@@ -1,0 +1,34 @@
+# CELL file written 00:16:19 (GMT+1.0) 22nd October 2020 from run HI
+
+%BLOCK lattice_cart
+   ANG
+       12.0000000000000        0.00000000000000        0.00000000000000    
+      0.612323399573677E-15    12.0000000000000        0.00000000000000    
+      0.612323399573677E-15   0.612323399573677E-15    12.0000000000000    
+%ENDBLOCK lattice_cart
+
+%BLOCK cell_constraints
+      0   0   0
+      0   0   0
+%ENDBLOCK cell_constraints
+
+%BLOCK positions_frac
+   H              0.000000000013618       0.000000000163156      -0.000952894767401
+   I             -0.000000000013618      -0.000000000163156       0.135036228100734
+%ENDBLOCK positions_frac
+
+FIX_COM : true
+
+%BLOCK species_pot
+SOC19
+%ENDBLOCK species_pot
+
+%BLOCK KPOINTS_LIST
+0.25 0.25 0.25 1.0
+%ENDBLOCK KPOINTS_LIST
+
+%BLOCK external_bfield
+TESLA
+1.0  0.0  0.0
+%ENDBLOCK external_bfield
+
