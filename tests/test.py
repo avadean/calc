@@ -1,3 +1,5 @@
 import calc
 
-hi = calc.Person()
+t = calc.Test()
+
+print(t)
