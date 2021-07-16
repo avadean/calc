@@ -1,3 +1,3 @@
-from calc.main import Test
+from calc.params import Params
 
-__all__ = ['Test']
+__all__ = ['Params']

@@ -1,5 +1,6 @@
 import calc
 
-t = calc.Test()
+t = calc.Params()
 
 print(t)
+
