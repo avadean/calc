@@ -1,0 +1,17 @@
+TASK                   : MAGRES 
+MAGRES_TASK            : HYPERFINE 
+
+XCFUNCTIONAL           : LDA 
+CUT_OFF_ENERGY         : 700 eV
+FIX_OCCUPANCY          : TRUE 
+RELATIVISTIC_TREATMENT : SCHROEDINGER 
+
+SPIN_POLARISED         : TRUE 
+SPIN_TREATMENT         : VECTOR 
+SPIN_ORBIT_COUPLING    : TRUE 
+
+IPRINT                 : 3 
+
+%BLOCK                 : DEVEL_CODE 
+DENSITY_IN_X           : TRUE 
+%ENDBLOCK              : DEVEL_CODE 
