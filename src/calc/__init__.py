@@ -1,3 +1,3 @@
-from calc.main import Person
+from calc.main import Test
 
-__all__ = ['Person']
+__all__ = ['Test']
