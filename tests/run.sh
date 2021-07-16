@@ -1,9 +1,9 @@
 
 currentDir=$(pwd)
 
-cd /home/dean/tools/calc/ || exit ;
+cd /Users/adam/Documents/projects/calc/tests/ || exit ;
 
-sudo python setup.py install >> /dev/null 2>&1 ;
+python3 setup.py install >> /dev/null 2>&1 ;
 
 cd "$currentDir" || exit ;
 
