@@ -1,10 +1,10 @@
 
 currentDir=$(pwd)
 
-cd /Users/adam/Documents/projects/calc/tests/ || exit ;
+cd /Users/adam/Documents/projects/calc/ || exit 1 ;
 
 python3 setup.py install >> /dev/null 2>&1 ;
 
-cd "$currentDir" || exit ;
+cd "$currentDir" || exit 1 ;
 
-python test.py ;
+python3 test.py ;
