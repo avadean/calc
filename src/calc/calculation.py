@@ -1,23 +1,17 @@
 from calc.data import assertCount
-from calc.cells import Cell, shortcutCells
-from calc.params import Param, shortcutParams
-from calc.species import shortcutSpecies
+from calc.cells import Cell, shortcutToCells
+from calc.params import Param, shortcutToParams
+from calc.species import shortcutToSpecies
 
 from itertools import product
 
 
-stringShortcuts = shortcutCells | shortcutParams | shortcutSpecies
+stringToShortcuts = shortcutToCells | shortcutToParams | shortcutToSpecies
 
-def getShortcut(arg=None):
-    assert type(arg) is str
-
-    shortcutList = stringShortcuts.get(arg.lower(), None)
-
-    if shortcutList is None:
-        raise ValueError('Shortcut {} not found'.format(arg))
-
-    return shortcutList
-
+stringToVariableSettings = { 'soc' : [(Param('spin_treatment', 'scalar'), Param('spin_orbit_coupling', False)),
+                                      (Param('spin_treatment', 'vector'), Param('spin_orbit_coupling', False)),
+                                      (Param('spin_treatment', 'vector'), Param('spin_orbit_coupling', True))]
+                             }
 
 def parseArgs(*args):
     if len(args) == 0:
@@ -77,36 +71,52 @@ def parseArgs(*args):
     return cells, params, strings
 
 
-def translateStrings(strings=None):
+def getShortcut(strings=None):
+    """ This function gets specific shortcuts from strings.
+        A string maps to a list of cells/params and is simply
+        an easy way to generate common settings in calculations. """
+
     assert type(strings) in [tuple, list]
 
     if len(strings) == 0:
         return [], []
 
-    cells = []
-    params = []
+    settings = []
 
     for string in strings:
-        newCells, newParams = stringShortcuts.get(string.lower(), (None, None))
+        newSettings = stringToShortcuts.get(string.lower(), None)
 
-        assert newCells is not None and newParams is not None, 'Shortcut string {} not recognised'.format(string)
+        assert newSettings is not None, 'Shortcut string {} not recognised'.format(string)
 
-        cells += newCells
-        params += newParams
+        settings += newSettings
 
-    return cells, params
+    return settings
 
 
-def setupCalculations(*args, other=None):
+def getVariableSettings(string=None):
+    """ This function gets a specific shortcut from a string.
+        The string will map to a list that contains lists of
+        cells/params, each to be used as a different setting """
+
+    assert type(string) is str
+
+    variableSettings = stringToVariableSettings.get(string.lower(), None)
+
+    assert variableSettings is not None, 'Shortcut to variable settings {} not recognised'.format(string)
+
+    return variableSettings
+
+
+def setupCalculations(*args, generalSettings=None):
     cellsGeneral = []
     paramsGeneral = []
 
     # Check if there are any general cells or params defined.
-    if other is not None:
-        other = [other] if type(other) is str else other
+    if generalSettings is not None:
+        generalSettings = [generalSettings] if type(generalSettings) is str else generalSettings
 
-        assert type(other) in [list, tuple]
-        cellsGeneral, paramsGeneral, strings = parseArgs(*other)
+        assert type(generalSettings) in [list, tuple]
+        cellsGeneral, paramsGeneral, strings = parseArgs(*generalSettings)
 
         # Check that we have one of each string.
         assertCount([string.lower() for string in strings])
@@ -114,13 +124,22 @@ def setupCalculations(*args, other=None):
         # The strings are shortcuts to one or more params/cells.
         # "Translate" from the string to these shortcuts and get them.
         # E.g. 'soc' is spin_treatment=vector and spin_orbit_coupling=true.
-        cellsFromStrings, paramsFromStrings = translateStrings(strings)
+        settings = getShortcut(strings)
 
-        # Add the shortcut cells/params.
-        cellsGeneral += cellsFromStrings
-        paramsGeneral += paramsFromStrings
+        for cellOrParam in settings:
+            if type(cellOrParam) is Cell:
+                cellsGeneral.append(cellOrParam)
+            elif type(cellOrParam) is Param:
+                paramsGeneral.append(cellOrParam)
+            else:
+                raise TypeError('{} type not recognised in shortcut'.format(type(cellOrParam)))
+
+        ## Add the shortcut cells/params.
+        #cellsGeneral += cellsFromStrings
+        #paramsGeneral += paramsFromStrings
 
         # Check that none of the shortcuts themselves have now duplicated any cells/params.
+        print(cellsGeneral)
         assertCount([cell.key for cell in cellsGeneral])
         assertCount([param.key for param in paramsGeneral])
 
@@ -140,7 +159,7 @@ def setupCalculations(*args, other=None):
         # 2 -> spin_treatment=vector and spin_orbit_coupling=false
         # 3 -> spin_treatment=vector and spin_orbit_coupling=true
         # So let's just put the string in a list so we can treat it the same as the rest.
-        arg = [arg] if type(arg) is str else arg
+        arg = getVariableSettings(arg) if type(arg) is str else arg
 
         # Create a list to store this combination.
         lst = []
@@ -148,13 +167,13 @@ def setupCalculations(*args, other=None):
         for strListCellParam in arg:
             type_ = type(strListCellParam)
 
-            # Shortcut string.
-            if type_ is str:
-                shortcut = getShortcut(strListCellParam)
-                lst.append(shortcut)
+            ## Shortcut string.
+            #if type_ is str:
+            #    variableSettings = getVariableSettings(strListCellParam)
+            #    lst.append(variableSettings)
 
             # User defined.
-            elif type_ in [list, tuple]:
+            if type_ in [list, tuple]:
                 assert all(type(s) in [Cell, Param] for s in strListCellParam), 'Settings should only be cells or params'
                 lst.append(list(strListCellParam))
 

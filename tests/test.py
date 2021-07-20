@@ -12,18 +12,7 @@ print(t)
 '''
 
 
-calculations = setupCalculations([(Param('spin_treatment', 'scalar'),
-                                   Param('spin_orbit_coupling', False)),
-
-                                  (Param('spin_treatment', 'vector'),
-                                   Param('spin_orbit_coupling', False)),
-
-                                  (Param('spin_treatment', 'vector'),
-                                   Param('spin_orbit_coupling', True))],
-
-                                 [Param('spin', 0.3), Param('spin', 0.5), Param('spin', 0.7)],
-
-                                 other=())
+calculations = setupCalculations('soc', generalSettings='HF')
 
 
 for calculation in calculations:

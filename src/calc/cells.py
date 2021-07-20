@@ -20,4 +20,4 @@ cellKnown = ['lattice_cart',
              'external_bfield']
 
 
-shortcutCells = {}
+shortcutToCells = {}

@@ -436,6 +436,6 @@ paramValues = {
 
 
 
-shortcutParams = {'soc': [Param('spin_treatment', 'vector'),
-                          Param('spin_orbit_coupling', True)]
-                  }
+shortcutToParams = {'soc': [Param('spin_treatment', 'vector'),
+                            Param('spin_orbit_coupling', True)]
+                    }
