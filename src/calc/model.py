@@ -1,41 +1,19 @@
-from calc.cells import Cell
-from calc.params import Param
+from calc.calculation import Calculation
 
 
 class Model:
-    def __init__(self, cells=None, params=None):
-        if cells is not None:
-            assert type(cells) is list
-            assert all(type(cell) == Cell for cell in cells)
+    name = None
 
-        if params is not None:
-            assert type(params) is list
-            assert all(type(param) == Param for param in params)
+    calculations = None
 
-        self.cells = cells
-        self.params = params
+    def __init__(self, name=None, calculations=None):
+        if name is not None:
+            assert type(name) is str
 
-    def __str__(self):
-        if self.params is None and self.cells is None:
-            return 'Model -> *** empty ***'
+        self.name = name
 
-        spaces = 15
-        string = 'Model ->'
+        if calculations is not None:
+            assert type(calculations) is list
+            assert all(type(calculation) == Calculation for calculation in calculations)
 
-        if self.cells is not None:
-            string += '\n'
-            
-            for cell in self.cells:
-                string += '  {key:>{spaces}} : {lines:<{spaces}}\n'.format(key=cell.key,
-                                                                           spaces=spaces,
-                                                                           lines=', '.join(cell.lines))
-
-        if self.params is not None:
-            string += '\n'
-
-            for param in self.params:
-                string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=param.key,
-                                                                           spaces=spaces,
-                                                                           value=param.value)
-
-        return string
+        self.calculations = calculations
