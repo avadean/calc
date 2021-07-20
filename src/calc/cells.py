@@ -6,6 +6,7 @@ class Cell:
 
     def __init__(self, key=None, lines=None):
         assert type(key) is str
+        key = key.lower()
         assert key in cellKnown, '{} not a known cell'.format(key)
         self.key = key
 

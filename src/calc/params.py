@@ -53,6 +53,7 @@ class Param:
                  block=False, blockLines=None):
 
         assert type(key) is str
+        key = key.lower()
         assert key in paramKnown, '{} not a known parameter'.format(key)
         self.key = key
 
@@ -73,6 +74,7 @@ class Param:
             assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, self.type)
 
             if self.type is str:
+                value = value.lower()
                 assert value in paramValues.get(self.key)
             elif self.type is bool:
                 assert value in [True, False]
