@@ -97,15 +97,17 @@ class Param:
     def __str__(self):
         attributes = [attr for attr in dir(self)
                       if not attr.startswith('__') and
-                      self.__getattribute__(attr) not in [None, False]
-                      ]
+                      self.__getattribute__(attr) is not None]
+
+        spaces = 20
 
         string = ''
 
         for attr in attributes:
             value = self.__getattribute__(attr)
             value = str(value) if type(value) is type else value
-            string += '  {:>12} : {:<12}\n'.format(attr, value)
+            value = str(value).lower() if type(value) is bool else value
+            string += '  {attribute:>{spaces}} : {val:<{spaces}}\n'.format(attribute=attr, val=value, spaces=spaces)
 
         return string
 
@@ -431,3 +433,9 @@ paramValues = {
     'iprint'                    : [1, 2, 3],
     'rand_seed'                 : [-float('inf'), float('inf')],
 }
+
+
+
+shortcutParams = {'soc': [Param('spin_treatment', 'vector'),
+                          Param('spin_orbit_coupling', True)]
+                  }

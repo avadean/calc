@@ -6,9 +6,8 @@ class Cell:
 
     def __init__(self, key=None, lines=None):
         assert type(key) is str
-        key = key.lower()
-        assert key in cellKnown, '{} not a known cell'.format(key)
-        self.key = key
+        assert key.lower() in cellKnown, '{} not a known cell'.format(key)
+        self.key = key.lower()
 
         assert type(lines) is list
         assert all(type(line) == str for line in lines)
@@ -16,5 +15,9 @@ class Cell:
 
 
 
-cellKnown = ['lattice_cart']
+cellKnown = ['lattice_cart',
 
+             'external_bfield']
+
+
+shortcutCells = {}
