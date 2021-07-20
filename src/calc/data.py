@@ -1,3 +1,12 @@
+from collections import Counter
+
+def assertCount(lst=None, count=1):
+    assert type(lst) is list
+    assert type(count) is int
+
+    countStrings = Counter(lst)
+    assert all(val == count for val in countStrings.values()), \
+        '{} must be specified {} time(s)'.format(countStrings.most_common(1)[0][0], count)
 
 
 def getNiceUnit(unit=None, strict=True):
