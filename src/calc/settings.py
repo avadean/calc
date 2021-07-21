@@ -549,8 +549,8 @@ class Setting:
 
         if self.type is Block:
             assert type(lines) is list
-            assert all(type(line) == str for line in lines)
-            self.lines = lines
+            assert all(type(line) is str for line in lines)
+            self.lines = [line.strip() for line in lines]
 
         else:
             if type(value) is int and self.type is float:
@@ -561,7 +561,7 @@ class Setting:
                                                                                                    self.type)
 
             if self.type is str:
-                value = value.lower()
+                value = value.strip().lower()
                 assert value in settingValues.get(self.key)
 
             elif self.type is bool:
@@ -591,6 +591,15 @@ class Setting:
 
         self.priority = getFromDict(key, settingPriorities)
 
+    def __str__(self):
+        if self.type is Block:
+            return '; '.join(self.lines)
+
+        elif self.type is float:
+            return '{:<12.4f}'.format(self.value)
+
+        else:
+            return str(self.value)
 
 
 
@@ -776,3 +785,74 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
 
 
 stringToShortcuts = shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases | shortcutToSpecies
+
+
+
+def orderSettings(settings=None):
+    assert type(settings) is list
+    assert all(type(setting) is Setting for setting in settings)
+
+    cells = []
+    params = []
+
+    for setting in settings:
+        if setting.file == 'cell':
+            cells.append(setting)
+        elif setting.file == 'param':
+            params.append(setting)
+        else:
+            raise ValueError('File {} not recognised'.format(setting.file))
+
+    cells = sorted(cells, key=lambda cell: cell.priority)
+    params = sorted(params, key=lambda param: param.priority)
+
+    return cells + params
+
+
+
+def parseArgs(*args):
+    if len(args) == 0:
+        return [], [], []
+
+    settings = []
+    strings = []
+
+    for arg in args:
+        t = type(arg)
+
+        if t is str:
+            strings.append(arg)
+
+        elif t is Setting:
+            settings.append(arg)
+
+        elif t is tuple:
+            for arg2 in arg:
+                t2 = type(arg2)
+
+                if t2 is str:
+                    strings.append(arg2)
+
+                elif t2 is Setting:
+                    settings.append(arg2)
+
+                else:
+                    raise TypeError('Cannot have type {} in tuple'.format(t2))
+
+        elif t is list:
+            for arg2 in arg:
+                t2 = type(arg2)
+
+                if t2 is str:
+                    strings.append(arg2)
+
+                elif t2 is Setting:
+                    settings.append(arg2)
+
+                else:
+                    raise TypeError('Cannot have type {} in list'.format(t2))
+
+        else:
+            raise TypeError('Cannot have type {}'.format(t))
+
+    return settings, strings

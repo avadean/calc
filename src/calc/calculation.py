@@ -1,56 +1,7 @@
 from calc.data import assertCount, Block
-from calc.settings import Setting, stringToShortcuts, stringToVariableSettings
+from calc.settings import Setting, stringToShortcuts, stringToVariableSettings, orderSettings, parseArgs
 
 from itertools import product
-
-
-
-def parseArgs(*args):
-    if len(args) == 0:
-        return [], [], []
-
-    settings = []
-    strings = []
-
-    for arg in args:
-        t = type(arg)
-
-        if t is str:
-            strings.append(arg)
-
-        elif t is Setting:
-            settings.append(arg)
-
-        elif t is tuple:
-            for arg2 in arg:
-                t2 = type(arg2)
-
-                if t2 is str:
-                    strings.append(arg2)
-
-                elif t2 is Setting:
-                    settings.append(arg2)
-
-                else:
-                    raise TypeError('Cannot have type {} in tuple'.format(t2))
-
-        elif t is list:
-            for arg2 in arg:
-                t2 = type(arg2)
-
-                if t2 is str:
-                    strings.append(arg2)
-
-                elif t2 is Setting:
-                    settings.append(arg2)
-
-                else:
-                    raise TypeError('Cannot have type {} in list'.format(t2))
-
-        else:
-            raise TypeError('Cannot have type {}'.format(t))
-
-    return settings, strings
 
 
 def getShortcut(*strings):
@@ -225,10 +176,10 @@ class Calculation:
 
         if settings is not None:
             assert type(settings) is list
-            assert all(type(setting) == Setting for setting in settings)
+            assert all(type(setting) is Setting for setting in settings)
             assertCount([setting.key for setting in settings])
 
-        self.settings = settings
+        self.settings = orderSettings(settings)
 
     def __str__(self):
         string = 'Calculation ->'
@@ -247,20 +198,11 @@ class Calculation:
 
         string += '\n'
 
-        cells = []
-        params = []
-        for setting in self.settings:
-            if setting.file == 'cell':
-                cells.append(setting)
-            elif setting.file == 'param':
-                params.append(setting)
-            else:
-                raise ValueError('File {} not recognised'.format(setting.file))
+        self.settings = orderSettings(self.settings)
 
-        for cell in cells:
-            value = '; '.join(setting.lines) if setting.type is Block else setting.value
+        for setting in self.settings:
             string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=setting.key,
                                                                        spaces=spaces,
-                                                                       value=value)
+                                                                       value=str(setting))
 
         return string
