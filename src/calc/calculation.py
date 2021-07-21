@@ -299,7 +299,7 @@ class Calculation:
             string += '\n'
 
             for cell in self.cells:
-                value = '; '.join(cell.lines) if cell.type is Block else value
+                value = '; '.join(cell.lines) if cell.type is Block else cell.value
                 string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=cell.key,
                                                                            spaces=spaces,
                                                                            value=value)
