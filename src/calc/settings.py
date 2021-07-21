@@ -1,4 +1,6 @@
-from calc.data import getAllowedUnits, getNiceUnit, getFromDict, Block, VectorInt, VectorFloat
+from calc.data import assertBetween,\
+    getAllowedUnits, getNiceUnit, getFromDict,\
+    Block, VectorInt, VectorFloat
 
 
 cellKnown = [
@@ -443,7 +445,7 @@ paramTypes = {
 
     # extra
     'continuation': str,
-    'iprint': str,
+    'iprint': int,
     'rand_seed': int,
     'comment': str,
 
@@ -533,8 +535,8 @@ settingUnits = cellUnits | paramUnits
 
 class Setting:
     def __init__(self, key=None, value=None, unit=None, lines=None):
-        assert type(key) is str
-        key = key.lower()
+        assert type(key) is str, 'Key for setting should be a string'
+        key = key.strip().lower()
 
         # See if we can find the key in cells, then params, if not then we don't know what it is.
         if key in cellKnown:
@@ -548,8 +550,8 @@ class Setting:
         self.type = getFromDict(key, settingTypes)
 
         if self.type is Block:
-            assert type(lines) is list
-            assert all(type(line) is str for line in lines)
+            assert type(lines) is list, 'Lines for block should be a list'
+            assert all(type(line) is str for line in lines), 'Each line for the block should be a string'
             self.lines = [line.strip() for line in lines]
 
         else:
@@ -562,20 +564,24 @@ class Setting:
 
             if self.type is str:
                 value = value.strip().lower()
-                assert value in settingValues.get(self.key)
+                assert value in settingValues.get(self.key), 'Value of {} not accepted for {}'.format(value,
+                                                                                                      self.key)
 
             elif self.type is bool:
-                assert value in [True, False]
+                assert value in [True, False],\
+                    'Value of {} not accepted for {}, should be True or False'.format(value, self.key)
 
             elif self.type in [float, int]:
-                assert min(settingValues.get(self.key)) <= value <= max(settingValues.get(self.key))
+                minimum = min(settingValues.get(self.key))
+                maximum = max(settingValues.get(self.key))
+                assertBetween(value, minimum, maximum, self.key)
 
             elif self.type in [VectorInt, VectorFloat]:
                 minimum = min(settingValues.get(self.key))
                 maximum = max(settingValues.get(self.key))
-                assert minimum <= value.x <= maximum
-                assert minimum <= value.y <= maximum
-                assert minimum <= value.z <= maximum
+                assertBetween(value.x, minimum, maximum, self.key)
+                assertBetween(value.y, minimum, maximum, self.key)
+                assertBetween(value.z, minimum, maximum, self.key)
 
             self.value = value
 
@@ -598,14 +604,12 @@ class Setting:
         elif self.type is float:
             return '{:<12.4f}'.format(self.value)
 
+        elif self.type is int:
+
+            return '{:<3d}'.format(self.value)
+
         else:
             return str(self.value)
-
-
-
-
-
-
 
 
 
@@ -775,7 +779,32 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
 
                              'density' : [Setting('devel_code', lines=['density_in_x=true']),
                                           Setting('devel_code', lines=['density_in_y=true']),
-                                          Setting('devel_code', lines=['density_in_z=true'])]
+                                          Setting('devel_code', lines=['density_in_z=true'])],
+
+                             'socdensity' : [(Setting('spin_treatment', 'scalar'), Setting('spin_orbit_coupling', False)),
+
+                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', False)),
+
+                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True),
+                                              Setting('devel_code', lines=['density_in_x=true'])),
+
+                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True),
+                                              Setting('devel_code', lines=['density_in_y=true'])),
+
+                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True),
+                                              Setting('devel_code', lines=['density_in_z=true']))],
+
+                             'zbfield' : [Setting('external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   1.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   2.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   3.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   4.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   5.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   6.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   7.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   8.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0   9.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0  10.0'])]
                              }
 
 
