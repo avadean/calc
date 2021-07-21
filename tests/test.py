@@ -1,10 +1,13 @@
-from calc import setupCalculations, Setting
+from calc import Model, setupCalculations, Setting
 
 
-calculations = setupCalculations('soc', 'density',
-                                 generalSettings=['HF', 'shielding', Setting('spin', 0.3)])
+calculations = setupCalculations(['HF', 'HCl'], 'zbfield',
+                                 globalSettings=['shielding', 'soc',
+                                                 Setting('iprint', 3)],
+                                 directories=[['HF', 'HCl'],
+                                              'zbfield'])
 # TODO: fix directories
 # see this failure: calculations = setupCalculations(['HF'], generalSettings='HF')
 
-for calculation in calculations:
-    print(calculation)
+
+model = Model(calculations)

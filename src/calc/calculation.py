@@ -1,5 +1,7 @@
-from calc.data import assertCount, Block
-from calc.settings import Setting, stringToShortcuts, stringToVariableSettings, orderSettings, parseArgs
+from calc.data import assertCount, stringToVariableDirectories
+from calc.settings import Setting,\
+    stringToShortcuts, stringToVariableSettings,\
+    orderSettings, parseArgs
 
 from itertools import product
 
@@ -26,7 +28,7 @@ def getShortcut(*strings):
 def getVariableSettings(string=None):
     """ This function gets a specific shortcut from a string.
         The string will map to a list that contains lists of
-        cells/params, each to be used as a different setting """
+        cells/params, each to be used as a different setting. """
 
     assert type(string) is str
 
@@ -37,18 +39,35 @@ def getVariableSettings(string=None):
     return variableSettings
 
 
-def setupCalculations(*args, generalSettings=None):
+def getVariableDirectories(string=None):
+    """ This function gets a specific shortcut from a string.
+        The string will map to a list that contains several
+        directory names. """
+
+    assert type(string) is str
+
+    variableDirectories = stringToVariableDirectories.get(string.lower(), None)
+
+    assert variableDirectories is not None, 'Shortcut to variable directories {} not recognised'.format(string)
+
+    return variableDirectories
+
+
+def setupCalculations(*args, globalSettings=None, directories=None):
+    print('Beginning setup of calculations')
+
     settingsGeneral = []
 
     # Check if there are any general cells or params defined.
-    if generalSettings is not None:
-        generalSettings = [generalSettings] if type(generalSettings) is str else generalSettings
+    if globalSettings is not None:
+        print('Collecting general settings...', end=' ', flush=True)
+        globalSettings = [globalSettings] if type(globalSettings) is str else globalSettings
 
-        assert type(generalSettings) in [list, tuple]
-        settingsGeneral, strings = parseArgs(*generalSettings)
+        assert type(globalSettings) in [list, tuple]
+        settingsGeneral, strings = parseArgs(*globalSettings)
 
         # Check that we have one of each string.
-        assertCount([string.lower() for string in strings])
+        assertCount([string.strip().lower() for string in strings])
 
         # The strings are shortcuts to one or more params/cells.
         # "Translate" from the string to these shortcuts and get them.
@@ -63,13 +82,14 @@ def setupCalculations(*args, generalSettings=None):
 
         # Check that none of the shortcuts themselves have now duplicated any cells/params.
         assertCount([setting.key for setting in settings])
+        print('Done!')
 
     # Now that we have dealt with the general cells/params of the calculations, we now work on the variable cells/params.
-
     arguments = []
     numbering = []
 
     # Loop through the different combinations.
+    print('Generating variable settings...', end=' ', flush=True)
     for arg in args:
         assert type(arg) in [str, list],\
             'Specify only shortcut strings or lists for variable cells/params, not {}'.format(type(arg))
@@ -80,7 +100,7 @@ def setupCalculations(*args, generalSettings=None):
         # 2 -> spin_treatment=vector and spin_orbit_coupling=false
         # 3 -> spin_treatment=vector and spin_orbit_coupling=true
         # So let's turn the shortcut string (if needed) into its list combination.
-        arg = getVariableSettings(arg) if type(arg) is str else arg
+        arg = getVariableSettings(arg.strip().lower()) if type(arg) is str else arg
 
         # Create a list to store this combination.
         lst = []
@@ -90,7 +110,7 @@ def setupCalculations(*args, generalSettings=None):
 
             # Shortcut string.
             if type_ is str:
-                variableSettings = getShortcut(strListSetting)
+                variableSettings = getShortcut(strListSetting.strip().lower())
                 lst.append(variableSettings)
 
             # User defined.
@@ -107,6 +127,26 @@ def setupCalculations(*args, generalSettings=None):
         arguments.append(lst)
         numbering.append(list(range(1, len(arg)+1)))
 
+    # Now let's deal with the directory names if given
+    if directories is not None:
+        assert type(directories) is list
+        assert all(type(directory) in [str, list] for directory in directories)
+
+        for directory in directories:
+            assert type(directory) in [str, list], \
+                'Specify only shortcut strings or lists for directories, not {}'.format(type(directory))
+
+        directories = [(getVariableDirectories(directory.strip().lower()) if type(directory) is str else directory)
+                       for directory in directories]
+
+        directories = [[string.strip() for string in direc] for direc in directories]
+
+        assert len(arguments) == len(directories), 'Number of variable settings must match directory depth'
+        assert all(len(arguments[num]) == len(directories[num]) for num in range(len(arguments))),\
+            'Variable settings shape must match directories shape'
+
+        directories = list(product(*directories))
+
     #assert sum(any(type(a) is str for a in arg) for arg in arguments) == 1,\
     #    'Can only have one iterable argument that is not a cell or param'
 
@@ -120,6 +160,9 @@ def setupCalculations(*args, generalSettings=None):
     combinations = list(product(*arguments))
     numbering = list(product(*numbering))
 
+    print('Done!')
+
+    print('Creating calculations...', end=' ', flush=True)
     calculations = []
 
     # Loop through the possible combinations.
@@ -137,6 +180,8 @@ def setupCalculations(*args, generalSettings=None):
             n = nums[listNum]
 
             directory += '{:03}'.format(n)
+            if directories is not None:
+                directory += '_{}'.format(directories[combNum][listNum])
 
             # Loop through the specific tuple that contains many cells or params or both.
             for setting in listOfSettings:
@@ -156,6 +201,11 @@ def setupCalculations(*args, generalSettings=None):
         calculations.append(Calculation(name=name,
                                         directory=directory,
                                         settings=settings))
+
+    print('Done!')
+
+    print('Finalising setup of calculations')
+    print('Note: remember to check you\'re happy with the directory setup')
 
     return calculations
 

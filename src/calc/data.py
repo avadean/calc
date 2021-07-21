@@ -42,6 +42,27 @@ def assertCount(lst=None, count=1):
         '{} must be specified {} time(s)'.format(countStrings.most_common(1)[0][0], count)
 
 
+def assertBetween(value=None, minimum=None, maximum=None, key=None):
+    assert type(value) in [int, float]
+    assert type(minimum) in [int, float]
+    assert type(maximum) in [int, float]
+
+    if minimum <= value <= maximum:
+        return
+
+    if key is None:
+        raise ValueError('Value of {} outside range of allowed values: {} to {}'.format(value,
+                                                                                        minimum,
+                                                                                        maximum))
+    else:
+        assert type(key) is str
+
+        raise ValueError('Value of {} for {} outside range of allowed values: {} to {}'.format(value,
+                                                                                               key,
+                                                                                               minimum,
+                                                                                               maximum))
+
+
 def getFromDict(key=None, dct=None, strict=True):
     assert type(key) is str
     assert type(dct) is dict
@@ -93,3 +114,20 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry'],
 
                    'inverseLength' : ['1/ang']
                    }
+
+stringToVariableDirectories = {'soc': ['scalar_soc_false',
+                                       'spinor_soc_false',
+                                       'spinor_soc_true'],
+
+                               'density': ['density_in_x',
+                                           'density_in_y',
+                                           'density_in_z'],
+
+                               'socdensity': ['scalar_soc_false',
+                                              'spinor_soc_false',
+                                              'spinor_soc_true_x',
+                                              'spinor_soc_true_y',
+                                              'spinor_soc_true_z'],
+
+                               'zbfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T']
+                               }
