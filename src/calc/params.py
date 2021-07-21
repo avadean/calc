@@ -40,7 +40,6 @@ def getPriority(key=None, strict=False):
 
 class Param:
     def __init__(self, key=None, value=None, unit=None, lines=None):
-
         assert type(key) is str
         key = key.lower()
         assert key in paramKnown, '{} not a known parameter'.format(key)
