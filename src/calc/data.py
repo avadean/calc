@@ -42,30 +42,27 @@ def assertCount(lst=None, count=1):
         '{} must be specified {} time(s)'.format(countStrings.most_common(1)[0][0], count)
 
 
-def getNiceUnit(unit=None, strict=True):
-    assert type(unit) is str
+def getFromDict(key=None, dct=None, strict=True):
+    assert type(key) is str
+    assert type(dct) is dict
     assert type(strict) is bool
 
-    unit = unit.lower()
+    key = key.lower()
 
-    niceUnit = unitToNiceUnit.get(unit, None)
+    value = dct.get(key, None)
 
-    if niceUnit is None and strict:
-        raise ValueError('Unit {} does not have any nice units'.format(unit))
+    if value is None and strict:
+        raise ValueError('Key {} does not have a value'.format(key))
 
-    return niceUnit
+    return value
+
+
+def getNiceUnit(unit=None, strict=True):
+    return getFromDict(key=unit, dct=unitToNiceUnit, strict=strict)
 
 
 def getAllowedUnits(unitType=None, strict=True):
-    assert type(unitType) is str
-    assert type(strict) is bool
-
-    unitList = unitTypeToUnit.get(unitType, None)
-
-    if unitList is None and strict:
-        raise ValueError('Unit type {} does not have any allowed units'.format(unitType))
-
-    return unitList
+    return getFromDict(key=unitType, dct=unitTypeToUnit, strict=strict)
 
 
 unitToNiceUnit = { 'ev' : 'eV',

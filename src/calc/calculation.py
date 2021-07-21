@@ -1,24 +1,15 @@
 from calc.data import assertCount, Block
-from calc.cells import Cell, shortcutToCells
-from calc.params import Param, shortcutToParams
-from calc.species import shortcutToSpecies
+from calc.settings import Setting, stringToShortcuts, stringToVariableSettings
 
 from itertools import product
 
 
-stringToShortcuts = shortcutToCells | shortcutToParams | shortcutToSpecies
-
-stringToVariableSettings = { 'soc' : [(Param('spin_treatment', 'scalar'), Param('spin_orbit_coupling', False)),
-                                      (Param('spin_treatment', 'vector'), Param('spin_orbit_coupling', False)),
-                                      (Param('spin_treatment', 'vector'), Param('spin_orbit_coupling', True))]
-                             }
 
 def parseArgs(*args):
     if len(args) == 0:
         return [], [], []
 
-    cells = []
-    params = []
+    settings = []
     strings = []
 
     for arg in args:
@@ -27,11 +18,8 @@ def parseArgs(*args):
         if t is str:
             strings.append(arg)
 
-        elif t is Cell:
-            cells.append(arg)
-
-        elif t is Param:
-            params.append(arg)
+        elif t is Setting:
+            settings.append(arg)
 
         elif t is tuple:
             for arg2 in arg:
@@ -40,11 +28,8 @@ def parseArgs(*args):
                 if t2 is str:
                     strings.append(arg2)
 
-                elif t2 is Cell:
-                    cells.append(arg2)
-
-                elif t2 is Param:
-                    params.append(arg2)
+                elif t2 is Setting:
+                    settings.append(arg2)
 
                 else:
                     raise TypeError('Cannot have type {} in tuple'.format(t2))
@@ -56,11 +41,8 @@ def parseArgs(*args):
                 if t2 is str:
                     strings.append(arg2)
 
-                elif t2 is Cell:
-                    cells.append(arg2)
-
-                elif t2 is Param:
-                    params.append(arg2)
+                elif t2 is Setting:
+                    settings.append(arg2)
 
                 else:
                     raise TypeError('Cannot have type {} in list'.format(t2))
@@ -68,7 +50,7 @@ def parseArgs(*args):
         else:
             raise TypeError('Cannot have type {}'.format(t))
 
-    return cells, params, strings
+    return settings, strings
 
 
 def getShortcut(*strings):
@@ -105,15 +87,14 @@ def getVariableSettings(string=None):
 
 
 def setupCalculations(*args, generalSettings=None):
-    cellsGeneral = []
-    paramsGeneral = []
+    settingsGeneral = []
 
     # Check if there are any general cells or params defined.
     if generalSettings is not None:
         generalSettings = [generalSettings] if type(generalSettings) is str else generalSettings
 
         assert type(generalSettings) in [list, tuple]
-        cellsGeneral, paramsGeneral, strings = parseArgs(*generalSettings)
+        settingsGeneral, strings = parseArgs(*generalSettings)
 
         # Check that we have one of each string.
         assertCount([string.lower() for string in strings])
@@ -123,21 +104,14 @@ def setupCalculations(*args, generalSettings=None):
         # E.g. 'soc' is spin_treatment=vector and spin_orbit_coupling=true.
         settings = getShortcut(*strings)
 
-        for cellOrParam in settings:
-            if type(cellOrParam) is Cell:
-                cellsGeneral.append(cellOrParam)
-            elif type(cellOrParam) is Param:
-                paramsGeneral.append(cellOrParam)
+        for setting in settings:
+            if type(setting) is Setting:
+                settingsGeneral.append(setting)
             else:
-                raise TypeError('{} type not recognised in shortcut'.format(type(cellOrParam)))
-
-        ## Add the shortcut cells/params.
-        #cellsGeneral += cellsFromStrings
-        #paramsGeneral += paramsFromStrings
+                raise TypeError('{} type not recognised in shortcut'.format(type(setting)))
 
         # Check that none of the shortcuts themselves have now duplicated any cells/params.
-        assertCount([cell.key for cell in cellsGeneral])
-        assertCount([param.key for param in paramsGeneral])
+        assertCount([setting.key for setting in settings])
 
     # Now that we have dealt with the general cells/params of the calculations, we now work on the variable cells/params.
 
@@ -160,21 +134,21 @@ def setupCalculations(*args, generalSettings=None):
         # Create a list to store this combination.
         lst = []
 
-        for strListCellParam in arg:
-            type_ = type(strListCellParam)
+        for strListSetting in arg:
+            type_ = type(strListSetting)
 
             # Shortcut string.
             if type_ is str:
-                variableSettings = getShortcut(strListCellParam)
+                variableSettings = getShortcut(strListSetting)
                 lst.append(variableSettings)
 
             # User defined.
             elif type_ in [list, tuple]:
-                assert all(type(s) in [Cell, Param] for s in strListCellParam), 'Settings should only be cells or params'
-                lst.append(list(strListCellParam))
+                assert all(type(setting) is Setting for setting in strListSetting), 'Settings should only be cells or params'
+                lst.append(list(strListSetting))
 
-            elif type_ in [Cell, Param]:
-                lst.append([strListCellParam])
+            elif type_ is Setting:
+                lst.append([strListSetting])
 
             else:
                 raise TypeError('A specific setting of several cells/params must be given as a shortcut or tuple')
@@ -205,58 +179,40 @@ def setupCalculations(*args, generalSettings=None):
         directory = '' # '{}'.format(get current working directory)
 
         # For the specific variable cells/params.
-        cellsSpecific = []
-        paramsSpecific = []
+        settingsSpecific = []
 
         # Loop through the tuples of specific cells/params of this combination.
-        for settNum, setting in enumerate(combination):
-            n = nums[settNum]
+        for listNum, listOfSettings in enumerate(combination):
+            n = nums[listNum]
 
             directory += '{:03}'.format(n)
 
             # Loop through the specific tuple that contains many cells or params or both.
-            for cellOrParam in setting:
-                if type(cellOrParam) is Cell:
-                    cellsSpecific.append(cellOrParam)
-                    directory += '_{}'.format(cellOrParam.lines)
-
-                elif type(cellOrParam) is Param:
-                    paramsSpecific.append(cellOrParam)
-                    directory += '_{}'.format(str(cellOrParam.value).lower())
+            for setting in listOfSettings:
+                if type(setting) is Setting:
+                    settingsSpecific.append(setting)
+                    #directory += '_{}'.format(setting.lines)
 
                 else:
-                    raise TypeError('Only cells/params define a calculation, not {}'.format(type(cellOrParam)))
+                    raise TypeError('Only cells/params define a calculation, not {}'.format(type(setting)))
 
             directory += '/'
 
-            '''
-            if type(setting) is str:
-                name = setting
-                directory += '{:03}_{}/'.format(n, name)
-            '''
-
         # Combine the general cells/params we want with the variable cells/params.
-        cells = cellsGeneral + cellsSpecific
-        params = paramsGeneral + paramsSpecific
+        settings = settingsGeneral + settingsSpecific
 
         # Create the calculation.
         calculations.append(Calculation(name=name,
                                         directory=directory,
-                                        cells=cells,
-                                        params=params))
+                                        settings=settings))
 
     return calculations
 
 
 
 class Calculation:
-    name = None
-    directory = None
-    cells = None
-    params = None
-
     def __init__(self, name=None, directory=None,
-                 cells=None, params=None):
+                 settings=None):
         if name is not None:
             assert type(name) is str
 
@@ -267,18 +223,12 @@ class Calculation:
 
         self.directory = directory
 
-        if cells is not None:
-            assert type(cells) is list
-            assert all(type(cell) == Cell for cell in cells)
-            assertCount([cell.key for cell in cells])
+        if settings is not None:
+            assert type(settings) is list
+            assert all(type(setting) == Setting for setting in settings)
+            assertCount([setting.key for setting in settings])
 
-        if params is not None:
-            assert type(params) is list
-            assert all(type(param) == Param for param in params)
-            assertCount([param.key for param in params])
-
-        self.cells = cells
-        self.params = params
+        self.settings = settings
 
     def __str__(self):
         string = 'Calculation ->'
@@ -289,27 +239,28 @@ class Calculation:
         if self.directory is not None:
             string += ' ({})'.format(self.directory)
 
-        if self.params is None and self.cells is None:
+        if self.settings is None:
             string += '\n  *** empty ***'
             return string
 
         spaces = 20
 
-        if self.cells is not None:
-            string += '\n'
+        string += '\n'
 
-            for cell in self.cells:
-                value = '; '.join(cell.lines) if cell.type is Block else cell.value
-                string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=cell.key,
-                                                                           spaces=spaces,
-                                                                           value=value)
+        cells = []
+        params = []
+        for setting in self.settings:
+            if setting.file == 'cell':
+                cells.append(setting)
+            elif setting.file == 'param':
+                params.append(setting)
+            else:
+                raise ValueError('File {} not recognised'.format(setting.file))
 
-        if self.params is not None:
-            string += '\n'
-
-            for param in self.params:
-                string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=param.key,
-                                                                           spaces=spaces,
-                                                                           value=param.value)
+        for cell in cells:
+            value = '; '.join(setting.lines) if setting.type is Block else setting.value
+            string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=setting.key,
+                                                                       spaces=spaces,
+                                                                       value=value)
 
         return string
