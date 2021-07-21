@@ -1,4 +1,4 @@
-from calc.data import getAllowedUnits, getNiceUnit
+from calc.data import getAllowedUnits, getNiceUnit, Block
 
 
 def getType(key=None, strict=True):
@@ -39,45 +39,35 @@ def getPriority(key=None, strict=False):
 
 
 class Param:
-    key = None
-    value = None
-    unit = None
-    unitType = None
-
-    block = False
-    blockLines = None
-
-    priority = None
-
-    def __init__(self, key=None, value=None, unit=None,
-                 block=False, blockLines=None):
+    def __init__(self, key=None, value=None, unit=None, lines=None):
 
         assert type(key) is str
         key = key.lower()
         assert key in paramKnown, '{} not a known parameter'.format(key)
         self.key = key
 
-        assert type(block) is bool
-        self.block = block
+        self.type = getType(key)
 
-        if self.block:
-            assert type(blockLines) is list
-            assert all(type(line) == str for line in blockLines)
-            self.blockLines = blockLines
+        if self.type is Block:
+            assert type(lines) is list
+            assert all(type(line) == str for line in lines)
+            self.lines = lines
 
         else:
-            self.type = getType(key)
-
             if type(value) is int and self.type is float:
                 value = float(value)
 
-            assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, self.type)
+            assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value,
+                                                                                                   self.key,
+                                                                                                   self.type)
 
             if self.type is str:
                 value = value.lower()
                 assert value in paramValues.get(self.key)
+
             elif self.type is bool:
                 assert value in [True, False]
+
             elif self.type in [float, int]:
                 assert min(paramValues.get(self.key)) <= value <= max(paramValues.get(self.key))
 
@@ -87,8 +77,8 @@ class Param:
                 self.unitType = getUnitType(key)
 
                 assert type(unit) is str
-                assert unit in getAllowedUnits(self.unitType), 'Unit {} is not an acceptable type for {}'.format(unit,
-                                                                                                                 self.unitType)
+                assert unit in getAllowedUnits(self.unitType),\
+                    'Unit {} is not an acceptable type for {}'.format(unit, self.unitType)
 
                 self.unit = getNiceUnit(unit)
 
@@ -377,19 +367,6 @@ paramTypes = {
 }
 
 
-paramUnits = {
-    # general
-    'cut_off_energy': 'energy',
-
-    # metals
-    'smearing_width': 'energy',
-
-    # miscellaneous.
-    'elec_energy_tol': 'energy',
-    'bs_eigenvalue_tol': 'energy',
-}
-
-
 paramValues = {
     # tasks
     'task'                      : ['singlepoint', 'bandstructure', 'geometryoptimisation', 'geometryoptimization', 'moleculardynamics', 'optics', 'transitionstatesearch', 'phonon', 'efield', 'phonon+efield', 'thermodynamics', 'wannier', 'magres', 'elnes', 'spectral', 'epcoupling', 'geneticalgor'],
@@ -432,6 +409,19 @@ paramValues = {
     # extra
     'iprint'                    : [1, 2, 3],
     'rand_seed'                 : [-float('inf'), float('inf')],
+}
+
+
+paramUnits = {
+    # general
+    'cut_off_energy': 'energy',
+
+    # metals
+    'smearing_width': 'energy',
+
+    # miscellaneous.
+    'elec_energy_tol': 'energy',
+    'bs_eigenvalue_tol': 'energy',
 }
 
 
