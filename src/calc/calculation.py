@@ -1,4 +1,4 @@
-from calc.data import assertCount
+from calc.data import assertCount, Block
 from calc.cells import Cell, shortcutToCells
 from calc.params import Param, shortcutToParams
 from calc.species import shortcutToSpecies
@@ -71,19 +71,16 @@ def parseArgs(*args):
     return cells, params, strings
 
 
-def getShortcut(strings=None):
-    """ This function gets specific shortcuts from strings.
+def getShortcut(*strings):
+    """ This function gets a specific shortcut from a string.
         A string maps to a list of cells/params and is simply
         an easy way to generate common settings in calculations. """
-
-    assert type(strings) in [tuple, list]
-
-    if len(strings) == 0:
-        return [], []
 
     settings = []
 
     for string in strings:
+        assert type(string) is str
+
         newSettings = stringToShortcuts.get(string.lower(), None)
 
         assert newSettings is not None, 'Shortcut string {} not recognised'.format(string)
@@ -124,7 +121,7 @@ def setupCalculations(*args, generalSettings=None):
         # The strings are shortcuts to one or more params/cells.
         # "Translate" from the string to these shortcuts and get them.
         # E.g. 'soc' is spin_treatment=vector and spin_orbit_coupling=true.
-        settings = getShortcut(strings)
+        settings = getShortcut(*strings)
 
         for cellOrParam in settings:
             if type(cellOrParam) is Cell:
@@ -139,7 +136,6 @@ def setupCalculations(*args, generalSettings=None):
         #paramsGeneral += paramsFromStrings
 
         # Check that none of the shortcuts themselves have now duplicated any cells/params.
-        print(cellsGeneral)
         assertCount([cell.key for cell in cellsGeneral])
         assertCount([param.key for param in paramsGeneral])
 
@@ -158,7 +154,7 @@ def setupCalculations(*args, generalSettings=None):
         # 1 -> spin_treatment=scalar and spin_orbit_coupling=false
         # 2 -> spin_treatment=vector and spin_orbit_coupling=false
         # 3 -> spin_treatment=vector and spin_orbit_coupling=true
-        # So let's just put the string in a list so we can treat it the same as the rest.
+        # So let's turn the shortcut string (if needed) into its list combination.
         arg = getVariableSettings(arg) if type(arg) is str else arg
 
         # Create a list to store this combination.
@@ -167,13 +163,13 @@ def setupCalculations(*args, generalSettings=None):
         for strListCellParam in arg:
             type_ = type(strListCellParam)
 
-            ## Shortcut string.
-            #if type_ is str:
-            #    variableSettings = getVariableSettings(strListCellParam)
-            #    lst.append(variableSettings)
+            # Shortcut string.
+            if type_ is str:
+                variableSettings = getShortcut(strListCellParam)
+                lst.append(variableSettings)
 
             # User defined.
-            if type_ in [list, tuple]:
+            elif type_ in [list, tuple]:
                 assert all(type(s) in [Cell, Param] for s in strListCellParam), 'Settings should only be cells or params'
                 lst.append(list(strListCellParam))
 
@@ -274,10 +270,12 @@ class Calculation:
         if cells is not None:
             assert type(cells) is list
             assert all(type(cell) == Cell for cell in cells)
+            assertCount([cell.key for cell in cells])
 
         if params is not None:
             assert type(params) is list
             assert all(type(param) == Param for param in params)
+            assertCount([param.key for param in params])
 
         self.cells = cells
         self.params = params
@@ -301,9 +299,10 @@ class Calculation:
             string += '\n'
 
             for cell in self.cells:
-                string += '  {key:>{spaces}} : {lines:<{spaces}}\n'.format(key=cell.key,
+                value = '; '.join(cell.lines) if cell.type is Block else value
+                string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=cell.key,
                                                                            spaces=spaces,
-                                                                           lines=', '.join(cell.lines))
+                                                                           value=value)
 
         if self.params is not None:
             string += '\n'
