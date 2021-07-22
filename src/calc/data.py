@@ -103,6 +103,20 @@ def getAllowedUnits(unitType=None, strict=True):
     return getFromDict(key=unitType, dct=unitTypeToUnit, strict=strict)
 
 
+def getVariableDirectories(string=None):
+    """ This function gets a specific shortcut from a string.
+        The string will map to a list that contains several
+        directory names. """
+
+    assert type(string) is str
+
+    variableDirectories = stringToVariableDirectories.get(string.strip().lower(), None)
+
+    assert variableDirectories is not None, 'Shortcut to variable directories {} not recognised'.format(string)
+
+    return variableDirectories
+
+
 unitToNiceUnit = { 'ev' : 'eV',
                    'ha' : 'Ha',
                    'j' : 'J',
@@ -150,18 +164,3 @@ stringToVariableDirectories = {'halides':['HF', 'HCl', 'HBr', 'HI'],
 
                                'zbfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T']
                                }
-
-
-def getVariableDirectories(string=None):
-    """ This function gets a specific shortcut from a string.
-        The string will map to a list that contains several
-        directory names. """
-
-    assert type(string) is str
-
-    variableDirectories = stringToVariableDirectories.get(string.lower(), None)
-
-    assert variableDirectories is not None, 'Shortcut to variable directories {} not recognised'.format(string)
-
-    return variableDirectories
-

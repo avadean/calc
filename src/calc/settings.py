@@ -514,6 +514,47 @@ paramUnits = {
 
 
 
+stringToNiceValue = {
+    'lda': 'LDA',
+    'pw91': 'PW91',
+    'pbe': 'PBE',
+    'pbesol': 'PBEsol',
+    'rpbe': 'rPBE',
+    'wc': 'WC',
+    'blyp': 'BLYP',
+    'lda-c': 'LDA-c',
+    'lda-x': 'LDA-x',
+    'zero': 'ZERO',
+    'hf': 'HF',
+    'pbe0': 'PBE0',
+    'b3lyp': 'B3LYP',
+    'hse03': 'HSE03',
+    'hse06': 'HSE06',
+    'exx-x': 'EXX-x',
+    'hf-lda': 'HF-LDA',
+    'exx': 'EXX',
+    'exx-lda': 'EXX-LDA',
+    'shf': 'SHF',
+    'sx': 'SX',
+    'shf-lda': 'SHF-LDA',
+    'sx-lda': 'SX-LDA',
+    'wda': 'WDA',
+    'sex': 'SEX',
+    'sex-lda': 'SEX-LDA',
+    'rscan': 'rSCAN'
+}
+
+
+def getNiceValueStr(string=None):
+    assert type(string) is str
+
+    string = string.strip().lower()
+
+    niceValue = stringToNiceValue.get(string, string)
+
+    return niceValue
+
+
 
 
 settingKnown = cellKnown + paramKnown
@@ -559,6 +600,7 @@ class Setting:
                 value = value.strip().lower()
                 assert value in settingValues.get(self.key), 'Value of {} not accepted for {}'.format(value,
                                                                                                       self.key)
+                value = getNiceValueStr(value)
 
             elif self.type is bool:
                 assert value in [True, False],\
@@ -643,6 +685,19 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                                                         'H    1.28913  -1.18913  -1.18913']),
 
                                     Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'ch3': [Setting(key='lattice_cart', lines=['BOHR',
+                                                              '  10.0   0.0   0.0',
+                                                              '   0.0  10.0   0.0',
+                                                              '   0.0   0.0  10.0']),
+
+                           Setting(key='positions_abs', lines=['ANG',
+                                                               'C   0.000000000  0.000000000  0.000000000',
+                                                               'H   1.079000000  0.000000000  0.000000000',
+                                                               'H  -0.539500000  0.934441411  0.000000000',
+                                                               'H  -0.539500000 -0.934441411  0.000000000']),
+
+                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hf': [Setting(key='lattice_cart', lines=[' ANG',
                                                              '  10.0   0.0   0.0',
