@@ -17,7 +17,8 @@ class Model:
 
         self.calculations = calculations
 
-        print('*** Model created with {} calculations ***'.format(len(self.calculations)))
+        print('*** Model created with {} calculation{} ***'.format(len(self.calculations),
+                                                                   '' if len(self.calculations) == 1 else 's'))
         print(self.getDirs())
 
     def __str__(self):
