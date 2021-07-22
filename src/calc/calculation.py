@@ -1,5 +1,5 @@
 from calc.data import assertCount, createDirectories
-from calc.settings import Setting, createSettings, createVariableSettings, orderSettings
+from calc.settings import Setting, createSettings, createVariableSettings
 
 from itertools import product
 
@@ -7,18 +7,18 @@ from itertools import product
 def createCalculations(*variableSettings, globalSettings=None, directoryNames=None):
     print('Beginning setup of calculations')
 
-    print('Collecting general settings...', end=' ', flush=True)
-    globalSettings = createSettings(globalSettings)
-    print('Done!')
-
-    # Now that we have dealt with the general cells/params of the calculations, we now work on the variable cells/params.
     print('Generating variable settings...', end=' ', flush=True)
     varSettingsProcessed = createVariableSettings(*variableSettings)
     print('Done!')
 
+    # Now that we have dealt with the variable cells/params of the calculations, we now work on the general cells/params.
+    print('Collecting general settings...', end=' ', flush=True)
+    globalSettings = createSettings(*globalSettings) if globalSettings is not None else []
+    print('Done!')
+
     # Now let's deal with the directory names if given
     print('Creating directories...', end=' ', flush=True)
-    directoryNames = createDirectories(directoryNames)
+    directoryNames = createDirectories(*directoryNames) if directoryNames is not None else []
     print('Done!')
 
     # Some checks on the calculations and directories.
@@ -91,8 +91,7 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
 
 
 class Calculation:
-    def __init__(self, name=None, directory=None,
-                 settings=None):
+    def __init__(self, name=None, directory=None, settings=None):
         if name is not None:
             assert type(name) is str
 
@@ -108,26 +107,24 @@ class Calculation:
             assert all(type(setting) is Setting for setting in settings)
             assertCount([setting.key for setting in settings])
 
-        self.settings = orderSettings(settings)
+        self.settings = sorted(settings, key=lambda setting: (setting.file, setting.priority))
 
     def __str__(self):
         string = 'Calculation ->'
 
-        if self.name is not None:
+        if self.name:
             string += ' {}'.format(self.name)
 
-        if self.directory is not None:
+        if self.directory:
             string += ' ({})'.format(self.directory)
 
-        if self.settings is None:
+        if not self.settings:
             string += '\n  *** empty ***'
             return string
 
         spaces = 20
 
         string += '\n'
-
-        self.settings = orderSettings(self.settings)
 
         for setting in self.settings:
             string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=setting.key,

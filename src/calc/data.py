@@ -1,11 +1,7 @@
 from collections import Counter
 
 
-def createDirectories(directoryNames=None):
-    if directoryNames is None:
-        return []
-
-    assert type(directoryNames) is list
+def createDirectories(*directoryNames):
 
     for directory in directoryNames:
         if type(directory) is list:

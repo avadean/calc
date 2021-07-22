@@ -171,10 +171,6 @@ cellUnits = {
     'symmetry_tol': 'length'
 }
 
-shortcutToCells = {}
-
-shortcutToCellsAliases = {}
-
 
 
 
@@ -619,6 +615,90 @@ class Setting:
 
 
 
+
+
+
+shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
+                   'ncp': Setting(key='species_pot', lines=['NCP']),
+                   'c19': Setting(key='species_pot', lines=['C19']),
+                   'soc19': Setting(key='species_pot', lines=['SOC19']),
+
+                   'h': [Setting(key='lattice_cart', lines=[' BOHR',
+                                                            '  10.0   0.0   0.0',
+                                                            '   0.0  10.0   0.0',
+                                                            '   0.0   0.0  10.0']),
+
+                         Setting(key='positions_abs', lines=['H   0.0  0.0  0.0']),
+
+                         Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'ch4distorted': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                       '  10.0   0.0   0.0',
+                                                                       '   0.0  10.0   0.0',
+                                                                       '   0.0   0.0  10.0']),
+
+                                    Setting(key='positions_abs', lines=['C    0.10000  -0.20000  -0.10000',
+                                                                        'H    1.18913   1.18913   1.18913',
+                                                                        'H   -1.18913  -1.18913   1.18913',
+                                                                        'H   -1.18913   1.48913  -1.18913',
+                                                                        'H    1.28913  -1.18913  -1.18913']),
+
+                                    Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hf': [Setting(key='lattice_cart', lines=[' ANG',
+                                                             '  10.0   0.0   0.0',
+                                                             '   0.0  10.0   0.0',
+                                                             '   0.0   0.0  10.0']),
+
+                          Setting(key='positions_frac',
+                                  lines=['  H   0.1   0.1   0.099380480724825',
+                                         '  F   0.1   0.1   0.192319519275175']),
+
+                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                          ],
+
+                   'hcl': [Setting(key='lattice_cart', lines=[' ANG',
+                                                              '  10.0   0.0   0.0',
+                                                              '   0.0  10.0   0.0',
+                                                              '   0.0   0.0  10.0']),
+
+                           Setting(key='positions_frac',
+                                   lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
+                                          '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
+
+                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                           ],
+
+                   'hbr': [Setting(key='lattice_cart', lines=[' ANG',
+                                                              '  12.0   0.0   0.0',
+                                                              '   0.0  12.0   0.0',
+                                                              '   0.0   0.0  12.0']),
+
+                           Setting(key='positions_frac',
+                                   lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
+                                          '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
+
+                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                           ],
+
+                   'hi': [Setting(key='lattice_cart', lines=[' ANG',
+                                                             '  12.0   0.0   0.0',
+                                                             '   0.0  12.0   0.0',
+                                                             '   0.0   0.0  12.0']),
+
+                          Setting(key='positions_frac',
+                                  lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
+                                         '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
+
+                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                          ]
+                   }
+
+shortcutToCellsAliases = {}
+
+
+
+
 shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
                     'geometryoptimisation': Setting('task', 'geometryoptimisation'),
 
@@ -648,7 +728,7 @@ shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
                     'hyperfine': [Setting('task', 'magres'),
                                   Setting('magres_task', 'hyperfine')],
 
-                    # 'jcoupling': NotImplementedError,
+                    # 'jcoupling': (!) NotImplementedError,
 
                     'soc': [Setting('spin_treatment', 'vector'),
                             Setting('spin_orbit_coupling', True)],
@@ -679,91 +759,6 @@ shortcutToParamsAliases = {'geom': shortcutToParams.get('geometryoptimisation'),
                            'polarized': shortcutToParams.get('spin_polarised'),
                            'spin_polarized': shortcutToParams.get('spin_polarised'),
                            }
-
-
-
-
-
-
-
-
-shortcutToSpecies = {'hf': [Setting(key='lattice_cart', lines=[' ANG',
-                                                               '  10.0   0.0   0.0',
-                                                               '   0.0  10.0   0.0',
-                                                               '   0.0   0.0  10.0']),
-
-                            Setting(key='cell_constraints', lines=['  0  0  0',
-                                                                   '  0  0  0']),
-
-                            Setting(key='positions_frac',
-                                    lines=['  H   0.1   0.1   0.099380480724825',
-                                           '  F   0.1   0.1   0.192319519275175']),
-
-                            Setting(key='fix_com', value=True),
-
-                            Setting(key='species_pot', lines=['SOC19']),
-
-                            Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                            ],
-
-                     'hcl': [Setting(key='lattice_cart', lines=[' ANG',
-                                                                '  10.0   0.0   0.0',
-                                                                '   0.0  10.0   0.0',
-                                                                '   0.0   0.0  10.0']),
-
-                             Setting(key='cell_constraints', lines=['  0  0  0',
-                                                                    '  0  0  0']),
-
-                             Setting(key='positions_frac',
-                                     lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
-                                            '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
-
-                             Setting(key='fix_com', value=True),
-
-                             Setting(key='species_pot', lines=['SOC19']),
-
-                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                             ],
-
-                     'hbr': [Setting(key='lattice_cart', lines=[' ANG',
-                                                                '  12.0   0.0   0.0',
-                                                                '   0.0  12.0   0.0',
-                                                                '   0.0   0.0  12.0']),
-
-                             Setting(key='cell_constraints', lines=['  0  0  0',
-                                                                    '  0  0  0']),
-
-                             Setting(key='positions_frac',
-                                     lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
-                                            '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
-
-                             Setting(key='fix_com', value=True),
-
-                             Setting(key='species_pot', lines=['SOC19']),
-
-                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                             ],
-
-                     'hi': [Setting(key='lattice_cart', lines=[' ANG',
-                                                               '  12.0   0.0   0.0',
-                                                               '   0.0  12.0   0.0',
-                                                               '   0.0   0.0  12.0']),
-
-                            Setting(key='cell_constraints', lines=['  0  0  0',
-                                                                   '  0  0  0']),
-
-                            Setting(key='positions_frac',
-                                    lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
-                                           '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
-
-                            Setting(key='fix_com', value=True),
-
-                            Setting(key='species_pot', lines=['SOC19']),
-
-                            Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                            ],
-                     }
-
 
 
 
@@ -811,20 +806,16 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
 
 
 stringToSettings = shortcutToCells | shortcutToCellsAliases |\
-                   shortcutToParams | shortcutToParamsAliases |\
-                   shortcutToSpecies
+                   shortcutToParams | shortcutToParamsAliases
 
 
 
 
 
-def createSettings(settings=None):
-    if settings is None:
-        return []
-
-    settings = [settings] if type(settings) in [str, Setting] else settings
-
-    assert type(settings) in [list, tuple]
+def createSettings(*settings):
+    """ This function takes in a list of strings and settings
+        and converts the strings to the settings that they are
+        shortcuts to """
 
     # Split the settings up into settings and shortcuts
     settings, shortcuts = parseArgs(*settings)
@@ -849,6 +840,16 @@ def createSettings(settings=None):
 
 
 def createVariableSettings(*variableSettings):
+    """ This functions takes in a list of strings/lists/tuples.
+        The strings are treated as shortcuts and converted
+        appropriately. The tuples are turned to lists. The
+        output is a list of lists of settings. The list
+        would then typically be outer producted to generate
+        all the possible variations of the settings.
+        E.g. [[HF, HCl], [soc=false, soc=true]]
+        would be outer producted to
+        [HF+soc=false, HF+soc=true, HCl+soc=false, HCl+soc=true] """
+
     variableSettingsProcessed = []
 
     for variable in variableSettings:
@@ -890,19 +891,21 @@ def createVariableSettings(*variableSettings):
     return variableSettingsProcessed
 
 
-def shortcutsToSettings(*strings):
+def shortcutsToSettings(*shortcuts):
     """ This function gets a specific shortcut from a string.
         A string maps to a list of cells/params and is simply
         an easy way to generate common settings in calculations. """
 
     settings = []
 
-    for string in strings:
-        assert type(string) is str
+    for shortcut in shortcuts:
+        assert type(shortcut) is str
 
-        newSettings = stringToSettings.get(string.lower(), None)
+        settingOrList = stringToSettings.get(shortcut.lower(), None)
 
-        assert newSettings is not None, 'Shortcut string {} not recognised'.format(string)
+        newSettings = [settingOrList] if type(settingOrList) is Setting else settingOrList
+
+        assert newSettings is not None, 'Shortcut string {} not recognised'.format(shortcut)
 
         settings += newSettings
 
@@ -923,7 +926,14 @@ def getVariableSetting(string=None):
     return variableSetting
 
 
-def orderSettings(settings=None):
+def getCellsParams(settings=None):
+    """ This functions takes a list of settings and
+        splits them up into two sorted lists of
+        cells and params"""
+
+    if settings is None:
+        return None
+
     assert type(settings) is list
     assert all(type(setting) is Setting for setting in settings)
 
@@ -941,18 +951,19 @@ def orderSettings(settings=None):
     cells = sorted(cells, key=lambda cell: cell.priority)
     params = sorted(params, key=lambda param: param.priority)
 
-    return cells + params
+    return cells, params
 
 
 
-def parseArgs(*args):
-    if len(args) == 0:
-        return [], [], []
+def parseArgs(*stringsAndSettings):
+    """ This function takes in a list of settings
+        and strings and splits them up into two
+        lists """
 
     settings = []
     strings = []
 
-    for arg in args:
+    for arg in stringsAndSettings:
         t = type(arg)
 
         if t is str:
