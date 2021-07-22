@@ -1,6 +1,27 @@
 from collections import Counter
 
 
+def createDirectories(directoryNames=None):
+    if directoryNames is None:
+        return []
+
+    assert type(directoryNames) is list
+
+    for directory in directoryNames:
+        if type(directory) is list:
+            assert all(type(name) is str for name in directory)
+        else:
+            assert type(directory) is str,\
+                'Specify only shortcut strings or lists for directories, not {}'.format(type(directory))
+
+    directoryNames = [(getVariableDirectories(directory.strip().lower()) if type(directory) is str else directory)
+                      for directory in directoryNames]
+
+    directoryNames = [[string.strip() for string in direc] for direc in directoryNames]
+
+    return directoryNames
+
+
 class Block:
     pass
 
@@ -131,3 +152,18 @@ stringToVariableDirectories = {'soc': ['scalar_soc_false',
 
                                'zbfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T']
                                }
+
+
+def getVariableDirectories(string=None):
+    """ This function gets a specific shortcut from a string.
+        The string will map to a list that contains several
+        directory names. """
+
+    assert type(string) is str
+
+    variableDirectories = stringToVariableDirectories.get(string.lower(), None)
+
+    assert variableDirectories is not None, 'Shortcut to variable directories {} not recognised'.format(string)
+
+    return variableDirectories
+

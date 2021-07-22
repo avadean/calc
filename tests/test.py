@@ -1,13 +1,11 @@
-from calc import Model, setupCalculations, Setting
+from calc import Model, createCalculations, Setting, createDirectories, createSettings
 
+directories = createDirectories([['HF', 'HCl'], 'zbfield'])
+settings = createSettings(['shielding', Setting('iprint', 3),
+                           Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True)])
 
-calculations = setupCalculations(['HF', 'HCl'], 'zbfield',
-                                 globalSettings=['shielding', 'soc',
-                                                 Setting('iprint', 3)],
-                                 directories=[['HF', 'HCl'],
-                                              'zbfield'])
-# TODO: fix directories
-# see this failure: calculations = setupCalculations(['HF'], generalSettings='HF')
-
+calculations = createCalculations(['HF', 'HCl'], 'zbfield',
+                                  globalSettings=settings,
+                                  directoryNames=directories)
 
 model = Model(calculations)
