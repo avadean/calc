@@ -595,10 +595,9 @@ class Setting:
             return '; '.join(self.lines)
 
         elif self.type is float:
-            return '{:<12.4f}'.format(self.value)
+            return '{:<12.4f}{}'.format(self.value, ' {}'.format(self.unit) if self.unit is not None else '')
 
         elif self.type is int:
-
             return '{:<3d}'.format(self.value)
 
         else:
@@ -733,6 +732,8 @@ shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
                     'soc': [Setting('spin_treatment', 'vector'),
                             Setting('spin_orbit_coupling', True)],
 
+                    'iprint': Setting('iprint', 3),
+
                     'xdensity': Setting('devel_code', lines=['density_in_x=true']),
                     'ydensity': Setting('devel_code', lines=['density_in_y=true']),
                     'zdensity': Setting('devel_code', lines=['density_in_z=true'])
@@ -796,17 +797,31 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
                                           Setting('external_bfield', lines=['TESLA', '0.0   0.0   7.0']),
                                           Setting('external_bfield', lines=['TESLA', '0.0   0.0   8.0']),
                                           Setting('external_bfield', lines=['TESLA', '0.0   0.0   9.0']),
-                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0  10.0'])]
+                                          Setting('external_bfield', lines=['TESLA', '0.0   0.0  10.0'])],
+
+                             'halides': [shortcutToCells.get('hf'),
+                                         shortcutToCells.get('hcl'),
+                                         shortcutToCells.get('hbr'),
+                                         shortcutToCells.get('hi')]
                              }
 
 
 
+defaultShortcut = { 'defaults': [Setting('cell_constraints', lines=['0   0   0', '0   0   0']),
+                                 Setting('fix_com', True),
+                                 Setting('task', 'singlepoint'),
+                                 Setting('xcfunctional', 'LDA'),
+                                 Setting('cut_off_energy', 700, 'eV'),
+                                 Setting('fix_occupancy', True),
+                                 Setting('iprint', 3)]
+                    }
 
 
 
 
-stringToSettings = shortcutToCells | shortcutToCellsAliases |\
-                   shortcutToParams | shortcutToParamsAliases
+
+
+stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases | defaultShortcut
 
 
 

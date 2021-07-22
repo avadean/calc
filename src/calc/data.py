@@ -132,7 +132,9 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry'],
                    'inverseLength' : ['1/ang']
                    }
 
-stringToVariableDirectories = {'soc': ['scalar_soc_false',
+stringToVariableDirectories = {'halides':['HF', 'HCl', 'HBr', 'HI'],
+
+                               'soc': ['scalar_soc_false',
                                        'spinor_soc_false',
                                        'spinor_soc_true'],
 

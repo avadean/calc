@@ -1,8 +1,8 @@
-from calc import Model, createCalculations, Setting, createDirectories, createSettings, createVariableSettings
+from calc import Model, createCalculations, createDirectories, createSettings, createVariableSettings, Setting
 
-directories = createDirectories(['HF', 'HCl'], 'zbfield')
-settings = createSettings('shielding', Setting('iprint', 3), 'usp', 'soc')
-variableSettings = createVariableSettings(['HF', 'HCl'], 'zbfield')
+directories = createDirectories(['HF', 'HCl'], 'soc')
+settings = createSettings('shielding', 'iprint')
+variableSettings = createVariableSettings(['HF', 'HCl'], 'soc')
 
 calculations = createCalculations(*variableSettings,
                                   globalSettings=settings,
