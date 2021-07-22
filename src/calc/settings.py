@@ -1,4 +1,4 @@
-from calc.data import assertBetween,\
+from calc.data import assertBetween, assertCount,\
     getAllowedUnits, getNiceUnit, getFromDict,\
     Block, VectorInt, VectorFloat
 
@@ -520,9 +520,6 @@ paramUnits = {
 
 
 
-
-
-
 settingKnown = cellKnown + paramKnown
 settingPriorities = cellPriorities | paramPriorities
 settingTypes = cellTypes | paramTypes
@@ -813,8 +810,117 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
 
 
 
-stringToShortcuts = shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases | shortcutToSpecies
+stringToSettings = shortcutToCells | shortcutToCellsAliases |\
+                   shortcutToParams | shortcutToParamsAliases |\
+                   shortcutToSpecies
 
+
+
+
+
+def createSettings(settings=None):
+    if settings is None:
+        return []
+
+    settings = [settings] if type(settings) in [str, Setting] else settings
+
+    assert type(settings) in [list, tuple]
+
+    # Split the settings up into settings and shortcuts
+    settings, shortcuts = parseArgs(*settings)
+
+    # Check that we have one of each string.
+    assertCount([shortcut.strip().lower() for shortcut in shortcuts])
+
+    # The shortcuts point to one or more params/cells.
+    # E.g. 'soc' is spin_treatment=vector and spin_orbit_coupling=true.
+    settingsFromShortcuts = shortcutsToSettings(*shortcuts)
+
+    for setting in settingsFromShortcuts:
+        if type(setting) is Setting:
+            settings.append(setting)
+        else:
+            raise TypeError('{} type not recognised in shortcut'.format(type(setting)))
+
+    # Check that none of the shortcuts themselves have now duplicated any cells/params.
+    assertCount([setting.key for setting in settings])
+
+    return settings
+
+
+def createVariableSettings(*variableSettings):
+    variableSettingsProcessed = []
+
+    for variable in variableSettings:
+        assert type(variable) in [str, list, tuple],\
+            'Specify only shortcut strings, lists or tuples for variable cells/params, not {}'.format(type(variable))
+
+        # Strings are shortcuts, but shortcuts to specific combinations of cells/params.
+        # E.g. 'soc' is a tuple of three different settings:
+        # 1 -> spin_treatment=scalar and spin_orbit_coupling=false
+        # 2 -> spin_treatment=vector and spin_orbit_coupling=false
+        # 3 -> spin_treatment=vector and spin_orbit_coupling=true
+        # So let's turn the shortcut string (if needed) into its list combination.
+        variable = getVariableSetting(variable.strip().lower()) if type(variable) is str else variable
+
+        # Create a list to store this combination.
+        lst = []
+
+        for strListSetting in variable:
+            type_ = type(strListSetting)
+
+            # Shortcut string.
+            if type_ is str:
+                variableSettings = shortcutsToSettings(strListSetting.strip().lower())
+                lst.append(variableSettings)
+
+            # User defined.
+            elif type_ in [list, tuple]:
+                assert all(type(setting) is Setting for setting in strListSetting), 'Settings should only be cells or params'
+                lst.append(list(strListSetting))
+
+            elif type_ is Setting:
+                lst.append([strListSetting])
+
+            else:
+                raise TypeError('A specific setting of several cells/params must be given as a shortcut or tuple')
+
+        variableSettingsProcessed.append(lst)
+
+    return variableSettingsProcessed
+
+
+def shortcutsToSettings(*strings):
+    """ This function gets a specific shortcut from a string.
+        A string maps to a list of cells/params and is simply
+        an easy way to generate common settings in calculations. """
+
+    settings = []
+
+    for string in strings:
+        assert type(string) is str
+
+        newSettings = stringToSettings.get(string.lower(), None)
+
+        assert newSettings is not None, 'Shortcut string {} not recognised'.format(string)
+
+        settings += newSettings
+
+    return settings
+
+
+def getVariableSetting(string=None):
+    """ This function gets a specific shortcut from a string.
+        The string will map to a list that contains lists of
+        cells/params, each to be used as a different setting. """
+
+    assert type(string) is str
+
+    variableSetting = stringToVariableSettings.get(string.lower(), None)
+
+    assert variableSetting is not None, 'Shortcut to variable settings {} not recognised'.format(string)
+
+    return variableSetting
 
 
 def orderSettings(settings=None):

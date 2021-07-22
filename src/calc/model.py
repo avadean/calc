@@ -1,5 +1,4 @@
 from calc.calculation import Calculation
-from random import shuffle
 
 class Model:
     name = None
