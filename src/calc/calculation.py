@@ -4,8 +4,10 @@ from calc.settings import Setting, createSettings, createVariableSettings
 from itertools import product
 
 
-def createCalculations(*variableSettings, globalSettings=None, directoryNames=None):
+def createCalculations(*variableSettings, globalSettings=None, directoryNames=None, withDefaults=True):
     print('Beginning setup of calculations')
+
+    assert type(withDefaults) is bool
 
     print('Generating variable settings...', end=' ', flush=True)
     varSettingsProcessed = createVariableSettings(*variableSettings)
@@ -46,6 +48,27 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
     # Then combinations will be: [(HF, bField 1.0T), (HF, bField 2.0T), (HCl, bField 1.0T), (HCl, bField 2.0T)]
     varSettingsProcessed = list(product(*varSettingsProcessed))
     directoryNames = list(product(*directoryNames))
+
+    if withDefaults:
+        print('Adding in any default settings not set...', end=' ', flush=True)
+
+        specifiedKeys = []
+
+        for combination in varSettingsProcessed:
+            for listOfSettings in combination:
+                for setting in listOfSettings:
+                    specifiedKeys.append(setting.key)
+            # Will already have all of the specifiedKeys by this point.
+            # Don't use varSettingsProcessed[0] just incase varSettingsProcessed is empty.
+            break
+
+        specifiedKeys += [setting.key for setting in globalSettings]
+
+        defaultSettings = createSettings('defaults')
+
+        globalSettings += [setting for setting in defaultSettings if setting.key not in specifiedKeys]
+
+        print('Done!')
 
     print('Creating calculations...', end=' ', flush=True)
     calculations = []
