@@ -863,6 +863,7 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
 
 
 defaultShortcut = { 'defaults': [Setting('cell_constraints', lines=['0   0   0', '0   0   0']),
+                                 Setting('species_pot', lines=['SOC19']),
                                  Setting('fix_com', True),
                                  Setting('task', 'singlepoint'),
                                  Setting('xcfunctional', 'LDA'),
