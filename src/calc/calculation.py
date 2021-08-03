@@ -4,24 +4,26 @@ from calc.settings import Setting, createSettings, createVariableSettings
 from itertools import product
 
 
-def createCalculations(*variableSettings, globalSettings=None, directoryNames=None, withDefaults=True):
-    print('Beginning setup of calculations')
+def createCalculations(*variableSettings, globalSettings=None, directoryNames=None, withDefaults=True, verbose=False):
+    assert type(verbose) is bool
+
+    if verbose: print('Beginning setup of calculations')
 
     assert type(withDefaults) is bool
 
-    print('Generating variable settings...', end=' ', flush=True)
+    if verbose: print('Generating variable settings...', end=' ', flush=True)
     varSettingsProcessed = createVariableSettings(*variableSettings)
-    print('Done!')
+    if verbose: print('Done!')
 
     # Now that we have dealt with the variable cells/params of the calculations, we now work on the general cells/params.
-    print('Collecting general settings...', end=' ', flush=True)
+    if verbose: print('Collecting general settings...', end=' ', flush=True)
     globalSettings = createSettings(*globalSettings) if globalSettings is not None else []
-    print('Done!')
+    if verbose: print('Done!')
 
     # Now let's deal with the directory names if given
-    print('Creating directories...', end=' ', flush=True)
+    if verbose: print('Creating directories...', end=' ', flush=True)
     directoryNames = createDirectories(*directoryNames) if directoryNames is not None else []
-    print('Done!')
+    if verbose: print('Done!')
 
     # Some checks on the calculations and directories.
     if directoryNames:
@@ -30,7 +32,8 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
             'Variable settings shape must match directories shape'
 
         # Add numbers to the start of each directory name.
-        directoryNames = [['{:03}_{}'.format(n, directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
+        #directoryNames = [['{:03}_{}'.format(n, directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
+        directoryNames = [['{}'.format(directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
                           for num, var in enumerate(varSettingsProcessed)]
     else:
         # If we don't have directory names then default to just numbers.
@@ -50,17 +53,18 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
     directoryNames = list(product(*directoryNames))
 
     if withDefaults:
-        print('Adding in any default settings not set...', end=' ', flush=True)
+        if verbose: print('Adding in any default settings not set...', end=' ', flush=True)
 
         specifiedKeys = []
 
         for combination in varSettingsProcessed:
             for listOfSettings in combination:
                 for setting in listOfSettings:
-                    specifiedKeys.append(setting.key)
-            # Will already have all of the specifiedKeys by this point.
-            # Don't use varSettingsProcessed[0] just incase varSettingsProcessed is empty.
-            break
+                    if setting.key not in specifiedKeys:
+                        specifiedKeys.append(setting.key)
+            ## Will already have all of the specifiedKeys by this point.
+            ## Don't use varSettingsProcessed[0] just incase varSettingsProcessed is empty.
+            #break
 
         specifiedKeys += [setting.key for setting in globalSettings]
 
@@ -68,9 +72,9 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
 
         globalSettings += [setting for setting in defaultSettings if setting.key not in specifiedKeys]
 
-        print('Done!')
+        if verbose: print('Done!')
 
-    print('Creating calculations...', end=' ', flush=True)
+    if verbose: print('Creating calculations...', end=' ', flush=True)
     calculations = []
 
     # Loop through the possible combinations.
@@ -104,10 +108,9 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
                                         directory=directory,
                                         settings=settings))
 
-    print('Done!')
+    if verbose: print('Done!')
 
-    print('Finalising setup of calculations')
-    print('Note: remember to check you\'re happy with the directory setup')
+    if verbose: print('Finalising setup of calculations')
 
     return calculations
 
