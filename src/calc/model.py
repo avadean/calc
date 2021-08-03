@@ -60,3 +60,22 @@ class Model:
 
         for calculation in self.calculations:
             calculation.create()
+
+    def run(self, force=False):
+        assert type(force) is bool
+
+        if len(self.calculations) > 3 and not force:
+            raise MemoryError('Too many calculations to run at once - use force=True to ignore')
+
+        serial = False  # TODO: add this option
+        bashAliasesFile = '/home/dean/.bash_aliases'  # TODO: move this somewhere better
+        notificationAlias = 'noti'  # TODO: move this somewhere better
+
+        for calculation in self.calculations:
+            calculation.run(serial, bashAliasesFile, notificationAlias)
+
+    def sub(self):
+        queueFile = '/home/dean/tools/files/castep_queue.txt'  # TODO: move this somewhere better
+
+        for calculation in self.calculations:
+            calculation.sub(queueFile)

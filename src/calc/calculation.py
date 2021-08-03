@@ -2,9 +2,12 @@ from calc.data import assertCount, createDirectories
 from calc.settings import Setting, createSettings, createVariableSettings
 
 from collections import Counter
+from datetime import datetime
 from itertools import product
 from math import floor
+from os import chdir, getcwd
 from pathlib import Path
+from subprocess import run as subProcessRun
 
 
 def createCalculations(*variableSettings, globalSettings=None, directoryNames=None, withDefaults=True, verbose=False):
@@ -123,6 +126,7 @@ class Calculation:
     def __init__(self, name=None, directory=None, settings=None):
         if name is not None:
             assert type(name) is str
+            assert ' ' not in name, 'Cannot have spaces in name'
 
         self.name = name
 
@@ -179,42 +183,11 @@ class Calculation:
         assert len(cells) + len(params) == len(self.settings), \
             'Setting in calculation cannot be categorised as a cell or param'
 
-        # Work out CASTEP prefix intelligently
-        positionCell = None
-
-        for cell in cells:
-            if cell.key in ['positions_frac', 'positions_abs']:
-                positionCell = cell
-                break
-
-        assert positionCell is not None, \
-            'Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)'
-
-        elements = []
-
-        for line in positionCell.lines:
-            try:
-                element = line.split(' ')[0]
-            except IndexError:
-                raise ValueError('Cannot find element in atomic positions line {}'.format(line))
-
-            element = element.strip()
-
-            element = element[0].upper() + element[1:].lower()
-
-            # Manually get rid of lines that are just units.
-            if element not in ['Ang', 'Bohr']:
-                elements.append(element)
-
-        elements = Counter(elements)
-
-        prefix = ''
-
-        for element, num in elements.items():
-            prefix += '{}{}'.format(element, '' if num == 1 else num)
+        # Work out CASTEP prefix intelligently if calculation does not have a name
+        self.setName()
 
         if len(cells) > 0:
-            cellFile = '{}/{}.cell'.format(directory, prefix)
+            cellFile = '{}/{}.cell'.format(directory, self.name)
 
             with open(cellFile, 'w') as f:
                 for cell in cells:
@@ -224,7 +197,7 @@ class Calculation:
                     f.write('\n')
 
         if len(params) > 0:
-            paramFile = '{}/{}.param'.format(directory, prefix)
+            paramFile = '{}/{}.param'.format(directory, self.name)
 
             longestParam = max([len(param.key) for param in params])
 
@@ -241,4 +214,79 @@ class Calculation:
                     for line in param.getLines(longestParam):
                         f.write(line)
 
-        print('Created calculation for {} in {}'.format(prefix, directory))
+        print('Created calculation for {} in {}'.format(self.name, directory))
+
+    def run(self, serial, bashAliasesFile, notificationAlias):
+        # Work out CASTEP prefix intelligently if calculation does not have a name
+        self.setName()
+
+        directory = Path(self.directory)
+
+        if not directory.is_dir():
+            raise NotADirectoryError('Cannot find directory {} to run calculation'.format(self.directory))
+
+        origDir = getcwd()
+
+        chdir(self.directory)
+
+        castep = 'castep.serial {}'.format(self.name) if serial else 'castep.mpi {}'.format(self.name)
+
+        command = 'bash -c \'. {} ; {} {} &\''.format(bashAliasesFile, notificationAlias, castep)
+
+        result = subProcessRun(command, check=True, shell=True, text=True)
+
+        chdir(origDir)
+
+    def sub(self, queueFile):
+        # Work out CASTEP prefix intelligently if calculation does not have a name
+        self.setName()
+
+        directory = Path(self.directory)
+
+        if not directory.is_dir():
+            raise NotADirectoryError('Cannot find directory {} to run calculation'.format(self.directory))
+
+        subFile = '{}/{}.sub'.format(self.directory, self.name)
+
+        with open(subFile, 'a') as f:
+            f.write('{} calculated queued at {}.\n'.format(self.name, datetime.now()))
+
+        with open(queueFile, 'a') as f:
+            f.write('{}  {}\n'.format(self.name, self.directory))
+
+    def setName(self):
+        if self.name is not None:
+            return
+
+        positionSetting = None
+
+        for setting in self.settings:
+            if setting.key in ['positions_frac', 'positions_abs']:
+                positionSetting = setting
+                break
+
+        assert positionSetting is not None, \
+            'Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)'
+
+        elements = []
+
+        for line in positionSetting.lines:
+            try:
+                element = line.split(' ')[0]
+            except IndexError:
+                raise ValueError('Cannot find element in atomic positions line {}'.format(line))
+
+            element = element.strip()
+
+            element = element[0].upper() + element[1:].lower()
+
+            # Manually get rid of lines that are just units.
+            if element not in ['Ang', 'Bohr']:
+                elements.append(element)
+
+        elements = Counter(elements)
+
+        self.name = ''
+
+        for element, num in elements.items():
+            self.name += '{}{}'.format(element, '' if num == 1 else num)
