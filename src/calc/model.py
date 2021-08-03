@@ -84,6 +84,8 @@ class Model:
                             notificationAlias=notificationAlias,
                             test=test)
 
+        print('*** Ran {} calculations ***'.format(len(self.calculations)))
+
     def sub(self, test=False):
         assert type(test) is bool
 
@@ -95,3 +97,5 @@ class Model:
         for calculation in self.calculations:
             calculation.sub(queueFile=queueFile,
                             test=test)
+
+        print('*** Submitted {} calculations ***'.format(len(self.calculations)))
