@@ -85,7 +85,7 @@ class Model:
                             test=test)
 
         if test:
-            print('*** Total of {} calculations to run - none have gone yet! ***'.format(len(self.calculations)))
+            print('*** Total of {} calculations to run - none have gone yet ***'.format(len(self.calculations)))
         else:
             print('*** Ran {} calculations ***'.format(len(self.calculations)))
 
@@ -102,6 +102,6 @@ class Model:
                             test=test)
 
         if test:
-            print('*** Total of {} calculations to submit - none have gone yet! ***'.format(len(self.calculations)))
+            print('*** Total of {} calculations to submit - none have gone yet ***'.format(len(self.calculations)))
         else:
             print('*** Submitted {} calculations ***'.format(len(self.calculations)))
