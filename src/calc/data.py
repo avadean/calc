@@ -146,21 +146,21 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry'],
                    'inverseLength' : ['1/ang']
                    }
 
-stringToVariableDirectories = {'halides':['HF', 'HCl', 'HBr', 'HI'],
+stringToVariableDirectories = {'halides':['001_HF', '002_HCl', '003_HBr', '004_HI'],
 
-                               'soc': ['scalar_soc_false',
-                                       'spinor_soc_false',
-                                       'spinor_soc_true'],
+                               'soc': ['001_scalar_soc_false',
+                                       '002_spinor_soc_false',
+                                       '003_spinor_soc_true'],
 
                                'density': ['density_in_x',
                                            'density_in_y',
                                            'density_in_z'],
 
-                               'socdensity': ['scalar_soc_false',
-                                              'spinor_soc_false',
-                                              'spinor_soc_true_x',
-                                              'spinor_soc_true_y',
-                                              'spinor_soc_true_z'],
+                               'socdensity': ['001_scalar_soc_false',
+                                              '002_spinor_soc_false',
+                                              '003_spinor_soc_true_x',
+                                              '003_spinor_soc_true_y',
+                                              '003_spinor_soc_true_z'],
 
                                'zbfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T']
                                }
