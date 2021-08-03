@@ -13,3 +13,5 @@ model = Model(calculations)
 #print(model)
 
 model.create(force=True)
+
+model.run(force=True)
