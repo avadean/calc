@@ -216,7 +216,12 @@ class Calculation:
 
         print('Created calculation for {} in {}'.format(self.name, directory))
 
-    def run(self, serial, bashAliasesFile, notificationAlias):
+    def run(self, serial=False, bashAliasesFile=None, notificationAlias=None, test=False):
+        assert type(serial) is bool
+        assert bashAliasesFile is not None
+        assert notificationAlias is not None
+        assert type(test) is bool
+
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName()
 
@@ -233,11 +238,17 @@ class Calculation:
 
         command = 'bash -c \'. {} ; {} {} &\''.format(bashAliasesFile, notificationAlias, castep)
 
-        result = subProcessRun(command, check=True, shell=True, text=True)
+        if test:
+            print('*** {} *** will be run in {}'.format(command, getcwd()))
+        else:
+            result = subProcessRun(command, check=True, shell=True, text=True)
 
         chdir(origDir)
 
-    def sub(self, queueFile):
+    def sub(self, queueFile=None, test=False):
+        assert queueFile is not None
+        assert type(test) is bool
+
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName()
 
@@ -248,11 +259,22 @@ class Calculation:
 
         subFile = '{}{}.sub'.format(self.directory, self.name)
 
-        with open(subFile, 'a') as f:
-            f.write('{} calculated queued at {}.\n'.format(self.name, datetime.now()))
+        if test:
+            print('*** {} calculation queued at {} *** will be written to {}'.format(self.name,
+                                                                                     datetime.now(),
+                                                                                     subFile))
 
-        with open(queueFile, 'a') as f:
-            f.write('{}  {}\n'.format(self.name, directory.resolve()))
+            print('*** {}  {} *** will be written to {}'.format(self.name,
+                                                                directory.resolve(),
+                                                                queueFile))
+            print('')
+
+        else:
+            with open(subFile, 'a') as f:
+                f.write('{} calculation queued at {}.\n'.format(self.name, datetime.now()))
+
+            with open(queueFile, 'a') as f:
+                f.write('{}  {}\n'.format(self.name, directory.resolve()))
 
     def setName(self):
         if self.name is not None:
