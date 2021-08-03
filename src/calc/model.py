@@ -73,10 +73,16 @@ class Model:
         notificationAlias = 'noti'  # TODO: move this somewhere better
 
         for calculation in self.calculations:
-            calculation.run(serial, bashAliasesFile, notificationAlias, test)
+            calculation.run(serial=serial,
+                            bashAliasesFile=bashAliasesFile,
+                            notificationAlias=notificationAlias,
+                            test=test)
 
-    def sub(self):
+    def sub(self, test=False):
+        assert type(test) is bool
+
         queueFile = '/home/dean/tools/files/castep_queue.txt'  # TODO: move this somewhere better
 
         for calculation in self.calculations:
-            calculation.sub(queueFile)
+            calculation.sub(queueFile=queueFile,
+                            test=test)
