@@ -1,8 +1,8 @@
 from calc import Model, createCalculations, createDirectories, createSettings, createVariableSettings#, Setting
 
-directories = createDirectories('halides', 'zbfield', 'density')
+directories = createDirectories('halides', 'hyperfinebfield')
 settings = createSettings('hyperfine', 'soc')
-variableSettings = createVariableSettings('halides', 'zbfield', 'density')
+variableSettings = createVariableSettings('halides', 'hyperfinebfield')
 
 calculations = createCalculations(*variableSettings,
                                   globalSettings=settings,

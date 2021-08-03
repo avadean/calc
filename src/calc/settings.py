@@ -867,6 +867,130 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
                                              (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True),
                                               Setting('devel_code', lines=['density_in_z=true']))],
 
+                             'hyperfinebfield': [(Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '1.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 1.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 1.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '2.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 2.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 2.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '3.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 3.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 3.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '4.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 4.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 4.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '5.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 5.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 5.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '6.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 6.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 6.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '7.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 7.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 7.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '8.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 8.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 8.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '9.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 9.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 9.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_x=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_y=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
+
+                                                 (Setting('devel_code', lines=['density_in_z=true']),
+                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 10.0']))
+                                                 ],
+
+                             'xbfield' : [Setting('external_bfield', lines=['TESLA', ' 0.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 1.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 2.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 3.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 4.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 5.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 6.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 7.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 8.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', ' 9.0  0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '10.0  0.0   0.0'])],
+
+                             'ybfield' : [Setting('external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   1.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   2.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   3.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   4.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   5.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   6.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   7.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   8.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0   9.0   0.0']),
+                                          Setting('external_bfield', lines=['TESLA', '0.0  10.0   0.0'])],
+
                              'zbfield' : [Setting('external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
                                           Setting('external_bfield', lines=['TESLA', '0.0   0.0   1.0']),
                                           Setting('external_bfield', lines=['TESLA', '0.0   0.0   2.0']),
