@@ -68,6 +68,9 @@ class Model:
         if len(self.calculations) > 3 and not force:
             raise MemoryError('Too many calculations to run at once - use force=True to ignore')
 
+        if len(self.calculations) > 5:
+            raise MemoryError('No seriously - don\'t do this many calculations...')
+
         serial = False  # TODO: add this option
         bashAliasesFile = '/home/dean/.bash_aliases'  # TODO: move this somewhere better
         notificationAlias = 'noti'  # TODO: move this somewhere better
