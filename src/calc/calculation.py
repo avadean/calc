@@ -246,13 +246,13 @@ class Calculation:
         if not directory.is_dir():
             raise NotADirectoryError('Cannot find directory {} to run calculation'.format(self.directory))
 
-        subFile = '{}/{}.sub'.format(self.directory, self.name)
+        subFile = '{}{}.sub'.format(self.directory, self.name)
 
         with open(subFile, 'a') as f:
             f.write('{} calculated queued at {}.\n'.format(self.name, datetime.now()))
 
         with open(queueFile, 'a') as f:
-            f.write('{}  {}\n'.format(self.name, self.directory))
+            f.write('{}  {}\n'.format(self.name, directory.resolve()))
 
     def setName(self):
         if self.name is not None:
