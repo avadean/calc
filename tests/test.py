@@ -10,4 +10,6 @@ calculations = createCalculations(*variableSettings,
                                   withDefaults=True)
 
 model = Model(calculations)
-print(model)
+#print(model)
+
+model.create(force=True)
