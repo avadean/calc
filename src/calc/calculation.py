@@ -1,7 +1,10 @@
 from calc.data import assertCount, createDirectories
 from calc.settings import Setting, createSettings, createVariableSettings
 
+from collections import Counter
 from itertools import product
+from math import floor
+from pathlib import Path
 
 
 def createCalculations(*variableSettings, globalSettings=None, directoryNames=None, withDefaults=True, verbose=False):
@@ -158,3 +161,84 @@ class Calculation:
                                                                        value=str(setting))
 
         return string
+
+    def create(self):
+        directory = Path(self.directory)
+
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+        except FileExistsError:
+            raise FileExistsError('Directory {} exists but is a file'.format(directory))
+
+        cells = [setting for setting in self.settings if setting.file == 'cell']
+        params = [setting for setting in self.settings if setting.file == 'param']
+
+        cells = sorted(cells, key=lambda cell: cell.priority)
+        params = sorted(params, key=lambda param: param.priority)
+
+        assert len(cells) + len(params) == len(self.settings), \
+            'Setting in calculation cannot be categorised as a cell or param'
+
+        # Work out CASTEP prefix intelligently
+        positionCell = None
+
+        for cell in cells:
+            if cell.key in ['positions_frac', 'positions_abs']:
+                positionCell = cell
+                break
+
+        assert positionCell is not None, \
+            'Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)'
+
+        elements = []
+
+        for line in positionCell.lines:
+            try:
+                element = line.split(' ')[0]
+            except IndexError:
+                raise ValueError('Cannot find element in atomic positions line {}'.format(line))
+
+            element = element.strip()
+
+            element = element[0].upper() + element[1:].lower()
+
+            # Manually get rid of lines that are just units.
+            if element not in ['Ang', 'Bohr']:
+                elements.append(element)
+
+        elements = Counter(elements)
+
+        prefix = ''
+
+        for element, num in elements.items():
+            prefix += '{}{}'.format(element, '' if num == 1 else num)
+
+        if len(cells) > 0:
+            cellFile = '{}/{}.cell'.format(directory, prefix)
+
+            with open(cellFile, 'w') as f:
+                for cell in cells:
+                    for line in cell.getLines():
+                        f.write(line)
+
+                    f.write('\n')
+
+        if len(params) > 0:
+            paramFile = '{}/{}.param'.format(directory, prefix)
+
+            longestParam = max([len(param.key) for param in params])
+
+            currentPriorityLevel = floor(params[0].priority)
+
+            with open(paramFile, 'w') as f:
+                for param in params:
+
+                    # If we're at a new priority level then add a line
+                    if currentPriorityLevel != floor(param.priority):
+                        f.write('\n')
+                        currentPriorityLevel = floor(param.priority)
+
+                    for line in param.getLines(longestParam):
+                        f.write(line)
+
+        print('Created calculation for {} in {}'.format(prefix, directory))

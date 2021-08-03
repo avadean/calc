@@ -620,6 +620,8 @@ class Setting:
 
             self.value = value
 
+            self.unit = unit
+
             if unit is not None:
                 self.unitType = getFromDict(key, settingUnits)
 
@@ -644,6 +646,28 @@ class Setting:
 
         else:
             return str(self.value)
+
+    def getLines(self, longestSetting=None):
+        if longestSetting is not None:
+            assert type(longestSetting) is int
+
+        lines = []
+
+        if self.type is Block:
+            lines.append('%block {}\n'.format(self.key))
+
+            for line in self.lines:
+                lines.append('{}\n'.format(line))
+
+            lines.append('%endblock {}\n'.format(self.key))
+
+        else:
+            lines.append('{}{} : {} {}\n'.format(self.key,
+                                                 '' if longestSetting is None else ' ' * (longestSetting - len(self.key)),
+                                                 self.value,
+                                                 '' if self.unit is None else self.unit))
+
+        return lines
 
 
 
@@ -784,7 +808,8 @@ shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
 
                     # 'jcoupling': (!) NotImplementedError,
 
-                    'soc': [Setting('spin_treatment', 'vector'),
+                    'soc': [Setting('spin_polarised', True),
+                            Setting('spin_treatment', 'vector'),
                             Setting('spin_orbit_coupling', True)],
 
                     'iprint': Setting('iprint', 3),
