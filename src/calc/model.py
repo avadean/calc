@@ -75,6 +75,9 @@ class Model:
         bashAliasesFile = '/home/dean/.bash_aliases'  # TODO: move this somewhere better
         notificationAlias = 'noti'  # TODO: move this somewhere better
 
+        if not Path(bashAliasesFile).is_file():
+            raise FileNotFoundError('Cannot find alias file {}'.format(bashAliasesFile))
+
         for calculation in self.calculations:
             calculation.run(serial=serial,
                             bashAliasesFile=bashAliasesFile,
@@ -85,6 +88,9 @@ class Model:
         assert type(test) is bool
 
         queueFile = '/home/dean/tools/files/castep_queue.txt'  # TODO: move this somewhere better
+
+        if not Path(queueFile).is_file():
+            raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
 
         for calculation in self.calculations:
             calculation.sub(queueFile=queueFile,
