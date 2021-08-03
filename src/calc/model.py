@@ -84,7 +84,10 @@ class Model:
                             notificationAlias=notificationAlias,
                             test=test)
 
-        print('*** Ran {} calculations ***'.format(len(self.calculations)))
+        if test:
+            print('*** Total of {} calculations to run - none have gone yet! ***'.format(len(self.calculations)))
+        else:
+            print('*** Ran {} calculations ***'.format(len(self.calculations)))
 
     def sub(self, test=False):
         assert type(test) is bool
@@ -98,4 +101,7 @@ class Model:
             calculation.sub(queueFile=queueFile,
                             test=test)
 
-        print('*** Submitted {} calculations ***'.format(len(self.calculations)))
+        if test:
+            print('*** Total of {} calculations to submit - none have gone yet! ***'.format(len(self.calculations)))
+        else:
+            print('*** Submitted {} calculations ***'.format(len(self.calculations)))
