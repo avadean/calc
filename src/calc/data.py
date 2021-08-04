@@ -174,5 +174,17 @@ stringToVariableDirectories = {'halides':['001_HF', '002_HCl', '003_HBr', '004_H
                                                    '09T/density_in_x', '09T/density_in_y', '09T/density_in_z',
                                                    '10T/density_in_x', '10T/density_in_y', '10T/density_in_z'],
 
+                               'hyperfinekilobfield': ['00kT/density_in_x', '00kT/density_in_y', '00kT/density_in_z',
+                                                       '01kT/density_in_x', '01kT/density_in_y', '01kT/density_in_z',
+                                                       '02kT/density_in_x', '02kT/density_in_y', '02kT/density_in_z',
+                                                       '03kT/density_in_x', '03kT/density_in_y', '03kT/density_in_z',
+                                                       '04kT/density_in_x', '04kT/density_in_y', '04kT/density_in_z',
+                                                       '05kT/density_in_x', '05kT/density_in_y', '05kT/density_in_z',
+                                                       '06kT/density_in_x', '06kT/density_in_y', '06kT/density_in_z',
+                                                       '07kT/density_in_x', '07kT/density_in_y', '07kT/density_in_z',
+                                                       '08kT/density_in_x', '08kT/density_in_y', '08kT/density_in_z',
+                                                       '09kT/density_in_x', '09kT/density_in_y', '09kT/density_in_z',
+                                                       '10kT/density_in_x', '10kT/density_in_y', '10kT/density_in_z'],
+
                                'bfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T']
                                }
