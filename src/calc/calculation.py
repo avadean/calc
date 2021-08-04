@@ -1,12 +1,13 @@
 from calc.data import assertCount, createDirectories,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault
-from calc.settings import Setting, createSettings, createVariableSettings
+from calc.settings import Setting, createSettings, createVariableSettings, readSettings
 
 from collections import Counter
 from datetime import datetime
+from fnmatch import filter
 from itertools import product
 from math import floor
-from os import chdir, getcwd
+from os import chdir, getcwd, listdir
 from pathlib import Path
 from subprocess import run as subProcessRun
 
@@ -120,6 +121,89 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
     if verbose: print('Finalising setup of calculations')
 
     return calculations
+
+
+
+def processCalculations(*directories):
+    directories = createDirectories(*directories)
+
+    directories = list(product(*directories))
+
+    directories = ['/'.join(directory) + '/' for directory in directories]
+
+    calculations = []
+
+    for directory in directories:
+        assert Path(directory).is_dir(), 'Cannot find directory {}'.format(directory)
+
+        prefix = None
+        cellPrefix = None
+        paramPrefix = None
+
+        # Get settings from cell file.
+        cellFiles = filter(listdir(directory), '*.cell')
+        cells = []
+
+        if len(cellFiles) == 1:
+            cellPrefix = cellFiles[0][:-5] # Removes '.cell'
+            cells = readSettings(file_='{}{}'.format(directory, cellFiles[0]))
+
+        elif len(cellFiles) > 1:
+            raise NameError('Too many cell files to read in directory {}'.format(directory))
+
+        else:
+            print('*** Caution: no cell file found in {}'.format(directory))
+
+        # Now do param file.
+        paramFiles = filter(listdir(directory), '*.param')
+        params = []
+
+        if len(paramFiles) == 1:
+            paramPrefix = paramFiles[0][:-6]  # Removes '.param'
+
+            params = readSettings(file_='{}{}'.format(directory, paramFiles[0]))
+        elif len(paramFiles) > 1:
+            raise NameError('Too many param files to read in directory {}'.format(directory))
+        else:
+            print('*** Caution: no param file found in {}'.format(directory))
+
+        # Check cell and param prefixes are the same.
+        if cellPrefix is not None and paramPrefix is not None:
+            assert paramPrefix == cellPrefix, \
+                'Different prefixes for cell and param files: {}.cell, {}.param'.format(cellPrefix, paramPrefix)
+
+        elif cellPrefix is not None:
+            prefix = cellPrefix
+
+        elif paramPrefix is not None:
+            prefix = paramPrefix
+
+        # Group cell and param settings together.
+        settings = cells + params
+
+        # Create new calculation.
+        newCalculation = Calculation(name=prefix,
+                                     directory=directory,
+                                     settings=settings)
+
+        # And add it to the list!
+        calculations.append(newCalculation)
+
+    return calculations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

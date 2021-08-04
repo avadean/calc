@@ -29,31 +29,158 @@ class Block:
 
 
 class VectorInt:
-    def __init__(self, x=None, y=None, z=None):
-        assert type(x) is int
-        assert type(y) is int
-        assert type(z) is int
+    def __init__(self, x=None, y=None, z=None, vector=None):
+        if vector is None:
+            assert type(x) is int
+            assert type(y) is int
+            assert type(z) is int
 
-        self.x = x
-        self.y = y
-        self.z = z
+            self.x = x
+            self.y = y
+            self.z = z
+
+        else:
+            if type(vector) is VectorInt:
+                self.x = vector.x
+                self.y = vector.y
+                self.z = vector.z
+
+            elif type(vector) is VectorFloat:
+
+                assert vector.x.is_integer() and vector.y.is_integer() and vector.z.is_integer()
+
+                self.x = int(vector.x)
+                self.y = int(vector.y)
+                self.z = int(vector.z)
+
+            else:
+                raise TypeError('Vector input to VectorInt must be VectorInt or VectorFloat')
 
     def __str__(self):
         return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
 
 
 class VectorFloat:
-    def __init__(self, x=None, y=None, z=None):
-        assert type(x) is float
-        assert type(y) is float
-        assert type(z) is float
+    def __init__(self, x=None, y=None, z=None, vector=None):
+        if vector is None:
+            assert type(x) is float
+            assert type(y) is float
+            assert type(z) is float
 
-        self.x = x
-        self.y = y
-        self.z = z
+            self.x = x
+            self.y = y
+            self.z = z
+
+        else:
+            if type(vector) is VectorInt:
+                self.x = float(vector.x)
+                self.y = float(vector.y)
+                self.z = float(vector.z)
+
+            elif type(vector) is VectorFloat:
+                self.x = vector.x
+                self.y = vector.y
+                self.z = vector.z
+
+            else:
+                raise TypeError('Vector input to VectorFloat must be VectorInt or VectorFloat')
 
     def __str__(self):
         return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
+
+
+def stringToValue(value):
+    assert type(value) is str
+
+    if value.lower() in ['t', 'true']:
+        return True
+
+    elif value.lower() in ['f', 'false']:
+        return False
+
+    elif isInt(value):
+        return int(float(value))
+
+    elif isFloat(value):
+        return float(value)
+
+    elif isVectorInt(value):
+        values = value.split()
+
+        x = int(float(values[0].strip()))
+        y = int(float(values[1].strip()))
+        z = int(float(values[2].strip()))
+
+        return VectorInt(x, y, z)
+
+    elif isVectorFloat(value):
+        values = value.split()
+
+        x = float(values[0].strip())
+        y = float(values[1].strip())
+        z = float(values[2].strip())
+
+        return VectorFloat(x, y, z)
+
+    else:
+        return value
+
+
+def isInt(x):
+    assert type(x) is str
+
+    try:
+        a = float(x)
+        b = int(a)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return a == b
+
+
+def isFloat(x):
+    assert type(x) is str
+
+    try:
+        a = float(x)
+    except (TypeError, ValueError):
+        return False
+    else:
+        return True
+
+
+def isVectorInt(vector):
+    assert type(vector) is str
+
+    parts = vector.split()
+
+    if len(parts) == 3:
+        x = parts[0].strip()
+        y = parts[1].strip()
+        z = parts[2].strip()
+
+        if isInt(x) and isInt(y) and isInt(z):
+            return True
+
+    else:
+        return False
+
+
+def isVectorFloat(vector):
+    assert type(vector) is str
+
+    parts = vector.split()
+
+    if len(parts) == 3:
+        x = parts[0].strip()
+        y = parts[1].strip()
+        z = parts[2].strip()
+
+        if isFloat(x) and isFloat(y) and isFloat(z):
+            return True
+
+    else:
+        return False
 
 
 def assertCount(lst=None, count=1):
