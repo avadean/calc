@@ -1,20 +1,20 @@
 from calc import Model, createCalculations, createDirectories, createSettings, createVariableSettings, Setting
 
-'''
-directories = createDirectories('halides', 'hyperfinebfield')
+
+directories = createDirectories(['HF', 'HCl'])
 settings = createSettings('hyperfine', 'soc')
-variableSettings = createVariableSettings('halides', 'hyperfinebfield')
+variableSettings = createVariableSettings(['HF', 'HCl'])
 
 calculations = createCalculations(*variableSettings,
-                                  globalSettings=settings,
+                                  #globalSettings=settings,
                                   directoryNames=directories,
                                   withDefaults=True)
-'''
+
 
 #model = Model(calculations)
 #print(model)
 
-model = Model()
+model = Model(calculations)
 
 model.create(force=True)
 

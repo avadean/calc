@@ -1,0 +1,27 @@
+%block lattice_cart
+ANG
+10.0   0.0   0.0
+0.0  10.0   0.0
+0.0   0.0  10.0
+%endblock lattice_cart
+
+%block positions_frac
+H    0.009999871806914   0.009999872045901   0.009226072370290
+Cl   0.010000128193086   0.010000127954099   0.138173927629710
+%endblock positions_frac
+
+%block cell_constraints
+0   0   0
+0   0   0
+%endblock cell_constraints
+
+%block species_pot
+SOC19
+%endblock species_pot
+
+%block kpoints_list
+0.25 0.25 0.25 1.0
+%endblock kpoints_list
+
+fix_com : True 
+

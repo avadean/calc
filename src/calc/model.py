@@ -61,45 +61,53 @@ class Model:
         for calculation in self.calculations:
             calculation.create()
 
-    def run(self, force=False, test=False):
-        assert type(force) is bool
+    def run(self, test=False, force=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         assert type(test) is bool
+        assert type(force) is bool
+
+        if serial is not None:
+            assert type(serial) is bool
+
+        if bashAliasesFile is not None:
+            assert type(bashAliasesFile) is str
+
+        if notificationAlias is not None:
+            assert type(notificationAlias) is str
 
         if len(self.calculations) > 3 and not force:
-            raise MemoryError('Too many calculations to run at once - use force=True to ignore')
+            if test:
+                print('*** WARNING: this is a lot of calculations to run at once - use force=True to ignore on real run ***')
+                print('*** Continuing test... ***')
+            else:
+                raise MemoryError('Too many calculations to run at once - use force=True to ignore')
 
         if len(self.calculations) > 5:
-            raise MemoryError('No seriously - don\'t do this many calculations...')
-
-        serial = False  # TODO: add this option
-        bashAliasesFile = '/home/dean/.bash_aliases'  # TODO: move this somewhere better
-        notificationAlias = 'noti'  # TODO: move this somewhere better
-
-        if not Path(bashAliasesFile).is_file():
-            raise FileNotFoundError('Cannot find alias file {}'.format(bashAliasesFile))
+            if test:
+                print('*** WARNING: this is too many calculations ***')
+                print('*** Continuing test... ***')
+            else:
+                raise MemoryError('No seriously - don\'t do this many calculations...')
 
         for calculation in self.calculations:
-            calculation.run(serial=serial,
+            calculation.run(test=test,
+                            serial=serial,
                             bashAliasesFile=bashAliasesFile,
-                            notificationAlias=notificationAlias,
-                            test=test)
+                            notificationAlias=notificationAlias)
 
         if test:
             print('*** Total of {} calculations to run - none have gone yet ***'.format(len(self.calculations)))
         else:
             print('*** Ran {} calculations ***'.format(len(self.calculations)))
 
-    def sub(self, test=False):
+    def sub(self, test=False, queueFile=None):
         assert type(test) is bool
 
-        queueFile = '/home/dean/tools/files/castep_queue.txt'  # TODO: move this somewhere better
-
-        if not Path(queueFile).is_file():
-            raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
+        if queueFile is not None:
+            assert type(queueFile) is str
 
         for calculation in self.calculations:
-            calculation.sub(queueFile=queueFile,
-                            test=test)
+            calculation.sub(test=test,
+                            queueFile=queueFile)
 
         if test:
             print('*** Total of {} calculations to submit - none have gone yet ***'.format(len(self.calculations)))
