@@ -1,7 +1,8 @@
 from calc.data import assertBetween, assertCount,\
     getAllowedUnits, getNiceUnit, getFromDict,\
-    Block, VectorInt, VectorFloat
+    Block, VectorInt, VectorFloat, stringToValue
 
+from pathlib import Path
 
 cellKnown = [
     # Lattice.
@@ -592,6 +593,9 @@ class Setting:
             if type(value) is int and self.type is float:
                 value = float(value)
 
+            if type(value) is VectorInt and self.type is VectorFloat:
+                value = VectorFloat(vector=value)
+
             assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value,
                                                                                                    self.key,
                                                                                                    self.type)
@@ -1130,6 +1134,129 @@ stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams |
 
 
 
+
+
+def readSettings(file_=None):
+    assert type(file_) is str
+    assert Path(file_).is_file(), 'Cannot find file {} when reading settings'.format(file_)
+
+    with open(file_) as f:
+        lines = f.read().splitlines()
+
+    lines = [line.strip() for line in lines if line.strip()]
+
+    settingKey = ''
+    inBlock = False
+    blockLines = []
+
+    settings = []
+
+    for line in lines:
+
+        # Check for comment.
+        comment = line.find('!')
+
+        # Remove it if need be.
+        if comment != -1:
+            line = line[:comment].strip()
+
+        if inBlock:
+            # Don't lower() line before as we may want capitalisation.
+            if line.lower().startswith('%'):
+
+                # Get rid of the '%' - don't need capitalisation now
+                line = line[1:].strip().lower()
+
+                # Check 'endblock' comes after.
+                if line.startswith('endblock'):
+                    line = line[8:].strip()
+
+                    # Check that there is only one string after 'endblock'.
+                    settingKeys = line.split()
+                    if len(settingKeys) == 1:
+                        settingKeyOther = settingKeys[0]
+                    else:
+                        raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+
+                    assert settingKey == settingKeyOther, 'Entered block {} but found endblock {}'.format(settingKey,
+                                                                                                          settingKeyOther)
+
+                    newSetting = Setting(key=settingKey, lines=blockLines)
+                    settings.append(newSetting)
+
+                    # We have now exited a block.
+                    inBlock = False
+                    blockLines = []
+
+                else:
+                    raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+            else:
+                blockLines.append(line)
+
+        else:
+            # Don't lower() line before as we may want capitalisation if it is not a block.
+            if line.lower().startswith('%'):
+
+                # Get rid of the '%' - don't need capitalisation now
+                line = line[1:].strip().lower()
+
+                # Check 'block' comes after.
+                if line.startswith('block'):
+                    line = line[5:].strip()
+
+                    # We have now entered a block.
+                    inBlock = True
+                    blockLines = []
+
+                    # Check that there is only one string after 'block'.
+                    settingKeys = line.split()
+                    if len(settingKeys) == 1:
+                        settingKey = settingKeys[0]
+                    else:
+                        raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+
+                else:
+                    raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+
+            else:
+                # If we're here then we have a keyword.
+
+                parts = line.split()
+                parts = [part.strip() for part in parts if part.strip() not in [':', '=']]
+
+                if len(parts) == 1:
+                    # e.g. symmetry_generate
+                    key = parts[0].lower()
+                    value = True
+
+                    newSetting = Setting(key=key, value=value)
+
+                elif len(parts) == 2:
+                    key = parts[0].lower()
+                    value = stringToValue(parts[1])
+
+                    newSetting = Setting(key=key, value=value)
+
+                elif len(parts) == 3:
+                    key = parts[0].lower()
+                    value = stringToValue(parts[1])
+                    unit = parts[2]
+
+                    newSetting = Setting(key=key, value=value, unit=unit)
+
+                elif len(parts) == 4:
+                    # e.g. kpoints_mp_grid : 1.0 1.0 1.0
+                    key = parts[0].lower()
+                    value = stringToValue('{} {} {}'.format(parts[1], parts[2], parts[3]))
+
+                    newSetting = Setting(key=key, value=value)
+
+                else:
+                    raise ValueError('Error in keyword {} of file {}'.format(line, file_))
+
+                settings.append(newSetting)
+
+    return settings
 
 
 def createSettings(*settings):
