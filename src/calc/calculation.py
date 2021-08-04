@@ -1,4 +1,5 @@
-from calc.data import assertCount, createDirectories
+from calc.data import assertCount, createDirectories,\
+    serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault
 from calc.settings import Setting, createSettings, createVariableSettings
 
 from collections import Counter
@@ -216,11 +217,26 @@ class Calculation:
 
         print('Created calculation for {} in {}'.format(self.name, directory))
 
-    def run(self, serial=False, bashAliasesFile=None, notificationAlias=None, test=False):
-        assert type(serial) is bool
-        assert bashAliasesFile is not None
-        assert notificationAlias is not None
+    def run(self, test=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         assert type(test) is bool
+
+        if serial is None:
+            serial = serialDefault
+        else:
+            assert type(serial) is bool
+
+        if bashAliasesFile is None:
+            bashAliasesFile = bashAliasesFileDefault
+        else:
+            assert type(bashAliasesFile) is str
+
+            if not Path(bashAliasesFile).is_file():
+                raise FileNotFoundError('Cannot find alias file {}'.format(bashAliasesFile))
+
+        if notificationAlias is None:
+            notificationAlias = notificationAliasDefault
+        else:
+            assert type(notificationAlias) is str
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName()
@@ -239,15 +255,22 @@ class Calculation:
         command = 'bash -c \'. {} ; {} {} &\''.format(bashAliasesFile, notificationAlias, castep)
 
         if test:
-            print('*** {} *** will be run in {}'.format(command, getcwd()))
+            print('|-> {} <-| will be run in {}'.format(command, getcwd()))
         else:
             result = subProcessRun(command, check=True, shell=True, text=True)
 
         chdir(origDir)
 
-    def sub(self, queueFile=None, test=False):
-        assert queueFile is not None
+    def sub(self, test=False, queueFile=None):
         assert type(test) is bool
+
+        if queueFile is None:
+            queueFile = queueFileDefault
+        else:
+            assert type(queueFile) is str
+
+            if not Path(queueFile).is_file():
+                raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName()
@@ -260,11 +283,11 @@ class Calculation:
         subFile = '{}{}.sub'.format(self.directory, self.name)
 
         if test:
-            print('*** {} calculation queued at {} *** will be written to {}'.format(self.name,
+            print('|-> {} calculation queued at {} <-| will be written to {}'.format(self.name,
                                                                                      datetime.now(),
                                                                                      subFile))
 
-            print('*** {}  {} *** will be written to {}'.format(self.name,
+            print('|-> {}  {} <-| will be written to {}'.format(self.name,
                                                                 directory.resolve(),
                                                                 queueFile))
             print('')

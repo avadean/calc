@@ -1,5 +1,11 @@
 from collections import Counter
 
+# Variables for running calculations.
+serialDefault = False
+bashAliasesFileDefault = '/home/dean/.bash_aliases'
+notificationAliasDefault = 'noti'
+queueFileDefault = '/home/dean/tools/files/castep_queue.txt'
+
 
 def createDirectories(*directoryNames):
 

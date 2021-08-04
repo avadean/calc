@@ -1,0 +1,7 @@
+task           : singlepoint 
+
+xcfunctional   : LDA 
+cut_off_energy : 700.0 eV
+fix_occupancy  : True 
+
+iprint         : 3 
