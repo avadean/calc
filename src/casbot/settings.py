@@ -1,4 +1,4 @@
-from calc.data import assertBetween, assertCount,\
+from casbot.data import assertBetween, assertCount,\
     getAllowedUnits, getNiceUnit, getFromDict,\
     Block, VectorInt, VectorFloat, stringToValue
 
