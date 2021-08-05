@@ -240,7 +240,7 @@ class Calculation:
             string += '\n  *** empty ***'
             return string
 
-        spaces = 20
+        spaces = 25
 
         string += '\n'
 
