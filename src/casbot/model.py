@@ -1,4 +1,4 @@
-from calc.calculation import Calculation
+from casbot.calculation import Calculation
 
 from pathlib import Path
 

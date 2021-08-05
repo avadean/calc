@@ -1,4 +1,4 @@
-from calc import Model, Setting,\
+from casbot import Model, Setting,\
     createCalculations, createDirectories, createSettings, createVariableSettings,\
     processCalculations
 

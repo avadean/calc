@@ -1,6 +1,6 @@
-from calc.data import assertCount, createDirectories,\
+from casbot.data import assertCount, createDirectories,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault
-from calc.settings import Setting, createSettings, createVariableSettings, readSettings
+from casbot.settings import Setting, createSettings, createVariableSettings, readSettings
 
 from collections import Counter
 from datetime import datetime

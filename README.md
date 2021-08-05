@@ -1,2 +1,2 @@
-# calc
-This does my DPhil.
+# castep bot; casbot
+A helper bot for CASTEP
