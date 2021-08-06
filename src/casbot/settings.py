@@ -204,7 +204,7 @@ paramKnown = [  # task
     # spin
     'spin',
     'spin_polarised',
-    'spin_polarized',
+    #'spin_polarized',
     'spin_treatment',
     'spin_orbit_coupling',
 
@@ -271,7 +271,7 @@ paramPriorities = {  # task
     # spin
     'spin': 3.1,
     'spin_polarised': 3.2,
-    'spin_polarized': 3.2,
+    #'spin_polarized': 3.2,
     'spin_treatment': 3.3,
     'spin_orbit_coupling': 3.4,
 
@@ -340,7 +340,7 @@ paramDefaults = {
     # spin
     'spin': '0.0',
     'spin_polarised': 'true if spin > 0 else false',
-    'spin_polarized': 'true if spin > 0 else false',
+    #'spin_polarized': 'true if spin > 0 else false',
     'spin_treatment': 'none',
     'spin_orbit_coupling': 'false',
 
@@ -406,7 +406,7 @@ paramTypes = {
     # spin
     'spin': float,
     'spin_polarised': bool,
-    'spin_polarized': bool,
+    #'spin_polarized': bool,
     'spin_treatment': str,
     'spin_orbit_coupling': bool,
 

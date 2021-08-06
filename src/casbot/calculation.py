@@ -12,15 +12,14 @@ from pathlib import Path
 from subprocess import run as subProcessRun
 
 
-def createCalculations(*variableSettings, globalSettings=None, directoryNames=None, withDefaults=True, verbose=False):
+def createCalculations(variableSettings=None, globalSettings=None, directoryNames=None, withDefaults=True, verbose=False):
     assert type(verbose) is bool
+    assert type(withDefaults) is bool
 
     if verbose: print('Beginning setup of calculations')
 
-    assert type(withDefaults) is bool
-
     if verbose: print('Generating variable settings...', end=' ', flush=True)
-    varSettingsProcessed = createVariableSettings(*variableSettings)
+    variableSettings = createVariableSettings(*variableSettings) if variableSettings is not None else []
     if verbose: print('Done!')
 
     # Now that we have dealt with the variable cells/params of the calculations, we now work on the general cells/params.
@@ -35,17 +34,17 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
 
     # Some checks on the calculations and directories.
     if directoryNames:
-        assert len(varSettingsProcessed) == len(directoryNames), 'Number of variable settings must match directory depth'
-        assert all(len(varSettingsProcessed[num]) == len(directoryNames[num]) for num in range(len(varSettingsProcessed))), \
+        assert len(variableSettings) == len(directoryNames), 'Number of variable settings must match directory depth'
+        assert all(len(variableSettings[num]) == len(directoryNames[num]) for num in range(len(variableSettings))), \
             'Variable settings shape must match directories shape'
 
         # Add numbers to the start of each directory name.
         #directoryNames = [['{:03}_{}'.format(n, directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
         directoryNames = [['{}'.format(directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
-                          for num, var in enumerate(varSettingsProcessed)]
+                          for num, var in enumerate(variableSettings)]
     else:
         # If we don't have directory names then default to just numbers.
-        directoryNames = [['{:03}'.format(n) for n in range(1, len(var) + 1)] for var in varSettingsProcessed]
+        directoryNames = [['{:03}'.format(n) for n in range(1, len(var) + 1)] for var in variableSettings]
 
     #assert sum(any(type(a) is str for a in variable) for variable in varSettingsProcessed) == 1,\
     #    'Can only have one iterable argument that is not a cell or param'
@@ -57,7 +56,7 @@ def createCalculations(*variableSettings, globalSettings=None, directoryNames=No
     # Combinations will expand out the varSettingsProcessed and create every possible combination of the variable settings.
     # E.g. If we have argument1=['HF', 'HCl'] and argument2=[Cell(bField=1.0T), Cell(bField=2.0T)]
     # Then combinations will be: [(HF, bField 1.0T), (HF, bField 2.0T), (HCl, bField 1.0T), (HCl, bField 2.0T)]
-    varSettingsProcessed = list(product(*varSettingsProcessed))
+    varSettingsProcessed = list(product(*variableSettings))
     directoryNames = list(product(*directoryNames))
 
     if withDefaults:
@@ -193,20 +192,6 @@ def processCalculations(*directories):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class Calculation:
     def __init__(self, name=None, directory=None, settings=None):
         if name is not None:
@@ -225,7 +210,8 @@ class Calculation:
             assert all(type(setting) is Setting for setting in settings)
             assertCount([setting.key for setting in settings])
 
-        self.settings = sorted(settings, key=lambda setting: (setting.file, setting.priority))
+        self.settings = settings
+        self.sortSettings()
 
     def __str__(self):
         string = 'Calculation ->'
@@ -419,3 +405,16 @@ class Calculation:
 
         for element, num in elements.items():
             self.name += '{}{}'.format(element, '' if num == 1 else num)
+
+    def sortSettings(self):
+        self.settings = sorted(self.settings, key=lambda setting: (setting.file, setting.priority))
+
+    def updateSettings(self, *settings):
+        settings = createSettings(*settings)
+
+        for setting in settings:
+            self.settings = [otherSetting for otherSetting in self.settings if otherSetting.key != setting.key]
+
+            self.settings.append(setting)
+
+            self.sortSettings()

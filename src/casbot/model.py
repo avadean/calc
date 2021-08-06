@@ -113,3 +113,7 @@ class Model:
             print('*** Total of {} calculations to submit - none have gone yet ***'.format(len(self.calculations)))
         else:
             print('*** Submitted {} calculations ***'.format(len(self.calculations)))
+
+    def updateSettings(self, *settings):
+        for calculation in self.calculations:
+            calculation.updateSettings(*settings)
