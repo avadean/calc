@@ -99,14 +99,16 @@ class Model:
         else:
             print('*** Ran {} calculations ***'.format(len(self.calculations)))
 
-    def sub(self, test=False, queueFile=None):
+    def sub(self, test=False, force=False, queueFile=None):
         assert type(test) is bool
+        assert type(force) is bool
 
         if queueFile is not None:
             assert type(queueFile) is str
 
         for calculation in self.calculations:
             calculation.sub(test=test,
+                            force=force,
                             queueFile=queueFile)
 
         if test:

@@ -331,16 +331,17 @@ class Calculation:
 
         chdir(origDir)
 
-    def sub(self, test=False, queueFile=None):
+    def sub(self, test=False, force=False, queueFile=None):
         assert type(test) is bool
+        assert type(force) is bool
 
         if queueFile is None:
             queueFile = queueFileDefault
         else:
             assert type(queueFile) is str
 
-            if not Path(queueFile).is_file():
-                raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
+        if not Path(queueFile).is_file():
+            raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName()
@@ -353,16 +354,23 @@ class Calculation:
         subFile = '{}{}.sub'.format(self.directory, self.name)
 
         if test:
-            print('|-> {} calculation queued at {} <-| will be written to {}'.format(self.name,
-                                                                                     datetime.now(),
-                                                                                     subFile))
+            print('|-> {} calculation queued at {} <-| will be appended to {}'.format(self.name,
+                                                                                      datetime.now(),
+                                                                                      subFile))
 
-            print('|-> {}  {} <-| will be written to {}'.format(self.name,
-                                                                directory.resolve(),
-                                                                queueFile))
+            print('|-> {}  {} <-| will be appended to {}'.format(self.name,
+                                                                 directory.resolve(),
+                                                                 queueFile))
+
+            if Path(subFile).is_file():
+                print('*** CAUTION: sub file {} found - calculation may already be submitted ***'.format(subFile))
+
             print('')
 
         else:
+            if Path(subFile).is_file() and not force:
+                raise FileExistsError('Calculation may already be submitted {} - use force=True to ignore'.format(subFile))
+
             with open(subFile, 'a') as f:
                 f.write('{} calculation queued at {}.\n'.format(self.name, datetime.now()))
 
