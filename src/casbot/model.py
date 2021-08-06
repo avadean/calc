@@ -34,18 +34,9 @@ class Model:
 
         return string
 
-    def getDirString(self):
-        if len(self.calculations) == 0:
-            return ''
-
-        string = ''
-
+    def check(self):
         for calculation in self.calculations:
-            string += '{}\n'.format(calculation.directory)
-
-        string = string[:-1]  # Remove last line break.
-
-        return string
+            calculation.check()
 
     def create(self, force=False):
         assert type(force) is bool
@@ -60,6 +51,19 @@ class Model:
 
         for calculation in self.calculations:
             calculation.create()
+
+    def getDirString(self):
+        if len(self.calculations) == 0:
+            return ''
+
+        string = ''
+
+        for calculation in self.calculations:
+            string += '{}\n'.format(calculation.directory)
+
+        string = string[:-1]  # Remove last line break.
+
+        return string
 
     def run(self, test=False, force=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         assert type(test) is bool

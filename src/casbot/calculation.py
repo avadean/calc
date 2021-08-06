@@ -193,36 +193,37 @@ def processCalculations(*directories):
 
 
 class Calculation:
-    def __init__(self, name=None, directory=None, settings=None):
-        if name is not None:
-            assert type(name) is str
-            assert ' ' not in name, 'Cannot have spaces in name'
-
-        self.name = name
-
+    def __init__(self, directory=None, settings=None, name=None):
         if directory is not None:
             assert type(directory) is str
-
-        self.directory = directory
 
         if settings is not None:
             assert type(settings) is list
             assert all(type(setting) is Setting for setting in settings)
             assertCount([setting.key for setting in settings])
 
+        if name is not None:
+            assert type(name) is str
+            assert ' ' not in name, 'Cannot have spaces in name'
+
+        self.directory = directory
+
         self.settings = settings
         self.sortSettings()
+
+        self.name = name
+        self.setName(strict=False)
 
     def __str__(self):
         string = 'Calculation ->'
 
-        if self.name:
+        if self.name is not None:
             string += ' {}'.format(self.name)
 
-        if self.directory:
+        if self.directory is not None:
             string += ' ({})'.format(self.directory)
 
-        if not self.settings:
+        if self.settings is None:
             string += '\n  *** empty ***'
             return string
 
@@ -237,7 +238,46 @@ class Calculation:
 
         return string
 
+    def check(self):
+        string = 'Calculation ->'
+
+        if self.name is not None:
+            string += ' {}'.format(self.name)
+
+        if self.directory is None:
+            string += ' (no directory specified)'
+            return
+        else:
+            string += ' ({})'.format(self.directory)
+
+        if Path(self.directory).is_dir():
+            subFile = '{}{}.sub'.format(self.directory, self.name)
+            castepFile = '{}{}.castep'.format(self.directory, self.name)
+
+            if Path(castepFile).is_file():
+                with open(castepFile) as f:
+                    castepLines = f.read().splitlines()
+
+                calculationFinished = False
+                for line in castepLines:
+                    if line.startswith('Total time'):
+                        calculationFinished = True
+                        break
+
+                string += ' *** finished ***' if calculationFinished else ' *** started ***'
+
+            elif Path(subFile).is_file():
+                string += ' *** submitted ***'
+
+        else:
+            string += '*** WARNING: directory specified as {} but not found'.format(self.directory)
+
+        print(string)
+
     def create(self):
+        if self.directory is None:
+            raise ValueError('Cannot create calculation when there is no directory specified')
+
         directory = Path(self.directory)
 
         try:
@@ -255,7 +295,7 @@ class Calculation:
             'Setting in calculation cannot be categorised as a cell or param'
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
-        self.setName()
+        self.setName(strict=True)
 
         if len(cells) > 0:
             cellFile = '{}/{}.cell'.format(directory, self.name)
@@ -288,6 +328,9 @@ class Calculation:
         print('Created calculation for {} in {}'.format(self.name, directory))
 
     def run(self, test=False, serial=None, bashAliasesFile=None, notificationAlias=None):
+        if self.directory is None:
+            raise ValueError('Cannot run calculation when there is no directory specified')
+
         assert type(test) is bool
 
         if serial is None:
@@ -309,7 +352,7 @@ class Calculation:
             assert type(notificationAlias) is str
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
-        self.setName()
+        self.setName(strict=True)
 
         directory = Path(self.directory)
 
@@ -332,6 +375,9 @@ class Calculation:
         chdir(origDir)
 
     def sub(self, test=False, force=False, queueFile=None):
+        if self.directory is None:
+            raise ValueError('Cannot submit calculation when there is no directory specified')
+
         assert type(test) is bool
         assert type(force) is bool
 
@@ -344,7 +390,7 @@ class Calculation:
             raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
-        self.setName()
+        self.setName(strict=True)
 
         directory = Path(self.directory)
 
@@ -377,7 +423,9 @@ class Calculation:
             with open(queueFile, 'a') as f:
                 f.write('{}  {}\n'.format(self.name, directory.resolve()))
 
-    def setName(self):
+    def setName(self, strict=False):
+        assert type(strict) is bool
+
         if self.name is not None:
             return
 
@@ -388,8 +436,8 @@ class Calculation:
                 positionSetting = setting
                 break
 
-        assert positionSetting is not None, \
-            'Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)'
+        if strict and positionSetting is None:
+            raise ValueError('Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)')
 
         elements = []
 
