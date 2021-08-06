@@ -269,7 +269,7 @@ unitToNiceUnit = { 'ev' : 'eV',
 
                    'ang' : 'Ang',
                    'bohr' : 'Bohr',
-                   
+
                    '1/ang' : '1/Ang'
                    }
 
@@ -319,7 +319,31 @@ stringToVariableDirectories = {'halides':['001_HF', '002_HCl', '003_HBr', '004_H
                                                    '09T/density_in_x', '09T/density_in_y', '09T/density_in_z',
                                                    '10T/density_in_x', '10T/density_in_y', '10T/density_in_z'],
 
-                               'hyperfinekilobfield': ['00kT/density_in_x', '00kT/density_in_y', '00kT/density_in_z',
+                               'hyperfinetensbfield': ['000T/density_in_x', '000T/density_in_y', '000T/density_in_z',
+                                                       '010T/density_in_x', '010T/density_in_y', '010T/density_in_z',
+                                                       '020T/density_in_x', '020T/density_in_y', '020T/density_in_z',
+                                                       '030T/density_in_x', '030T/density_in_y', '030T/density_in_z',
+                                                       '040T/density_in_x', '040T/density_in_y', '040T/density_in_z',
+                                                       '050T/density_in_x', '050T/density_in_y', '050T/density_in_z',
+                                                       '060T/density_in_x', '060T/density_in_y', '060T/density_in_z',
+                                                       '070T/density_in_x', '070T/density_in_y', '070T/density_in_z',
+                                                       '080T/density_in_x', '080T/density_in_y', '080T/density_in_z',
+                                                       '090T/density_in_x', '090T/density_in_y', '090T/density_in_z',
+                                                       '100T/density_in_x', '100T/density_in_y', '100T/density_in_z'],
+
+                               'hyperfinehundredsbfield': ['0000T/density_in_x', '0000T/density_in_y', '0000T/density_in_z',
+                                                           '0100T/density_in_x', '0100T/density_in_y', '0100T/density_in_z',
+                                                           '0200T/density_in_x', '0200T/density_in_y', '0200T/density_in_z',
+                                                           '0300T/density_in_x', '0300T/density_in_y', '0300T/density_in_z',
+                                                           '0400T/density_in_x', '0400T/density_in_y', '0400T/density_in_z',
+                                                           '0500T/density_in_x', '0500T/density_in_y', '0500T/density_in_z',
+                                                           '0600T/density_in_x', '0600T/density_in_y', '0600T/density_in_z',
+                                                           '0700T/density_in_x', '0700T/density_in_y', '0700T/density_in_z',
+                                                           '0800T/density_in_x', '0800T/density_in_y', '0800T/density_in_z',
+                                                           '0900T/density_in_x', '0900T/density_in_y', '0900T/density_in_z',
+                                                           '1000T/density_in_x', '1000T/density_in_y', '1000T/density_in_z'],
+
+                               'hyperfinekilosbfield': ['00kT/density_in_x', '00kT/density_in_y', '00kT/density_in_z',
                                                        '01kT/density_in_x', '01kT/density_in_y', '01kT/density_in_z',
                                                        '02kT/density_in_x', '02kT/density_in_y', '02kT/density_in_z',
                                                        '03kT/density_in_x', '03kT/density_in_y', '03kT/density_in_z',
