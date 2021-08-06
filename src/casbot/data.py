@@ -351,3 +351,10 @@ stringToVariableDirectories = {'halides':['001_HF', '002_HCl', '003_HBr', '004_H
 
                                'bfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T']
                                }
+
+stringToVariableDirectoriesAliases = {'xbfield': stringToVariableDirectories.get('bfield'),
+                                      'ybfield': stringToVariableDirectories.get('bfield'),
+                                      'zbfield': stringToVariableDirectories.get('bfield')
+                                      }
+
+stringToVariableDirectories = stringToVariableDirectories | stringToVariableDirectoriesAliases
