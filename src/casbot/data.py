@@ -199,9 +199,9 @@ def assertCount(lst=None, count=1):
     assert type(lst) is list
     assert type(count) is int
 
-    countStrings = Counter(lst)
-    assert all(val == count for val in countStrings.values()), \
-        '{} must be specified {} time(s)'.format(countStrings.most_common(1)[0][0], count)
+    counter = Counter(lst)
+    assert all(val == count for val in counter.values()), \
+        '{} must be specified {} time(s)'.format(counter.most_common(1)[0][0], count)
 
 
 def assertBetween(value=None, minimum=None, maximum=None, key=None):
@@ -209,20 +209,14 @@ def assertBetween(value=None, minimum=None, maximum=None, key=None):
     assert type(minimum) in [int, float]
     assert type(maximum) in [int, float]
 
-    if minimum <= value <= maximum:
-        return
-
-    if key is None:
-        raise ValueError('Value of {} outside range of allowed values: {} to {}'.format(value,
-                                                                                        minimum,
-                                                                                        maximum))
-    else:
+    if key is not None:
         assert type(key) is str
 
-        raise ValueError('Value of {} for {} outside range of allowed values: {} to {}'.format(value,
-                                                                                               key,
-                                                                                               minimum,
-                                                                                               maximum))
+    assert minimum <= value <= maximum,\
+        'Value of {}{} outside range of allowed values: {} to {}'.format(value,
+                                                                         ' for {}'.format(key) if key is not None else '',
+                                                                         minimum,
+                                                                         maximum)
 
 
 def getFromDict(key=None, dct=None, strict=True):
