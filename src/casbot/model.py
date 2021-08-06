@@ -20,7 +20,7 @@ class Model:
             assert all(type(calculation) == Calculation for calculation in calculations)
             self.calculations = calculations
 
-        print('*** Model created with {} calculation{} ***'.format(len(self.calculations),
+        print('*** Model defined with {} calculation{} ***'.format(len(self.calculations),
                                                                    '' if len(self.calculations) == 1 else 's'))
         #print(self.getDirString())
 
