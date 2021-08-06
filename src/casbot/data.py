@@ -53,8 +53,15 @@ class VectorInt:
                 self.y = int(vector.y)
                 self.z = int(vector.z)
 
+            elif type(vector) is str and isVectorInt(vector):
+                values = vector.split()
+
+                self.x = int(values[0].strip())
+                self.y = int(values[1].strip())
+                self.z = int(values[2].strip())
+
             else:
-                raise TypeError('Vector input to VectorInt must be VectorInt or VectorFloat')
+                raise TypeError('Vector input to VectorInt must be a 3 str-int-vector, VectorInt or int-VectorFloat')
 
     def __str__(self):
         return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
@@ -82,8 +89,15 @@ class VectorFloat:
                 self.y = vector.y
                 self.z = vector.z
 
+            elif type(vector) is str and (isVectorInt(vector) or isVectorFloat(vector)):
+                values = vector.split()
+
+                self.x = float(values[0].strip())
+                self.y = float(values[1].strip())
+                self.z = float(values[2].strip())
+
             else:
-                raise TypeError('Vector input to VectorFloat must be VectorInt or VectorFloat')
+                raise TypeError('Vector input to VectorFloat must be a 3 vector as a str, VectorInt or VectorFloat')
 
     def __str__(self):
         return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
@@ -142,7 +156,7 @@ def isFloat(x):
     assert type(x) is str
 
     try:
-        a = float(x)
+        float(x)
     except (TypeError, ValueError):
         return False
     else:
@@ -162,8 +176,7 @@ def isVectorInt(vector):
         if isInt(x) and isInt(y) and isInt(z):
             return True
 
-    else:
-        return False
+    return False
 
 
 def isVectorFloat(vector):
@@ -179,8 +192,7 @@ def isVectorFloat(vector):
         if isFloat(x) and isFloat(y) and isFloat(z):
             return True
 
-    else:
-        return False
+    return False
 
 
 def assertCount(lst=None, count=1):
