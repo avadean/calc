@@ -126,6 +126,9 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
 def processCalculations(*directories):
     directories = createDirectories(*directories)
 
+    if len(directories) == 0:
+        return []
+
     directories = list(product(*directories))
 
     directories = ['/'.join(directory) + '/' for directory in directories]
