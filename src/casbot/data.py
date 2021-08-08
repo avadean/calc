@@ -256,6 +256,41 @@ def getVariableDirectories(string=None):
     return variableDirectories
 
 
+
+class PrintColors:
+    default = '\033[39m'
+    black = '\033[30m'
+    red = '\033[31m'
+    green = '\033[32m'
+    yellow = '\033[33m'
+    blue = '\033[34m'
+    magenta = '\033[35m'
+    cyan = '\033[36m'
+    gray = '\033[37m'
+    orange = '\033[38;5;166m'
+    pink = '\033[38;5;13m'
+
+    lightRed = '\033[91m'
+    lightGreen = '\033[92m'
+    lightYellow = '\033[93m'
+    lightBlue = '\033[94m'
+    lightMagenta = '\033[95m'
+    lightCyan = '\033[96m'
+
+    reset = '\033[0m'
+    bold = '\033[1m'
+    italicized = '\033[3m'
+    underline = '\033[4m'
+    blink = '\033[5m'
+
+    notYetCreated = red
+    created = pink
+    submitted = orange
+    running = blue
+    complete = green
+
+
+
 unitToNiceUnit = { 'ev' : 'eV',
                    'ha' : 'Ha',
                    'j' : 'J',

@@ -1,5 +1,6 @@
 from casbot.data import assertCount, createDirectories,\
-    serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault
+    serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
+    PrintColors
 from casbot.settings import Setting, createSettings, createVariableSettings, readSettings
 
 from collections import Counter
@@ -9,6 +10,7 @@ from itertools import product
 from math import floor
 from os import chdir, getcwd, listdir
 from pathlib import Path
+from re import search
 from subprocess import run as subProcessRun
 
 
@@ -251,7 +253,7 @@ class Calculation:
             string += ' (no directory specified)'
             return
         else:
-            string += ' ({})'.format(self.directory)
+            string += ' ({}) '.format(self.directory)
 
         if Path(self.directory).is_dir():
             subFile = '{}{}.sub'.format(self.directory, self.name)
@@ -267,13 +269,61 @@ class Calculation:
                         calculationFinished = True
                         break
 
-                string += ' *** finished ***' if calculationFinished else ' *** started ***'
+                if calculationFinished:
+                    string += '*** {}complete{} ***'.format(PrintColors.complete,
+                                                            PrintColors.reset)
+
+                else:
+                    startTime = None
+
+                    for line in castepLines:
+                        if line.startswith('Run started:'):
+                            line = line[12:].strip()  # len('Run started:') = 12
+
+                            try:
+                                startTime = datetime.strptime(line, '%a, %d %b %Y %H:%M:%S %z')
+                            except ValueError:
+                                pass
+                            else:
+                                startTime = startTime.strftime('%Y-%m-%d %H:%M:%S')
+                                break
+
+                    string += '*** {}running{} since {} ***'.format(PrintColors.running,
+                                                                    PrintColors.reset,
+                                                                    'unknown time' if startTime is None else startTime)
 
             elif Path(subFile).is_file():
-                string += ' *** submitted ***'
+                subTime = None
+
+                with open(subFile) as f:
+                    subLines = f.read().splitlines()
+
+                subLines.reverse()
+
+                for line in subLines:
+
+                    subTime = search(r'\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}', line)
+
+                    if subTime is not None:
+                        subTime = subTime.group()
+
+                        subTime.replace('/', '-')
+
+                        #subTime = datetime.strptime(subTime, '%Y-%m-%d %H:%M:%S')
+
+                        break
+
+                string += '*** {}submitted{} at {} ***'.format(PrintColors.submitted,
+                                                               PrintColors.reset,
+                                                               'unknown time' if subTime is None else subTime)
+
+            else:
+                string += '*** {}created{} ***'.format(PrintColors.created,
+                                                       PrintColors.reset)
 
         else:
-            string += '*** WARNING: directory specified as {} but not found'.format(self.directory)
+            string += '*** {}not yet created{} ***'.format(PrintColors.notYetCreated,
+                                                           PrintColors.reset)
 
         print(string)
 
