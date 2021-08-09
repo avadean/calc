@@ -175,13 +175,6 @@ cellUnits = {
 
 
 
-
-
-
-
-
-
-
 paramKnown = [  # task
     'task',
     'magres_task',
@@ -513,9 +506,6 @@ paramUnits = {
 
 
 
-
-
-
 stringToNiceValue = {
     'lda': 'LDA',
     'pw91': 'PW91',
@@ -558,14 +548,11 @@ def getNiceValueStr(string=None):
 
 
 
-
 settingKnown = cellKnown + paramKnown
 settingPriorities = cellPriorities | paramPriorities
 settingTypes = cellTypes | paramTypes
 settingValues = cellValues | paramValues
 settingUnits = cellUnits | paramUnits
-
-
 
 
 
@@ -673,18 +660,6 @@ class Setting:
                                                  '' if self.unit is None else self.unit))
 
         return lines
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -837,7 +812,6 @@ shortcutToCellsAliases = {}
 
 
 
-
 shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
                     'geometryoptimisation': Setting('task', 'geometryoptimisation'),
 
@@ -914,9 +888,6 @@ shortcutToParamsAliases = {'geom': [shortcutToParams.get('geometryoptimisation')
 
                            'writestructure': shortcutToParams.get('writecell')
                            }
-
-
-
 
 
 
@@ -1402,12 +1373,7 @@ defaultShortcut = { 'defaults': [Setting('cell_constraints', lines=['0   0   0',
 
 
 
-
-
-
 stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases | defaultShortcut
-
-
 
 
 
@@ -1674,7 +1640,6 @@ def getCellsParams(settings=None):
     params = sorted(params, key=lambda param: param.priority)
 
     return cells, params
-
 
 
 def parseArgs(*stringsAndSettings):
