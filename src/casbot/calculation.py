@@ -271,8 +271,8 @@ class Calculation:
                         break
 
                 if calculationFinished:
-                    string += '*** {}complete{} ***'.format(PrintColors.complete,
-                                                            PrintColors.reset)
+                    string += '*** {}completed{} ***'.format(PrintColors.complete,
+                                                             PrintColors.reset)
 
                 else:
                     startTime = None
@@ -290,9 +290,9 @@ class Calculation:
                                 startTime = startTime.strftime('%Y-%m-%d %H:%M:%S')
                                 break
 
-                    string += '*** {}running{} since {} ***'.format(PrintColors.running,
-                                                                    PrintColors.reset,
-                                                                    'unknown time' if startTime is None else startTime)
+                    string += '***  {}running{}  -> {} ***'.format(PrintColors.running,
+                                                                   PrintColors.reset,
+                                                                   'unknown time' if startTime is None else startTime)
 
             elif Path(subFile).is_file():
                 subTime = None
@@ -315,7 +315,7 @@ class Calculation:
 
                         break
 
-                string += '*** {}submitted{} at {} ***'.format(PrintColors.submitted,
+                string += '*** {}submitted{} -> {} ***'.format(PrintColors.submitted,
                                                                PrintColors.reset,
                                                                'unknown time' if subTime is None else subTime)
 
