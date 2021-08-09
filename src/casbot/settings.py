@@ -56,7 +56,7 @@ cellKnown = [
 ]
 
 cellPriorities = {
-# Lattice.
+    # Lattice.
     'lattice_abc': 5.0,
     'lattice_cart': 10.0,
 

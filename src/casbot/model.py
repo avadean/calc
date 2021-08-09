@@ -2,11 +2,8 @@ from casbot.calculation import Calculation
 
 from pathlib import Path
 
+
 class Model:
-    name = None
-
-    calculations = None
-
     def __init__(self, calculations=None, name=None):
         if name is not None:
             assert type(name) is str

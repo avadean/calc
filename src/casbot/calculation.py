@@ -341,8 +341,8 @@ class Calculation:
         cells = [setting for setting in self.settings if setting.file == 'cell']
         params = [setting for setting in self.settings if setting.file == 'param']
 
-        cells = sorted(cells, key=lambda cell: cell.priority)
-        params = sorted(params, key=lambda param: param.priority)
+        cells = sorted(cells, key=lambda c: c.priority)
+        params = sorted(params, key=lambda p: p.priority)
 
         assert len(cells) + len(params) == len(self.settings), \
             'Setting in calculation cannot be categorised as a cell or param'
