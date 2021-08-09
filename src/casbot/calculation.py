@@ -265,7 +265,8 @@ class Calculation:
 
                 calculationFinished = False
                 for line in castepLines:
-                    if line.startswith('Total time'):
+                    line = line.strip().lower()
+                    if line.startswith('total time'):
                         calculationFinished = True
                         break
 
@@ -277,7 +278,8 @@ class Calculation:
                     startTime = None
 
                     for line in castepLines:
-                        if line.startswith('Run started:'):
+                        line = line.strip()
+                        if line.lower().startswith('run started:'):
                             line = line[12:].strip()  # len('Run started:') = 12
 
                             try:
@@ -441,6 +443,8 @@ class Calculation:
 
         if not Path(queueFile).is_file():
             raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
+        elif test:
+            print('Found queue file {}'.format(queueFile))
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName(strict=True)

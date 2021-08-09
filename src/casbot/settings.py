@@ -774,7 +774,63 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                          '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
 
                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                          ]
+                          ],
+
+                   'hfrot': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                '  10.0   0.0   0.0',
+                                                                '   0.0  10.0   0.0',
+                                                                '   0.0   0.0  10.0']),
+
+                             Setting(key='positions_frac',
+                                     #lines=['  H   0.12040092  0.12040092 -0.02972739',
+                                     #       '  F   0.16687044  0.16687044  0.03599044']),
+                                     lines=['H         0.120400920000000  0.120400920000000 -0.029727390000000',
+                                            'F         0.166870440000000  0.166870440000000  0.035990440000000']),
+
+                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                             ],
+
+                   'hclrot': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                 '  10.0   0.0   0.0',
+                                                                 '   0.0  10.0   0.0',
+                                                                 '   0.0   0.0  10.0']),
+
+                              Setting(key='positions_frac',
+                                      #lines=['  H    0.01168401  0.01168401 -0.00347605',
+                                      #       '  Cl   0.07615812  0.07615812  0.08770359']),
+                                      lines=['H         0.011684010000000  0.011684010000000 -0.003476050000000',
+                                             'Cl        0.076158120000000  0.076158120000000  0.087703590000000']),
+
+                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                              ],
+
+                   'hbrrot': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                 '  12.0   0.0   0.0',
+                                                                 '   0.0  12.0   0.0',
+                                                                 '   0.0   0.0  12.0']),
+
+                              Setting(key='positions_frac',
+                                      #lines=['  H    0.00555653 0.00555643 0.00786405',
+                                      #       '  Br   0.06514347 0.06514357 0.09212085']),
+                                      lines=['H         0.005556530000000  0.005556430000000  0.007864050000000',
+                                             'Br        0.065143470000000  0.065143570000000  0.092120850000000']),
+
+                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                              ],
+
+                   'hirot': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                '  12.0   0.0   0.0',
+                                                                '   0.0  12.0   0.0',
+                                                                '   0.0   0.0  12.0']),
+
+                             Setting(key='positions_frac',
+                                     #lines=['  H   -0.00047645 -0.00047645 -0.0006738',
+                                     #       '  I    0.06751811  0.06751811  0.09548503']),
+                                     lines=['H        -0.000476450000000 -0.000476450000000 -0.000673800000000',
+                                            'I         0.067518110000000  0.067518110000000  0.095485030000000']),
+
+                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
+                             ]
                    }
 
 shortcutToCellsAliases = {}
@@ -798,7 +854,7 @@ shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
                     'schroedinger': Setting('relativistic_treatment', 'schroedinger'),
                     'dirac': Setting('relativistic_treatment', 'dirac'),
 
-                    'spin_polarised': Setting('spin_polarised', True),
+                    'spinpolarised': Setting('spin_polarised', True),
 
                     'efg': [Setting('task', 'magres'),
                             Setting('magres_task', 'efg')],
@@ -818,6 +874,8 @@ shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
                             Setting('spin_treatment', 'vector'),
                             Setting('spin_orbit_coupling', True)],
 
+                    'writecell': Setting('write_cell_structure', True),
+
                     'iprint': Setting('iprint', 3),
 
                     'xdensity': Setting('devel_code', lines=['density_in_x=true']),
@@ -825,13 +883,20 @@ shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
                     'zdensity': Setting('devel_code', lines=['density_in_z=true'])
                     }
 
-shortcutToParamsAliases = {'geom': shortcutToParams.get('geometryoptimisation'),
-                           'geometry': shortcutToParams.get('geometryoptimisation'),
-                           'optimise': shortcutToParams.get('geometryoptimisation'),
-                           'optimize': shortcutToParams.get('geometryoptimisation'),
-                           'optimisation': shortcutToParams.get('geometryoptimisation'),
-                           'optimization': shortcutToParams.get('geometryoptimisation'),
-                           'geometryoptimization': shortcutToParams.get('geometryoptimisation'),
+shortcutToParamsAliases = {'geom': [shortcutToParams.get('geometryoptimisation'),
+                                    shortcutToParams.get('writecell')],
+                           'geometry': [shortcutToParams.get('geometryoptimisation'),
+                                        shortcutToParams.get('writecell')],
+                           'optimise': [shortcutToParams.get('geometryoptimisation'),
+                                        shortcutToParams.get('writecell')],
+                           'optimize': [shortcutToParams.get('geometryoptimisation'),
+                                        shortcutToParams.get('writecell')],
+                           'optimisation': [shortcutToParams.get('geometryoptimisation'),
+                                            shortcutToParams.get('writecell')],
+                           'optimization': [shortcutToParams.get('geometryoptimisation'),
+                                            shortcutToParams.get('writecell')],
+                           'geometryoptimization': [shortcutToParams.get('geometryoptimisation'),
+                                                    shortcutToParams.get('writecell')],
 
                            'averagecutoff': shortcutToParams.get('normalcutoff'),
                            'middlecutoff': shortcutToParams.get('normalcutoff'),
@@ -841,9 +906,13 @@ shortcutToParamsAliases = {'geom': shortcutToParams.get('geometryoptimisation'),
                            'schrodinger': shortcutToParams.get('schroedinger'),
                            'schroed': shortcutToParams.get('schroedinger'),
 
-                           'polarised': shortcutToParams.get('spin_polarised'),
-                           'polarized': shortcutToParams.get('spin_polarised'),
-                           'spin_polarized': shortcutToParams.get('spin_polarised'),
+                           'polarised': shortcutToParams.get('spinpolarised'),
+                           'polarized': shortcutToParams.get('spinpolarised'),
+                           'spinpolarized': shortcutToParams.get('spinpolarised'),
+                           'spin_polarised': shortcutToParams.get('spinpolarised'),
+                           'spin_polarized': shortcutToParams.get('spinpolarised'),
+
+                           'writestructure': shortcutToParams.get('writecell')
                            }
 
 
@@ -1311,7 +1380,12 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
                              'halides': [shortcutToCells.get('hf'),
                                          shortcutToCells.get('hcl'),
                                          shortcutToCells.get('hbr'),
-                                         shortcutToCells.get('hi')]
+                                         shortcutToCells.get('hi')],
+
+                             'halidesrot': [shortcutToCells.get('hfrot'),
+                                            shortcutToCells.get('hclrot'),
+                                            shortcutToCells.get('hbrrot'),
+                                            shortcutToCells.get('hirot')]
                              }
 
 
