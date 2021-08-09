@@ -329,11 +329,25 @@ class Calculation:
 
         print(string)
 
-    def create(self):
+    def create(self, force=False, passive=False):
+        assert type(force) is bool
+        assert type(passive) is bool
+
+        if force and passive:
+            raise ValueError('Cannot create calculation with force=True and passive=True - use one option as True only')
+
         if self.directory is None:
             raise ValueError('Cannot create calculation when there is no directory specified')
 
         directory = Path(self.directory)
+
+        if directory.exists():
+            if passive:
+                print('Skipping creation of calculation for {} in {}'.format(self.name, directory))
+                return
+
+            elif not force:
+                raise FileExistsError('Directory for calculation already exists - use force=True to overwrite or passive=True to ignore')
 
         try:
             directory.mkdir(parents=True, exist_ok=True)

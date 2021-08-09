@@ -35,19 +35,24 @@ class Model:
         for calculation in self.calculations:
             calculation.check()
 
-    def create(self, force=False):
+    def create(self, force=False, passive=False):
         assert type(force) is bool
+        assert type(passive) is bool
+
+        if force and passive:
+            raise ValueError('Cannot create model with force=True and passive=True - use one option as True only')
 
         if len(self.calculations) == 0:
             raise ValueError('No calculations to create')
-        elif len(self.calculations) != 1 and any(calculation.directory is None for calculation in self.calculations):
-            raise ValueError('Cannot create multiple calculations when (a) directory/ies is/are not supplied')
 
-        if not force and any(Path(calculation.directory).exists() for calculation in self.calculations):
-            raise FileExistsError('Some directories already exist - use force=True to overwrite')
+        if any(calculation.directory is None for calculation in self.calculations):
+            raise ValueError('Cannot create calculations when directories are not defined')
+
+        if not force and not passive and any(Path(calculation.directory).exists() for calculation in self.calculations):
+            raise FileExistsError('Some directories already exist - use force=True to overwrite or passive=True to ignore')
 
         for calculation in self.calculations:
-            calculation.create()
+            calculation.create(force=force, passive=passive)
 
     def getDirString(self):
         if len(self.calculations) == 0:
