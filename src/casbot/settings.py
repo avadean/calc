@@ -712,8 +712,7 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                   lines=['  H   0.1   0.1   0.099380480724825',
                                          '  F   0.1   0.1   0.192319519275175']),
 
-                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                          ],
+                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hcl': [Setting(key='lattice_cart', lines=[' ANG',
                                                               '  10.0   0.0   0.0',
@@ -724,8 +723,7 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                    lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
                                           '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
 
-                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                           ],
+                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hbr': [Setting(key='lattice_cart', lines=[' ANG',
                                                               '  12.0   0.0   0.0',
@@ -736,8 +734,7 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                    lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
                                           '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
 
-                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                           ],
+                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hi': [Setting(key='lattice_cart', lines=[' ANG',
                                                              '  12.0   0.0   0.0',
@@ -748,8 +745,7 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                   lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
                                          '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
 
-                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                          ],
+                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hfrot': [Setting(key='lattice_cart', lines=[' ANG',
                                                                 '  10.0   0.0   0.0',
@@ -762,8 +758,7 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                      lines=['H         0.120400920000000  0.120400920000000 -0.029727390000000',
                                             'F         0.166870440000000  0.166870440000000  0.035990440000000']),
 
-                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                             ],
+                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hclrot': [Setting(key='lattice_cart', lines=[' ANG',
                                                                  '  10.0   0.0   0.0',
@@ -776,8 +771,7 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                       lines=['H         0.011684010000000  0.011684010000000 -0.003476050000000',
                                              'Cl        0.076158120000000  0.076158120000000  0.087703590000000']),
 
-                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                              ],
+                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hbrrot': [Setting(key='lattice_cart', lines=[' ANG',
                                                                  '  12.0   0.0   0.0',
@@ -790,8 +784,7 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                       lines=['H         0.005556530000000  0.005556430000000  0.007864050000000',
                                              'Br        0.065143470000000  0.065143570000000  0.092120850000000']),
 
-                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                              ],
+                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hirot': [Setting(key='lattice_cart', lines=[' ANG',
                                                                 '  12.0   0.0   0.0',
@@ -804,8 +797,52 @@ shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
                                      lines=['H        -0.000476450000000 -0.000476450000000 -0.000673800000000',
                                             'I         0.067518110000000  0.067518110000000  0.095485030000000']),
 
-                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])
-                             ]
+                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hftrans': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                  '  10.0   0.0   0.0',
+                                                                  '   0.0  10.0   0.0',
+                                                                  '   0.0   0.0  10.0']),
+
+                               Setting(key='positions_frac',
+                                       lines=['  H   1.1   -1.1   2.099380480724825',
+                                              '  F   1.1   -1.1   2.192319519275175']),
+
+                               Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hcltrans': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                   '  10.0   0.0   0.0',
+                                                                   '   0.0  10.0   0.0',
+                                                                   '   0.0   0.0  10.0']),
+
+                                Setting(key='positions_frac',
+                                        lines=['  H    1.009999871806914  -1.009999872045901   2.009226072370290',
+                                               '  Cl   1.010000128193086  -1.010000127954099   2.138173927629710']),
+
+                                Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hbrtrans': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                   '  12.0   0.0   0.0',
+                                                                   '   0.0  12.0   0.0',
+                                                                   '   0.0   0.0  12.0']),
+
+                                Setting(key='positions_frac',
+                                        lines=['  H     0.999997053809360  -1.000003049675148   2.011117199951347',
+                                               '  Br    1.000002946190640  -0.999996950324852   2.130282800048653']),
+
+                                Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hitrans': [Setting(key='lattice_cart', lines=[' ANG',
+                                                                  '  12.0   0.0   0.0',
+                                                                  '   0.0  12.0   0.0',
+                                                                  '   0.0   0.0  12.0']),
+
+                               Setting(key='positions_frac',
+                                       lines=['  H   1.000000000013618  -0.999999999836844   1.999047105232599',
+                                              '  I   0.999999999986382  -1.000000000163156   2.135036228100734']),
+
+                               Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
                    }
 
 shortcutToCellsAliases = {}
@@ -1356,7 +1393,12 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
                              'halidesrot': [shortcutToCells.get('hfrot'),
                                             shortcutToCells.get('hclrot'),
                                             shortcutToCells.get('hbrrot'),
-                                            shortcutToCells.get('hirot')]
+                                            shortcutToCells.get('hirot')],
+
+                             'halidestrans': [shortcutToCells.get('hftrans'),
+                                              shortcutToCells.get('hcltrans'),
+                                              shortcutToCells.get('hbrtrans'),
+                                              shortcutToCells.get('hitrans')]
                              }
 
 
