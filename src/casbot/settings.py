@@ -505,7 +505,6 @@ paramUnits = {
 }
 
 
-
 stringToNiceValue = {
     'lda': 'LDA',
     'pw91': 'PW91',
@@ -535,16 +534,6 @@ stringToNiceValue = {
     'sex-lda': 'SEX-LDA',
     'rscan': 'rSCAN'
 }
-
-
-def getNiceValueStr(string=None):
-    assert type(string) is str
-
-    string = string.strip().lower()
-
-    niceValue = stringToNiceValue.get(string, string)
-
-    return niceValue
 
 
 
@@ -592,7 +581,7 @@ class Setting:
                 value = value.strip().lower()
                 assert value in settingValues.get(self.key), 'Value of {} not accepted for {}'.format(value,
                                                                                                       self.key)
-                value = getNiceValueStr(value)
+                value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
 
             elif self.type is bool:
                 assert value in [True, False],\
@@ -601,30 +590,28 @@ class Setting:
             elif self.type in [float, int]:
                 minimum = min(settingValues.get(self.key))
                 maximum = max(settingValues.get(self.key))
-                assertBetween(value, minimum, maximum, self.key)
+                assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
 
             elif self.type in [VectorInt, VectorFloat]:
                 minimum = min(settingValues.get(self.key))
                 maximum = max(settingValues.get(self.key))
-                assertBetween(value.x, minimum, maximum, self.key)
-                assertBetween(value.y, minimum, maximum, self.key)
-                assertBetween(value.z, minimum, maximum, self.key)
+                assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
 
             self.value = value
-
             self.unit = unit
 
             if unit is not None:
-                self.unitType = getFromDict(key, settingUnits)
+                self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
 
                 assert type(unit) is str
-                unit = unit.lower()
-                assert unit in getAllowedUnits(self.unitType),\
-                    'Unit {} is not an acceptable type for {}'.format(unit, self.unitType)
+
+                unit = unit.strip().lower()
+
+                assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
 
                 self.unit = getNiceUnit(unit)
 
-        self.priority = getFromDict(key, settingPriorities)
+        self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
 
     def __str__(self):
         if self.type is Block:
@@ -637,6 +624,7 @@ class Setting:
             return '{:<3d}'.format(self.value)
 
         else:
+            # Includes VectorInt and VectorFloat as well as strings
             return str(self.value)
 
     def getLines(self, longestSetting=None):

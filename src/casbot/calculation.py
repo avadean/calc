@@ -243,8 +243,11 @@ class Calculation:
 
         return string
 
-    def analyse(self):
-        assert self.getStatus() == 'completed', 'Calculation not completed'
+    def analyse(self, type_=None):
+        assert self.getStatus() == 'completed', 'Calculation not completed therefore cannot analyse'
+
+        assert type(type_) is str
+        assert type(type_) in ['']
 
     def check(self):
         string = 'Calculation ->'

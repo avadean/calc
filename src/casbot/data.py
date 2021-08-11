@@ -29,78 +29,72 @@ class Block:
 
 
 class VectorInt:
-    def __init__(self, x=None, y=None, z=None, vector=None):
+    def __init__(self, *values, vector=None):
         if vector is None:
-            assert type(x) is int
-            assert type(y) is int
-            assert type(z) is int
+            assert all(type(val) is int for val in values)
 
-            self.x = x
-            self.y = y
-            self.z = z
+            self.values = values
 
         else:
             if type(vector) is VectorInt:
-                self.x = vector.x
-                self.y = vector.y
-                self.z = vector.z
+                self.values = vector.values
 
             elif type(vector) is VectorFloat:
+                assert all(val.is_integer() for val in vector.values)
 
-                assert vector.x.is_integer() and vector.y.is_integer() and vector.z.is_integer()
+                self.values = [int(val) for val in vector.values]
 
-                self.x = int(vector.x)
-                self.y = int(vector.y)
-                self.z = int(vector.z)
+            elif type(vector) is str:
+                values = [val.strip() for val in vector.split()]
 
-            elif type(vector) is str and isVectorInt(vector):
-                values = vector.split()
+                assert isInt(*values)
 
-                self.x = int(values[0].strip())
-                self.y = int(values[1].strip())
-                self.z = int(values[2].strip())
+                self.values = [int(float(val)) for val in values]
 
             else:
                 raise TypeError('Vector input to VectorInt must be a 3 str-int-vector, VectorInt or int-VectorFloat')
 
+        self.type_ = len(self.values)
+
     def __str__(self):
-        return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
+        intSetting = '{:>3d}'
+
+        return '  '.join(intSetting for _ in range(self.type_)).format(*self.values)
+        #return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
 
 
 class VectorFloat:
-    def __init__(self, x=None, y=None, z=None, vector=None):
+    def __init__(self, *values, vector=None):
         if vector is None:
-            assert type(x) is float
-            assert type(y) is float
-            assert type(z) is float
+            assert all(type(val) is float for val in values)
 
-            self.x = x
-            self.y = y
-            self.z = z
+            self.values = values
 
         else:
             if type(vector) is VectorInt:
-                self.x = float(vector.x)
-                self.y = float(vector.y)
-                self.z = float(vector.z)
+                self.values = [float(val) for val in vector.values]
 
             elif type(vector) is VectorFloat:
-                self.x = vector.x
-                self.y = vector.y
-                self.z = vector.z
+                self.values = vector.values
 
-            elif type(vector) is str and (isVectorInt(vector) or isVectorFloat(vector)):
-                values = vector.split()
+            elif type(vector) is str:
+                values = [val.strip() for val in vector.split()]
 
-                self.x = float(values[0].strip())
-                self.y = float(values[1].strip())
-                self.z = float(values[2].strip())
+                assert isInt(*values) or isFloat(*values)
+
+                self.values = [float(val) for val in values]
 
             else:
-                raise TypeError('Vector input to VectorFloat must be a 3 vector as a str, VectorInt or VectorFloat')
+                raise TypeError('Vector input to VectorFloat must be a vector as a str, VectorInt or VectorFloat')
+
+        self.type_ = len(self.values)
 
     def __str__(self):
-        return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
+        floatSetting = '{:>12.4f}'
+
+        return '  '.join(floatSetting for _ in range(self.type_)).format(*self.values)
+        #return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
+
 
 
 def stringToValue(value):
@@ -119,48 +113,41 @@ def stringToValue(value):
         return float(value)
 
     elif isVectorInt(value):
-        values = value.split()
-
-        x = int(float(values[0].strip()))
-        y = int(float(values[1].strip()))
-        z = int(float(values[2].strip()))
-
-        return VectorInt(x, y, z)
+        return VectorInt(vector=value)
 
     elif isVectorFloat(value):
-        values = value.split()
-
-        x = float(values[0].strip())
-        y = float(values[1].strip())
-        z = float(values[2].strip())
-
-        return VectorFloat(x, y, z)
+        return VectorFloat(vector=value)
 
     else:
         return value
 
 
-def isInt(x):
-    assert type(x) is str
+def isInt(*xList):
+    assert all(type(x_i) is str for x_i in xList)
 
-    try:
-        a = float(x)
-        b = int(a)
-    except (TypeError, ValueError):
-        return False
-    else:
-        return a == b
+    for x_i in xList:
+        try:
+            a = float(x_i)
+            b = int(a)
+        except (TypeError, ValueError):
+            return False
+        else:
+            if a != b:
+                return False
+
+    return True
 
 
-def isFloat(x):
-    assert type(x) is str
+def isFloat(*xList):
+    assert all(type(x_i) is str for x_i in xList)
 
-    try:
-        float(x)
-    except (TypeError, ValueError):
-        return False
-    else:
-        return True
+    for x_i in xList:
+        try:
+            float(x_i)
+        except (TypeError, ValueError):
+            return False
+
+    return True
 
 
 def isVectorInt(vector):
@@ -204,31 +191,36 @@ def assertCount(lst=None, count=1):
         '{} must be specified {} time(s)'.format(counter.most_common(1)[0][0], count)
 
 
-def assertBetween(value=None, minimum=None, maximum=None, key=None):
-    assert type(value) in [int, float]
+def assertBetween(*values, minimum=None, maximum=None, key=None):
+    assert all(type(value) in [int, float] for value in values)
     assert type(minimum) in [int, float]
     assert type(maximum) in [int, float]
 
     if key is not None:
         assert type(key) is str
 
-    assert minimum <= value <= maximum,\
-        'Value of {}{} outside range of allowed values: {} to {}'.format(value,
-                                                                         ' for {}'.format(key) if key is not None else '',
-                                                                         minimum,
-                                                                         maximum)
+    for value in values:
+        assert minimum <= value <= maximum,\
+            'Value of {}{} outside range of allowed values: {} to {}'.format(value,
+                                                                             ' for {}'.format(key) if key is not None else '',
+                                                                             minimum,
+                                                                             maximum)
 
 
-def getFromDict(key=None, dct=None, strict=True):
+def getFromDict(key=None, dct=None, strict=True, default=None):
     assert type(key) is str
     assert type(dct) is dict
     assert type(strict) is bool
 
-    key = key.lower()
+    if default is not None:
+        assert type(default) in [str, float, int],\
+            'getFromDict default does not work for type {} yet'.format(type(default))
 
-    value = dct.get(key, None)
+    key = key.strip().lower()
 
-    if value is None and strict:
+    value = dct.get(key, default)
+
+    if value == default and strict:
         raise ValueError('Key {} does not have a value'.format(key))
 
     return value
