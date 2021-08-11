@@ -31,16 +31,29 @@ class Model:
 
         return string
 
-    def analyse(self, force=False):
-        assert type(force) is bool
+    def analyse(self, type_=None, passive=False):
+        assert type(type_) is str
+        assert type(passive) is bool
 
-        if not force:
-            assert all(c.getStatus() == 'completed' for c in self.calculations),\
-                'Not all calculations have completed - use force=True to ignore'
+        type_ = type_.strip().lower()
 
-        analysis = {c: c.analyse() if c.getStatus() == 'completed' else [] for c in self.calculations}
+        numCompleted = sum(c.getStatus() == 'completed' for c in self.calculations)
 
-        return analysis
+        if numCompleted == len(self.calculations):
+            print('All {} calculations have completed. Analysing...'.format(len(self.calculations)), end=' ', flush=True)
+
+        elif not passive:
+            raise ValueError('Not all calculations have completed - use passive=True to ignore incomplete calculations')
+
+        else:
+            print('{} calculations have completed out of {}. Analysing completed calculations...'.format(numCompleted, len(self.calculations)),
+                  end=' ', flush=True)
+
+        for calculation in self.calculations:
+            if calculation.getStatus() == 'completed':
+                calculation.analyse(type_=type_)
+
+        print('Done!')
 
     def check(self):
         for calculation in self.calculations:
@@ -77,6 +90,11 @@ class Model:
         string = string[:-1]  # Remove last line break.
 
         return string
+
+    def printHyperfine(self):
+        for calculation in self.calculations:
+            calculation.printHyperfine()
+            print('')
 
     def run(self, test=False, force=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         assert type(test) is bool

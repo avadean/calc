@@ -1,5 +1,8 @@
 from collections import Counter
 
+import numpy as np
+
+
 # Variables for running calculations.
 serialDefault = False
 bashAliasesFileDefault = '/home/dean/.bash_aliases'
@@ -95,6 +98,23 @@ class VectorFloat:
         return '  '.join(floatSetting for _ in range(self.type_)).format(*self.values)
         #return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
 
+
+
+def strListToArray(lst=None):
+    assert type(lst) is list
+    assert all(type(line) is str for line in lst)
+
+    if len(lst) == 0:
+        return np.empty(0, dtype=float)
+
+    assert all(len(line.split()) == len(lst[0].split()) for line in lst), 'Shape mismatch when converting to array'
+
+    try:
+        arr = np.array([line.split() for line in lst], dtype=float)
+    except ValueError:
+        raise ValueError('Error in tensor format {}'.format('  '.join(lst)))
+
+    return arr
 
 
 def stringToValue(value):

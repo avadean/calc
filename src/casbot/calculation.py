@@ -2,6 +2,7 @@ from casbot.data import assertCount, createDirectories,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
     PrintColors
 from casbot.settings import Setting, createSettings, createVariableSettings, readSettings
+from casbot.results import getResult
 
 from collections import Counter
 from datetime import datetime
@@ -198,6 +199,13 @@ def processCalculations(*directories):
 
 
 class Calculation:
+    hyperfineDipolarBare = None
+    hyperfineDipolarAug = None
+    hyperfineDipolarAug2 = None
+    hyperfineDipolar = None
+    hyperfineFermi = None
+    hyperfineTotal = None
+
     def __init__(self, directory=None, settings=None, name=None):
         if directory is not None:
             assert type(directory) is str
@@ -247,7 +255,29 @@ class Calculation:
         assert self.getStatus() == 'completed', 'Calculation not completed therefore cannot analyse'
 
         assert type(type_) is str
-        assert type(type_) in ['']
+
+        type_ = type_.strip().lower()
+
+        self.setName(strict=True)
+
+        # TODO: allow for looking in different files (e.g .magres) not just .castep
+        castepFile = '{}{}.castep'.format(self.directory, self.name)
+
+        assert Path(castepFile).is_file(), 'Cannot find castep file {}'.format(castepFile)
+
+        with open(castepFile) as f:
+            castepLines = f.read().splitlines()
+
+        if type_ == 'hyperfine':
+            self.hyperfineDipolarBare = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
+            self.hyperfineDipolarAug = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
+            self.hyperfineDipolarAug2 = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
+            self.hyperfineDipolar = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
+            self.hyperfineFermi = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
+            self.hyperfineTotal = getResult(resultToGet='hyperfine_total', lines=castepLines)
+
+        else:
+            raise ValueError('Do not know how to put result {} into calculation (yet)'.format(type_))
 
     def check(self):
         string = 'Calculation ->'
@@ -440,6 +470,14 @@ class Calculation:
 
         else:
             return 'not yet created'
+
+    def printHyperfine(self):
+        print(self.hyperfineDipolarBare)
+        print(self.hyperfineDipolarAug)
+        print(self.hyperfineDipolarAug2)
+        print(self.hyperfineDipolar)
+        print(self.hyperfineFermi)
+        print(self.hyperfineTotal)
 
     def run(self, test=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         if self.directory is None:

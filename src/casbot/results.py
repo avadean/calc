@@ -1,14 +1,73 @@
-from casbot.data import getAllowedUnits, getNiceUnit, getFromDict,\
-    Block, VectorInt, VectorFloat
+#from casbot.data import getAllowedUnits, getNiceUnit, getFromDict,\
+#    VectorInt, VectorFloat
+from casbot.data import strListToArray
+
+from numpy import ndarray
 
 
-resultKnown = []
+resultKnown = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
+               'hyperfine_fermi', 'hyperfine_total']
 
-resultTypes = {}
+resultTypes = {'hyperfine_dipolarbare': ndarray,
+               'hyperfine_dipolaraug': ndarray,
+               'hyperfine_dipolaraug2': ndarray,
+               'hyperfine_dipolar': ndarray,
+               'hyperfine_fermi': ndarray,
+               'hyperfine_total': ndarray}
 
-resultUnits = {}
+#resultUnits = {}
 
 
+
+def getResult(resultToGet=None, lines=None):
+    assert type(resultToGet) is str
+    assert type(lines) is list
+    assert all(type(line) is str for line in lines)
+
+    resultToGet = resultToGet.strip().lower()
+
+    assert resultToGet in resultKnown
+
+
+
+    if resultToGet in ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
+                       'hyperfine_fermi', 'hyperfine_total']:
+
+        wordToLookFor = {'hyperfine_dipolarbare': 'd_bare',
+                         'hyperfine_dipolaraug': 'd_aug',
+                         'hyperfine_dipolaraug2': 'd_aug2',
+                         'hyperfine_dipolar': 'dipolar',
+                         'hyperfine_fermi': 'fermi',
+                         'hyperfine_total': 'total'}.get(resultToGet)
+        tensors = {}
+
+        for num, line in enumerate(lines):
+            parts = line.strip().lower().split()
+
+            if len(parts) == 4:
+                if parts[2] == wordToLookFor and parts[3] == 'tensor':
+                    element = parts[0][0].upper() + parts[0][1:].lower()
+                    elementNum = parts[1]
+
+                    assert elementNum.isdigit(), 'Error in digit on line {} of results file'.format(num)
+
+                    tensor = strListToArray(lines[num+2:num+5])
+
+                    tensors[element + elementNum] = tensor
+
+        if len(tensors) == 0:
+            raise ValueError('Could not find any hyperfine dipolar bare tensors in results file')
+
+        return tensors
+
+
+
+    else:
+        raise ValueError('Do not know how to get result {}'.format(resultToGet))
+
+
+
+'''
 class Result:
     def __init__(self, key=None, value=None, unit=None):
         assert type(key) is str, 'Key for result should be a string'
@@ -56,7 +115,7 @@ class Result:
             return '{:<3d}'.format(self.value)
 
         else:
-            # Includes VectorInt, VectorFloat and TensorFloat as well as strings
+            # Includes VectorInt and VectorFloat as well as strings
             return str(self.value)
 
     def getLines(self, longestSetting=None):
@@ -69,3 +128,4 @@ class Result:
                                          '' if self.unit is None else self.unit)]
 
         return lines
+'''
