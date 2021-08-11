@@ -65,6 +65,9 @@ class VectorInt:
         return '  '.join(intSetting for _ in range(self.type_)).format(*self.values)
         #return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
 
+    def getMagnitude(self):
+        return np.sqrt(sum(val ** 2.0 for val in self.values))
+
 
 class VectorFloat:
     def __init__(self, *values, vector=None):
@@ -97,6 +100,9 @@ class VectorFloat:
 
         return '  '.join(floatSetting for _ in range(self.type_)).format(*self.values)
         #return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
+
+    def getMagnitude(self):
+        return np.sqrt(sum(val ** 2.0 for val in self.values))
 
 
 
@@ -173,33 +179,13 @@ def isFloat(*xList):
 def isVectorInt(vector):
     assert type(vector) is str
 
-    parts = vector.split()
-
-    if len(parts) == 3:
-        x = parts[0].strip()
-        y = parts[1].strip()
-        z = parts[2].strip()
-
-        if isInt(x) and isInt(y) and isInt(z):
-            return True
-
-    return False
+    return True if all(isInt(part) for part in vector.split()) else False
 
 
 def isVectorFloat(vector):
     assert type(vector) is str
 
-    parts = vector.split()
-
-    if len(parts) == 3:
-        x = parts[0].strip()
-        y = parts[1].strip()
-        z = parts[2].strip()
-
-        if isFloat(x) and isFloat(y) and isFloat(z):
-            return True
-
-    return False
+    return True if all(isFloat(part) for part in vector.split()) else False
 
 
 def assertCount(lst=None, count=1):
