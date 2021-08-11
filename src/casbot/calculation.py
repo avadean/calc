@@ -496,21 +496,25 @@ class Calculation:
 
         if all_:
             names = ['dipolar bare', 'dipolar aug', 'dipolar aug2', 'dipolar total', 'fermi', 'total']
+            colors = [PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.green, PrintColors.orange]
             isos = [self.hyperfineDipolarBareIso, self.hyperfineDipolarAugIso, self.hyperfineDipolarAug2Iso, self.hyperfineDipolarIso, self.hyperfineFermiIso, self.hyperfineTotalIso]
             tensors = [self.hyperfineDipolarBareTensor, self.hyperfineDipolarAugTensor, self.hyperfineDipolarAug2Tensor, self.hyperfineDipolarTensor, self.hyperfineFermiTensor, self.hyperfineTotalTensor]
 
         elif dipolar:
             names = ['dipolar bare', 'dipolar aug', 'dipolar aug2', 'dipolar total']
+            colors = [PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.blue]
             isos = [self.hyperfineDipolarBareIso, self.hyperfineDipolarAugIso, self.hyperfineDipolarAug2Iso, self.hyperfineDipolarIso]
             tensors = [self.hyperfineDipolarBareTensor, self.hyperfineDipolarAugTensor, self.hyperfineDipolarAug2Tensor, self.hyperfineDipolarTensor]
 
         elif fermi:
             names = ['fermi']
+            colors = [PrintColors.green]
             isos = [self.hyperfineFermiIso]
             tensors = [self.hyperfineFermiTensor]
 
         else:
             names = ['dipolar total', 'fermi', 'total']
+            colors = [PrintColors.blue, PrintColors.green, PrintColors.orange]
             isos = [self.hyperfineDipolarIso, self.hyperfineFermiIso, self.hyperfineTotalIso]
             tensors = [self.hyperfineDipolarTensor, self.hyperfineFermiTensor, self.hyperfineTotalTensor]
 
@@ -520,7 +524,7 @@ class Calculation:
             for num, tensorSet in enumerate(tensors):
                 tensor = tensorSet.get(element)
 
-                string += '  |->   {:<2s} {:^17} {:>11.5f}   <-|\n'.format(element, names[num], isos[num].get(element))
+                string += '  |->   {:<2s} {}{:^17}{} {:>11.5f}   <-|\n'.format(element, colors[num], names[num], PrintColors.reset, isos[num].get(element))
 
                 if showTensors:
                     string += '   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n'.format(tensor[0][0], tensor[0][1], tensor[0][2],
@@ -642,8 +646,11 @@ class Calculation:
                 positionSetting = setting
                 break
 
-        if strict and positionSetting is None:
-            raise ValueError('Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)')
+        if positionSetting is None:
+            if strict:
+                raise ValueError('Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)')
+            else:
+                return
 
         elements = []
 
