@@ -1,6 +1,7 @@
 from casbot.calculation import Calculation
 
 from pathlib import Path
+from tqdm import tqdm
 
 
 class Model:
@@ -40,16 +41,16 @@ class Model:
         numCompleted = sum(c.getStatus() == 'completed' for c in self.calculations)
 
         if numCompleted == len(self.calculations):
-            print('All {} calculations have completed. Analysing...'.format(len(self.calculations)), end=' ', flush=True)
+            print('All {} calculations have completed. Analysing...'.format(len(self.calculations)))
 
         elif not passive:
             raise ValueError('Not all calculations have completed - use passive=True to ignore incomplete calculations')
 
         else:
-            print('{} calculations have completed out of {}. Analysing completed calculations...'.format(numCompleted, len(self.calculations)),
-                  end=' ', flush=True)
+            print('{} calculations have completed out of {}. Analysing completed calculations...'.format(numCompleted, len(self.calculations)))
 
-        for calculation in self.calculations:
+        # tqdm is for loading bar
+        for calculation in tqdm(iterable=self.calculations, ncols=100, unit='calculation'):
             if calculation.getStatus() == 'completed':
                 calculation.analyse(type_=type_)
 
