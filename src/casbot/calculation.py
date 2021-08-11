@@ -199,12 +199,19 @@ def processCalculations(*directories):
 
 
 class Calculation:
-    hyperfineDipolarBare = None
-    hyperfineDipolarAug = None
-    hyperfineDipolarAug2 = None
-    hyperfineDipolar = None
-    hyperfineFermi = None
-    hyperfineTotal = None
+    hyperfineDipolarBareIso = None
+    hyperfineDipolarAugIso = None
+    hyperfineDipolarAug2Iso = None
+    hyperfineDipolarIso = None
+    hyperfineFermiIso = None
+    hyperfineTotalIso = None
+
+    hyperfineDipolarBareTensor = None
+    hyperfineDipolarAugTensor = None
+    hyperfineDipolarAug2Tensor = None
+    hyperfineDipolarTensor = None
+    hyperfineFermiTensor = None
+    hyperfineTotalTensor = None
 
     def __init__(self, directory=None, settings=None, name=None):
         if directory is not None:
@@ -269,12 +276,12 @@ class Calculation:
             castepLines = f.read().splitlines()
 
         if type_ == 'hyperfine':
-            self.hyperfineDipolarBare = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
-            self.hyperfineDipolarAug = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
-            self.hyperfineDipolarAug2 = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
-            self.hyperfineDipolar = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
-            self.hyperfineFermi = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
-            self.hyperfineTotal = getResult(resultToGet='hyperfine_total', lines=castepLines)
+            self.hyperfineDipolarBareIso, self.hyperfineDipolarBareTensor = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
+            self.hyperfineDipolarAugIso, self.hyperfineDipolarAugTensor = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
+            self.hyperfineDipolarAug2Iso, self.hyperfineDipolarAug2Tensor = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
+            self.hyperfineDipolarIso, self.hyperfineDipolarTensor = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
+            self.hyperfineFermiIso, self.hyperfineFermiTensor = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
+            self.hyperfineTotalIso, self.hyperfineTotalTensor = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
         else:
             raise ValueError('Do not know how to put result {} into calculation (yet)'.format(type_))
@@ -471,13 +478,58 @@ class Calculation:
         else:
             return 'not yet created'
 
-    def printHyperfine(self):
-        print(self.hyperfineDipolarBare)
-        print(self.hyperfineDipolarAug)
-        print(self.hyperfineDipolarAug2)
-        print(self.hyperfineDipolar)
-        print(self.hyperfineFermi)
-        print(self.hyperfineTotal)
+    def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False):
+        assert type(all_) is bool
+        assert type(dipolar) is bool
+        assert type(fermi) is bool
+        assert type(showTensors) is bool
+
+        string = 'Calculation ->'
+
+        if self.name is not None:
+            string += ' {}'.format(self.name)
+
+        if self.directory is not None:
+            string += ' ({})'.format(self.directory)
+
+        string += '\n'
+
+        if all_:
+            names = ['dipolar bare', 'dipolar aug', 'dipolar aug2', 'dipolar total', 'fermi', 'total']
+            isos = [self.hyperfineDipolarBareIso, self.hyperfineDipolarAugIso, self.hyperfineDipolarAug2Iso, self.hyperfineDipolarIso, self.hyperfineFermiIso, self.hyperfineTotalIso]
+            tensors = [self.hyperfineDipolarBareTensor, self.hyperfineDipolarAugTensor, self.hyperfineDipolarAug2Tensor, self.hyperfineDipolarTensor, self.hyperfineFermiTensor, self.hyperfineTotalTensor]
+
+        elif dipolar:
+            names = ['dipolar bare', 'dipolar aug', 'dipolar aug2', 'dipolar total']
+            isos = [self.hyperfineDipolarBareIso, self.hyperfineDipolarAugIso, self.hyperfineDipolarAug2Iso, self.hyperfineDipolarIso]
+            tensors = [self.hyperfineDipolarBareTensor, self.hyperfineDipolarAugTensor, self.hyperfineDipolarAug2Tensor, self.hyperfineDipolarTensor]
+
+        elif fermi:
+            names = ['fermi']
+            isos = [self.hyperfineFermiIso]
+            tensors = [self.hyperfineFermiTensor]
+
+        else:
+            names = ['dipolar total', 'fermi', 'total']
+            isos = [self.hyperfineDipolarIso, self.hyperfineFermiIso, self.hyperfineTotalIso]
+            tensors = [self.hyperfineDipolarTensor, self.hyperfineFermiTensor, self.hyperfineTotalTensor]
+
+        elements = list(isos[0].keys())
+
+        for element in elements:
+            for num, tensorSet in enumerate(tensors):
+                tensor = tensorSet.get(element)
+
+                string += '  |->   {:<2s} {:^17} {:>11.5f}   <-|\n'.format(element, names[num], isos[num].get(element))
+
+                if showTensors:
+                    string += '   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n'.format(tensor[0][0], tensor[0][1], tensor[0][2],
+                                                                                                                                                          tensor[1][0], tensor[1][1], tensor[1][2],
+                                                                                                                                                          tensor[2][0], tensor[2][1], tensor[2][2])
+
+        string = string[:-1]  # Remove last line break.
+
+        print(string)
 
     def run(self, test=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         if self.directory is None:

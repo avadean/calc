@@ -1,5 +1,7 @@
 #from casbot.data import getAllowedUnits, getNiceUnit, getFromDict,\
 #    VectorInt, VectorFloat
+import numpy as np
+
 from casbot.data import strListToArray
 
 from numpy import ndarray
@@ -29,7 +31,6 @@ def getResult(resultToGet=None, lines=None):
     assert resultToGet in resultKnown
 
 
-
     if resultToGet in ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
                        'hyperfine_fermi', 'hyperfine_total']:
 
@@ -39,6 +40,8 @@ def getResult(resultToGet=None, lines=None):
                          'hyperfine_dipolar': 'dipolar',
                          'hyperfine_fermi': 'fermi',
                          'hyperfine_total': 'total'}.get(resultToGet)
+
+        isos = {}
         tensors = {}
 
         for num, line in enumerate(lines):
@@ -53,13 +56,13 @@ def getResult(resultToGet=None, lines=None):
 
                     tensor = strListToArray(lines[num+2:num+5])
 
+                    isos[element + elementNum] = np.trace(tensor) / 3.0
                     tensors[element + elementNum] = tensor
 
         if len(tensors) == 0:
             raise ValueError('Could not find any hyperfine dipolar bare tensors in results file')
 
-        return tensors
-
+        return isos, tensors
 
 
     else:

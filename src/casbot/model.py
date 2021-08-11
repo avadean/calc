@@ -90,9 +90,14 @@ class Model:
 
         return string
 
-    def printHyperfine(self):
+    def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False):
+        assert type(all_) is bool
+        assert type(dipolar) is bool
+        assert type(fermi) is bool
+        assert type(showTensors) is bool
+
         for calculation in self.calculations:
-            calculation.printHyperfine()
+            calculation.printHyperfine(all_=all_, dipolar=dipolar, fermi=fermi, showTensors=showTensors)
             print('')
 
     def run(self, test=False, force=False, serial=None, bashAliasesFile=None, notificationAlias=None):
