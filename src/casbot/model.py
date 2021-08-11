@@ -54,8 +54,6 @@ class Model:
             if calculation.getStatus() == 'completed':
                 calculation.analyse(type_=type_)
 
-        print('Done!')
-
     def check(self):
         for calculation in self.calculations:
             calculation.check()
