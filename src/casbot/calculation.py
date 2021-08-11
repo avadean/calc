@@ -243,8 +243,13 @@ class Calculation:
 
         return string
 
+    def analyse(self):
+        assert self.getStatus() == 'completed', 'Calculation not completed'
+
     def check(self):
         string = 'Calculation ->'
+
+        self.setName(strict=False)
 
         if self.name is not None:
             string += ' {}'.format(self.name)
@@ -256,6 +261,8 @@ class Calculation:
             string += ' ({}) '.format(self.directory)
 
         if Path(self.directory).is_dir():
+            self.setName(strict=True)
+
             subFile = '{}{}.sub'.format(self.directory, self.name)
             castepFile = '{}{}.castep'.format(self.directory, self.name)
 
@@ -263,9 +270,13 @@ class Calculation:
                 with open(castepFile) as f:
                     castepLines = f.read().splitlines()
 
+                castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
+
                 calculationFinished = False
+
                 for line in castepLines:
                     line = line.strip().lower()
+
                     if line.startswith('total time'):
                         calculationFinished = True
                         break
@@ -279,6 +290,7 @@ class Calculation:
 
                     for line in castepLines:
                         line = line.strip()
+
                         if line.lower().startswith('run started:'):
                             line = line[12:].strip()  # len('Run started:') = 12
 
@@ -303,7 +315,6 @@ class Calculation:
                 subLines.reverse()
 
                 for line in subLines:
-
                     subTime = search(r'\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}', line)
 
                     if subTime is not None:
@@ -395,6 +406,37 @@ class Calculation:
                         f.write(line)
 
         print('Created calculation for {} in {}'.format(self.name, directory))
+
+    def getStatus(self):
+        if self.directory is None:
+            return 'no directory specified'
+
+        if Path(self.directory).is_dir():
+            self.setName(strict=True)
+
+            subFile = '{}{}.sub'.format(self.directory, self.name)
+            castepFile = '{}{}.castep'.format(self.directory, self.name)
+
+            if Path(castepFile).is_file():
+                with open(castepFile) as f:
+                    castepLines = f.read().splitlines()
+
+                castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
+
+                for line in castepLines:
+                    if line.strip().lower().startswith('total time'):
+                        return 'completed'
+
+                return 'running'
+
+            elif Path(subFile).is_file():
+                return 'submitted'
+
+            else:
+                return 'created'
+
+        else:
+            return 'not yet created'
 
     def run(self, test=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         if self.directory is None:
@@ -516,7 +558,7 @@ class Calculation:
             try:
                 element = line.split(' ')[0]
             except IndexError:
-                raise ValueError('Cannot find element in atomic positions line {}'.format(line))
+                raise ValueError('Cannot find element in atomic positions line {} to help set name'.format(line))
 
             element = element.strip()
 
@@ -525,6 +567,9 @@ class Calculation:
             # Manually get rid of lines that are just units.
             if element not in ['Ang', 'Bohr']:
                 elements.append(element)
+
+        if len(elements) == 0:
+            raise ValueError('Could not find any elements in {} block to help set name'.format(positionSetting.key))
 
         elements = Counter(elements)
 

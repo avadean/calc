@@ -31,6 +31,17 @@ class Model:
 
         return string
 
+    def analyse(self, force=False):
+        assert type(force) is bool
+
+        if not force:
+            assert all(c.getStatus() == 'completed' for c in self.calculations),\
+                'Not all calculations have completed - use force=True to ignore'
+
+        analysis = {c: c.analyse() if c.getStatus() == 'completed' else [] for c in self.calculations}
+
+        return analysis
+
     def check(self):
         for calculation in self.calculations:
             calculation.check()
