@@ -199,19 +199,12 @@ def processCalculations(*directories):
 
 
 class Calculation:
-    hyperfineDipolarBareIso = None
-    hyperfineDipolarAugIso = None
-    hyperfineDipolarAug2Iso = None
-    hyperfineDipolarIso = None
-    hyperfineFermiIso = None
-    hyperfineTotalIso = None
-
-    hyperfineDipolarBareTensor = None
-    hyperfineDipolarAugTensor = None
-    hyperfineDipolarAug2Tensor = None
-    hyperfineDipolarTensor = None
-    hyperfineFermiTensor = None
-    hyperfineTotalTensor = None
+    hyperfineDipolarBareTensors = []
+    hyperfineDipolarAugTensors = []
+    hyperfineDipolarAug2Tensors = []
+    hyperfineDipolarTensors = []
+    hyperfineFermiTensors = []
+    hyperfineTotalTensors = []
 
     def __init__(self, directory=None, settings=None, name=None):
         if directory is not None:
@@ -276,12 +269,12 @@ class Calculation:
             castepLines = f.read().splitlines()
 
         if type_ == 'hyperfine':
-            self.hyperfineDipolarBareIso, self.hyperfineDipolarBareTensor = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
-            self.hyperfineDipolarAugIso, self.hyperfineDipolarAugTensor = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
-            self.hyperfineDipolarAug2Iso, self.hyperfineDipolarAug2Tensor = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
-            self.hyperfineDipolarIso, self.hyperfineDipolarTensor = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
-            self.hyperfineFermiIso, self.hyperfineFermiTensor = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
-            self.hyperfineTotalIso, self.hyperfineTotalTensor = getResult(resultToGet='hyperfine_total', lines=castepLines)
+            self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
+            self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
+            self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
+            self.hyperfineDipolarTensors = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
+            self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
+            self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
         else:
             raise ValueError('Do not know how to put result {} into calculation (yet)'.format(type_))
@@ -312,22 +305,14 @@ class Calculation:
 
                 castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
 
-                calculationFinished = False
-
                 for line in castepLines:
                     line = line.strip().lower()
 
                     if line.startswith('total time'):
-                        calculationFinished = True
+                        string += '*** {}completed{} ***'.format(PrintColors.complete,
+                                                                 PrintColors.reset)
                         break
-
-                if calculationFinished:
-                    string += '*** {}completed{} ***'.format(PrintColors.complete,
-                                                             PrintColors.reset)
-
                 else:
-                    startTime = None
-
                     for line in castepLines:
                         line = line.strip()
 
@@ -340,15 +325,15 @@ class Calculation:
                                 pass
                             else:
                                 startTime = startTime.strftime('%Y-%m-%d %H:%M:%S')
+                                string += '***  {}running{}  -> {} ***'.format(PrintColors.running,
+                                                                               PrintColors.reset,
+                                                                               startTime)
                                 break
-
-                    string += '***  {}running{}  -> {} ***'.format(PrintColors.running,
-                                                                   PrintColors.reset,
-                                                                   'unknown time' if startTime is None else startTime)
+                    else:
+                        string += '***  {}running{}  -> unknown time ***'.format(PrintColors.running,
+                                                                                 PrintColors.reset)
 
             elif Path(subFile).is_file():
-                subTime = None
-
                 with open(subFile) as f:
                     subLines = f.read().splitlines()
 
@@ -364,11 +349,13 @@ class Calculation:
 
                         #subTime = datetime.strptime(subTime, '%Y-%m-%d %H:%M:%S')
 
+                        string += '*** {}submitted{} -> {} ***'.format(PrintColors.submitted,
+                                                                       PrintColors.reset,
+                                                                       subTime)
                         break
-
-                string += '*** {}submitted{} -> {} ***'.format(PrintColors.submitted,
-                                                               PrintColors.reset,
-                                                               'unknown time' if subTime is None else subTime)
+                else:
+                    string += '*** {}submitted{} -> unknown time ***'.format(PrintColors.submitted,
+                                                                             PrintColors.reset)
 
             else:
                 string += '*** {}created{} ***'.format(PrintColors.created,
@@ -478,11 +465,17 @@ class Calculation:
         else:
             return 'not yet created'
 
-    def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False):
+    def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
         assert type(all_) is bool
         assert type(dipolar) is bool
         assert type(fermi) is bool
         assert type(showTensors) is bool
+
+        if element is not None:
+            assert type(element) is str
+
+            element = element.strip()
+            element = None if element == '' else element[0].upper() + element[1:].lower()
 
         string = 'Calculation ->'
 
@@ -495,41 +488,25 @@ class Calculation:
         string += '\n'
 
         if all_:
-            names = ['dipolar bare', 'dipolar aug', 'dipolar aug2', 'dipolar total', 'fermi', 'total']
             colors = [PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.green, PrintColors.orange]
-            isos = [self.hyperfineDipolarBareIso, self.hyperfineDipolarAugIso, self.hyperfineDipolarAug2Iso, self.hyperfineDipolarIso, self.hyperfineFermiIso, self.hyperfineTotalIso]
-            tensors = [self.hyperfineDipolarBareTensor, self.hyperfineDipolarAugTensor, self.hyperfineDipolarAug2Tensor, self.hyperfineDipolarTensor, self.hyperfineFermiTensor, self.hyperfineTotalTensor]
+            tensorsList = [self.hyperfineDipolarBareTensors, self.hyperfineDipolarAugTensors, self.hyperfineDipolarAug2Tensors, self.hyperfineDipolarTensors, self.hyperfineFermiTensors, self.hyperfineTotalTensors]
 
         elif dipolar:
-            names = ['dipolar bare', 'dipolar aug', 'dipolar aug2', 'dipolar total']
             colors = [PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.blue]
-            isos = [self.hyperfineDipolarBareIso, self.hyperfineDipolarAugIso, self.hyperfineDipolarAug2Iso, self.hyperfineDipolarIso]
-            tensors = [self.hyperfineDipolarBareTensor, self.hyperfineDipolarAugTensor, self.hyperfineDipolarAug2Tensor, self.hyperfineDipolarTensor]
+            tensorsList = [self.hyperfineDipolarBareTensors, self.hyperfineDipolarAugTensors, self.hyperfineDipolarAug2Tensors, self.hyperfineDipolarTensors]
 
         elif fermi:
-            names = ['fermi']
             colors = [PrintColors.green]
-            isos = [self.hyperfineFermiIso]
-            tensors = [self.hyperfineFermiTensor]
+            tensorsList = [self.hyperfineFermiTensors]
 
         else:
-            names = ['dipolar total', 'fermi', 'total']
             colors = [PrintColors.blue, PrintColors.green, PrintColors.orange]
-            isos = [self.hyperfineDipolarIso, self.hyperfineFermiIso, self.hyperfineTotalIso]
-            tensors = [self.hyperfineDipolarTensor, self.hyperfineFermiTensor, self.hyperfineTotalTensor]
+            tensorsList = [self.hyperfineDipolarTensors, self.hyperfineFermiTensors, self.hyperfineTotalTensors]
 
-        elements = list(isos[0].keys())
-
-        for element in elements:
-            for num, tensorSet in enumerate(tensors):
-                tensor = tensorSet.get(element)
-
-                string += '  |->   {:<2s} {}{:^17}{} {:>11.5f}   <-|\n'.format(element, colors[num], names[num], PrintColors.reset, isos[num].get(element))
-
-                if showTensors:
-                    string += '   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n'.format(tensor[0][0], tensor[0][1], tensor[0][2],
-                                                                                                                                                          tensor[1][0], tensor[1][1], tensor[1][2],
-                                                                                                                                                          tensor[2][0], tensor[2][1], tensor[2][2])
+        for num, tensors in enumerate(tensorsList):
+            for tensor in tensors:
+                if element is None or (element is not None and tensor.element == element):
+                    string += tensor.__str__(color=colors[num], showTensors=showTensors) + '\n'
 
         string = string[:-1]  # Remove last line break.
 
@@ -639,14 +616,11 @@ class Calculation:
         if self.name is not None:
             return
 
-        positionSetting = None
-
         for setting in self.settings:
             if setting.key in ['positions_frac', 'positions_abs']:
                 positionSetting = setting
                 break
-
-        if positionSetting is None:
+        else:
             if strict:
                 raise ValueError('Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)')
             else:

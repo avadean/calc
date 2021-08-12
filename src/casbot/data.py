@@ -10,6 +10,20 @@ notificationAliasDefault = 'noti'
 queueFileDefault = '/home/dean/tools/files/castep_queue.txt'
 
 
+# Periodic table of elements.
+elements = ['h' ,                                                                                                 'he',
+            'li', 'be',                                                             'b' , 'c' , 'n' , 'o' , 'f' , 'ne',
+            'na', 'mg',                                                             'al', 'si', 'p' , 's' , 'cl', 'ar',
+            'k' , 'ca', 'sc', 'ti', 'v' , 'cr', 'mn', 'fe', 'co', 'ni', 'cu', 'zn', 'ga', 'ge', 'as', 'se', 'br', 'kr',
+            'rb', 'sr', 'y' , 'zr', 'nb', 'mo', 'tc', 'ru', 'rh', 'pd', 'ag', 'cd', 'in', 'sn', 'sb', 'te', 'i' , 'xe',
+            'cs', 'ba',
+            'la', 'ce', 'pr', 'nd', 'pm', 'sm', 'eu', 'gd', 'tb', 'dy', 'ho', 'er', 'tm', 'yb', 'lu',
+            'hf', 'ta', 'w' , 're', 'os', 'ir', 'pt', 'au', 'hg', 'tl', 'pb', 'bi', 'po', 'at', 'rn',
+            'fr', 'ra',
+            'ac', 'th', 'pa', 'u' , 'np', 'pu', 'am', 'cm', 'bk', 'cf', 'es', 'fm', 'md', 'no', 'lr',
+            'rf', 'db', 'sg', 'bh', 'hs', 'mt', 'ds', 'rg', 'cn', 'nh', 'fl', 'mc', 'lv', 'ts', 'og' ]
+
+
 def createDirectories(*directoryNames):
 
     for directory in directoryNames:
@@ -293,6 +307,7 @@ unitToNiceUnit = { 'ev' : 'eV',
                    'ha' : 'Ha',
                    'j' : 'J',
                    'ry' : 'Ry',
+                   'mhz' : 'MHz',
 
                    'ang' : 'Ang',
                    'bohr' : 'Bohr',
@@ -304,6 +319,7 @@ unitToUnitType = { 'ev' : 'energy',
                    'ha' : 'energy',
                    'j' : 'energy',
                    'ry' : 'energy',
+                   'mhz' : 'energy',
 
                    'ang' : 'length',
                    'bohr' : 'length',
@@ -311,7 +327,7 @@ unitToUnitType = { 'ev' : 'energy',
                    '1/ang' : 'inverseLength'
                    }
 
-unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry'],
+unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
 
                    'length' : ['ang', 'bohr'],
 

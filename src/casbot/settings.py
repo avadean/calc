@@ -559,7 +559,7 @@ class Setting:
             raise ValueError('{} not a known setting'.format(key))
 
         self.key = key
-        self.type = getFromDict(key, settingTypes)
+        self.type = getFromDict(key=key, dct=settingTypes, strict=True)
 
         if self.type is Block:
             assert type(lines) is list, 'Lines for block should be a list'
@@ -570,22 +570,18 @@ class Setting:
             if type(value) is int and self.type is float:
                 value = float(value)
 
-            if type(value) is VectorInt and self.type is VectorFloat:
+            if type(value) in [str, VectorInt] and self.type is VectorFloat:
                 value = VectorFloat(vector=value)
 
-            assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value,
-                                                                                                   self.key,
-                                                                                                   self.type)
+            assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, self.type)
 
             if self.type is str:
                 value = value.strip().lower()
-                assert value in settingValues.get(self.key), 'Value of {} not accepted for {}'.format(value,
-                                                                                                      self.key)
+                assert value in settingValues.get(self.key), 'Value of {} not accepted for {}'.format(value, self.key)
                 value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
 
             elif self.type is bool:
-                assert value in [True, False],\
-                    'Value of {} not accepted for {}, should be True or False'.format(value, self.key)
+                assert value in [True, False], 'Value of {} not accepted for {}, should be True or False'.format(value, self.key)
 
             elif self.type in [float, int]:
                 minimum = min(settingValues.get(self.key))
@@ -598,7 +594,6 @@ class Setting:
                 assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
 
             self.value = value
-            self.unit = unit
 
             if unit is not None:
                 self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
@@ -609,7 +604,9 @@ class Setting:
 
                 assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
 
-                self.unit = getNiceUnit(unit)
+                unit = getNiceUnit(unit)
+
+            self.unit = unit
 
         self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
 
