@@ -168,13 +168,14 @@ class NMRTensor(Result):
         self.trace = np.trace(self.value)
         self.iso = self.trace / 3.0
 
-        self.diag = np.diag(np.linalg.eigvals(self.value))
+        self.eigenVals, self.eigenVects = np.linalg.eig(self.value)
+        self.diag = np.diag(self.eigenVals)
 
-    def __str__(self, color='', showTensors=False):
-        assert type(color) is str
+    def __str__(self, nameColor='', showTensors=False):
+        assert type(nameColor) is str
         assert type(showTensors) is bool
 
-        string = '  |->   {:<3s} {}{:^16}{} {:>11.5f}   <-|'.format(self.element + self.ion, color, self.name, PrintColors.reset, self.iso)
+        string = '  |->   {:<3s} {}{:^16}{} {:>11.5f}   <-|'.format(self.element + self.ion, nameColor, self.name, PrintColors.reset, self.iso)
 
         if showTensors:
             string += '\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}'.format(*self.value.flatten())

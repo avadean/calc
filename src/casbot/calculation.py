@@ -488,25 +488,34 @@ class Calculation:
         string += '\n'
 
         if all_:
-            colors = [PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.green, PrintColors.orange]
-            tensorsList = [self.hyperfineDipolarBareTensors, self.hyperfineDipolarAugTensors, self.hyperfineDipolarAug2Tensors, self.hyperfineDipolarTensors, self.hyperfineFermiTensors, self.hyperfineTotalTensors]
+            tensorsList = [(self.hyperfineDipolarBareTensors, PrintColors.blue),
+                           (self.hyperfineDipolarAugTensors, PrintColors.blue),
+                           (self.hyperfineDipolarAug2Tensors, PrintColors.blue),
+                           (self.hyperfineDipolarTensors, PrintColors.blue),
+                           (self.hyperfineFermiTensors, PrintColors.green),
+                           (self.hyperfineTotalTensors, PrintColors.orange)]
 
-        elif dipolar:
-            colors = [PrintColors.blue, PrintColors.blue, PrintColors.blue, PrintColors.blue]
-            tensorsList = [self.hyperfineDipolarBareTensors, self.hyperfineDipolarAugTensors, self.hyperfineDipolarAug2Tensors, self.hyperfineDipolarTensors]
-
-        elif fermi:
-            colors = [PrintColors.green]
-            tensorsList = [self.hyperfineFermiTensors]
+        elif not dipolar and not fermi:
+            tensorsList = [(self.hyperfineDipolarTensors, PrintColors.blue),
+                           (self.hyperfineFermiTensors, PrintColors.green),
+                           (self.hyperfineTotalTensors, PrintColors.orange)]
 
         else:
-            colors = [PrintColors.blue, PrintColors.green, PrintColors.orange]
-            tensorsList = [self.hyperfineDipolarTensors, self.hyperfineFermiTensors, self.hyperfineTotalTensors]
+            tensorsList = []
 
-        for num, tensors in enumerate(tensorsList):
+            if dipolar:
+                tensorsList += [(self.hyperfineDipolarBareTensors, PrintColors.blue),
+                                (self.hyperfineDipolarAugTensors, PrintColors.blue),
+                                (self.hyperfineDipolarAug2Tensors, PrintColors.blue),
+                                (self.hyperfineDipolarTensors, PrintColors.blue)]
+
+            if fermi:
+                tensorsList += [(self.hyperfineFermiTensors, PrintColors.green)]
+
+        for tensors, color in tensorsList:
             for tensor in tensors:
                 if element is None or (element is not None and tensor.element == element):
-                    string += tensor.__str__(color=colors[num], showTensors=showTensors) + '\n'
+                    string += tensor.__str__(nameColor=color, showTensors=showTensors) + '\n'
 
         string = string[:-1]  # Remove last line break.
 
