@@ -295,9 +295,10 @@ class PrintColors:
     underline = '\033[4m'
     blink = '\033[5m'
 
-    notYetCreated = red
+    errored = red
+    notYetCreated = orange
     created = pink
-    submitted = orange
+    submitted = yellow
     running = blue
     complete = green
 
