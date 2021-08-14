@@ -398,7 +398,10 @@ stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_
                                                         '09kT/density_in_x', '09kT/density_in_y', '09kT/density_in_z',
                                                         '10kT/density_in_x', '10kT/density_in_y', '10kT/density_in_z'],
 
-                               'bfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T']
+                               'bfield': ['00T', '01T', '02T', '03T', '04T', '05T', '06T', '07T', '08T', '09T', '10T'],
+                               'tensbfield': ['000T', '010T', '020T', '030T', '040T', '050T', '060T', '070T', '080T', '090T', '100T'],
+                               'hundredsbfield': ['0000T', '01T00', '0200T', '0300T', '0400T', '0500T', '0600T', '0700T', '0800T', '0900T', '1000T'],
+                               'kilosbfield': ['00kT', '01kT', '02kT', '03kT', '04kT', '05kT', '06kT', '07kT', '08kT', '09kT', '10kT']
                                }
 
 stringToVariableDirectoriesAliases = {'xbfield': stringToVariableDirectories.get('bfield'),
