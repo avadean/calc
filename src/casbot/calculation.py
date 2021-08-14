@@ -299,7 +299,7 @@ class Calculation:
             subFile = '{}{}.sub'.format(self.directory, self.name)
             castepFile = '{}{}.castep'.format(self.directory, self.name)
 
-            if any('.err' in file_ for file_ in listdir(self.directory)):
+            if any((self.name in file_ and '.err' in file_) for file_ in listdir(self.directory)):
                 string += '***  {}errored{}  ***'.format(PrintColors.errored,
                                                          PrintColors.reset)
 
