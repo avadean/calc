@@ -300,8 +300,8 @@ class Calculation:
             castepFile = '{}{}.castep'.format(self.directory, self.name)
 
             if any('.err' in file_ for file_ in listdir(self.directory)):
-                string += '*** {}errored{} ***'.format(PrintColors.errored,
-                                                       PrintColors.reset)
+                string += '***  {}errored{}  ***'.format(PrintColors.errored,
+                                                         PrintColors.reset)
 
             elif Path(castepFile).is_file():
                 with open(castepFile) as f:
@@ -362,8 +362,8 @@ class Calculation:
                                                                              PrintColors.reset)
 
             else:
-                string += '*** {}created{} ***'.format(PrintColors.created,
-                                                       PrintColors.reset)
+                string += '***  {}created{}  ***'.format(PrintColors.created,
+                                                         PrintColors.reset)
 
         else:
             string += '*** {}not yet created{} ***'.format(PrintColors.notYetCreated,
