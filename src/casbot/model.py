@@ -62,25 +62,65 @@ class Model:
     def check(self):
         self.setSpecies(strict=True)
 
-        speciesCompletedTime = {species: 0.0 for species in self.species.keys()}
-        speciesRunningTime = {species: 0.0 for species in self.species.keys()}
+        totalTimeCompleted = {species: 0.0 for species in self.species.keys()}
+        #totalTimeRunning = {species: 0.0 for species in self.species.keys()}
 
-        speciesNumCompleted = Counter()
-        speciesNumRunning = Counter()
+        numCompleted = Counter()
+        numRunning = Counter()
+        numSubmitted = Counter()
 
         for c in self.calculations:
             status = c.getStatus()
 
+            #if status in ['no directory specified', 'errored', 'created', 'not yet created']:
+            #    continue
+
             if status == 'completed':
-                speciesNumCompleted.update(c.name)
-                speciesCompletedTime[c.name] = speciesCompletedTime.get(c.name) + c.getCompletedTime()
+                numCompleted[c.name] += 1
+                totalTimeCompleted[c.name] += c.getCompletedTime()
 
             elif status == 'running':
-                speciesNumRunning.update(c.name)
-                speciesRunningTime[c.name] = speciesRunningTime.get(c.name) + c.getRunningTime()
+                numRunning[c.name] += 1
+                #totalTimeRunning[c.name] += c.getRunningTime()
+
+            elif status == 'submitted':
+                numSubmitted[c.name] += 1
+
+        if sum((numRunning + numSubmitted).values()) > 0 and sum(numCompleted.values()):
+            averageTimeCompleted = {species: None if numCompleted[species] == 0 else totalTimeCompleted[species] / numCompleted[species] for species in self.species.keys()}
+            #averageTimeRunning = {species: None if numRunning[species] == 0 else totalTimeRunning[species] / numRunning[species] for species in self.species.keys()}
+
+            calculations = sorted([calc for calc in self.calculations if calc.getStatus() in ['running', 'submitted']], key=lambda calc: calc.getStatus())
+
+            # If we can run n calculations at once, we don't need to work in serial, so we create a parallel set of finish times where n = number running at that moment.
+            numParallelRunning = sum(numRunning.values()) if sum(numRunning.values()) else 1
+            finishTimes = [0.0 for _ in range(numParallelRunning)]  # Number of seconds away from now a calculation is expected to finish.
+
+            for c in calculations:
+
+                # If there are completed calculations for this species, take the average of those, otherwise take the average of all the completed calculations.
+                # Note: sum(numCompleted.values()) cannot be zero due to the if statement check above - so no worries on ZeroDivisionError here.
+                timeForThisCalculation = averageTimeCompleted[c.name] if numCompleted[c.name] > 0 else sum(totalTimeCompleted.values()) / float(sum(numCompleted.values()))
+
+                if c.getStatus() == 'running':
+                    timeForThisCalculation -= c.getRunningTime()
+                    timeForThisCalculation = max(0.0, timeForThisCalculation)
+
+                nextFinishTime = min(finishTimes)
+                index = finishTimes.index(nextFinishTime)
+
+                finishTimes[index] += timeForThisCalculation
+
+                c.expectedSecToFinish = finishTimes[index]
+
+        maxNameLen = max([len(calc.name) for calc in self.calculations if calc.name is not None], default=0)
+        maxDirLen = max([len(calc.directory) for calc in self.calculations if calc.directory is not None], default=0)
 
         for c in self.calculations:
-            c.check()
+            c.check(nameOutputLen=maxNameLen, dirOutputLen=maxDirLen)
+
+        for c in self.calculations:
+            c.expectedSecToFinish = None
 
     def create(self, force=False, passive=False):
         assert type(force) is bool
@@ -117,7 +157,7 @@ class Model:
     def setSpecies(self, strict=False):
         assert type(strict) is bool
 
-        if all(self.species.keys()):
+        if len(self.species) > 0 and all(self.species.keys()):
             return
 
         for calculation in self.calculations:

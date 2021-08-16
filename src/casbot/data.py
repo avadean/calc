@@ -300,7 +300,7 @@ class PrintColors:
     created = pink
     submitted = yellow
     running = blue
-    complete = green
+    completed = green
 
 
 

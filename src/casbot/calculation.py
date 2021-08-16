@@ -229,6 +229,7 @@ class Calculation:
 
         self.completedTime = None
         self.runTime = None
+        self.expectedSecToFinish = None
 
     def __str__(self):
         string = 'Calculation ->'
@@ -282,20 +283,50 @@ class Calculation:
         else:
             raise ValueError('Do not know how to put result {} into calculation (yet)'.format(type_))
 
-    def check(self):
-        string = 'Calculation ->'
+    def check(self, nameOutputLen=0, dirOutputLen=0):
+        assert type(nameOutputLen) is int
+        assert type(dirOutputLen) is int
 
         self.setName(strict=False)
 
+        string = ' ->'
+
         if self.name is not None:
-            string += ' {}'.format(self.name)
+            nameOutputLen = nameOutputLen if nameOutputLen else len(self.name)
+            string += '  {:<{spaces}}'.format(self.name if self.name is not None else '', spaces=nameOutputLen)
 
         if self.directory is None:
-            string += ' (no directory specified)'
+            string += '  (no directory specified)'
             return
         else:
-            string += ' ({}) '.format(self.directory)
+            maxDirLength = dirOutputLen if dirOutputLen else len(self.directory)
+            string += '  {:<{spaces}}'.format('({})'.format(self.directory), spaces=maxDirLength + 2)  # 2 for brackets ()
 
+        status = self.getStatus()
+
+        color = {  # 'no directory specified': PrintColors.black,
+            'errored': PrintColors.errored,
+            'completed': PrintColors.completed,
+            'running': PrintColors.running,
+            'submitted': PrintColors.submitted,
+            'created': PrintColors.created,
+            'not yet created': PrintColors.notYetCreated}.get(status, None)
+
+        assert color is not None, 'Status {} not recognised'.format(status)
+
+        if status in ['running', 'submitted'] and self.expectedSecToFinish is not None:
+            finishDateTimeInSec = datetime.now().timestamp() + self.expectedSecToFinish
+            finishDateTime = datetime.fromtimestamp(finishDateTimeInSec).strftime('%Y-%m-%d %H:%M:%S')
+            extraMessage = 'expected finish time {}'.format(finishDateTime)
+        else:
+            extraMessage = ''
+
+        string += '  *** {}{:^15}{} *** {}'.format(color,
+                                                   status,
+                                                   PrintColors.reset,
+                                                   ' {}'.format(extraMessage) if extraMessage else '')
+
+        '''
         if Path(self.directory).is_dir():
             self.setName(strict=True)
 
@@ -371,6 +402,7 @@ class Calculation:
         else:
             string += '*** {}not yet created{} ***'.format(PrintColors.notYetCreated,
                                                            PrintColors.reset)
+        '''
 
         print(string)
 
@@ -498,49 +530,24 @@ class Calculation:
                 line = line[12:].strip()  # len('Run started:') = 12
 
                 try:
-                    startTime = datetime.strptime(line, '%a, %d %b %Y %H:%M:%S %z')
+                    time = datetime.now().timestamp() - datetime.strptime(line, '%a, %d %b %Y %H:%M:%S %z').timestamp()
                 except ValueError:
-                    pass
+                    raise ValueError('Error in run started time in castep file {}'.format(castepFile))
                 else:
-                    startTime = startTime.strftime('%Y-%m-%d %H:%M:%S')
-                    string += '***  {}running{}  -> {} ***'.format(PrintColors.running,
-                                                                   PrintColors.reset,
-                                                                   startTime)
                     break
-
-            if line.startswith('run started'):
-                index = line.index('=')
-
-                assert index != -1, 'Error in total time in castep file {}'.format(castepFile)
-
-                line = line[index + 1:].strip()
-
-                line = line[:-1].strip()
-
-                try:
-                    time = float(line)
-                except ValueError:
-                    raise ValueError('Error in total time in castep file {}'.format(castepFile))
-
-                break
         else:
-            raise ValueError('Cannot find total time in castep file {}'.format(castepFile))
+            raise ValueError('Cannot calculate running time from castep file {}'.format(castepFile))
 
         return time
-
-
-
-
-
-
-
-
 
     def getStatus(self):
         if self.directory is None:
             return 'no directory specified'
 
-        if Path(self.directory).is_dir():
+        if any((self.name in file_ and '.err' in file_) for file_ in listdir(self.directory)):
+            return 'errored'
+
+        elif Path(self.directory).is_dir():
             self.setName(strict=True)
 
             subFile = '{}{}.sub'.format(self.directory, self.name)
