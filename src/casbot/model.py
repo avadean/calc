@@ -1,5 +1,6 @@
 from casbot.calculation import Calculation
 
+from collections import Counter
 from pathlib import Path
 from tqdm import tqdm
 
@@ -20,6 +21,10 @@ class Model:
 
         print('*** Model defined with {} calculation{} ***'.format(len(self.calculations),
                                                                    '' if len(self.calculations) == 1 else 's'))
+
+        self.species = Counter()
+        self.setSpecies(strict=False)
+
         #print(self.getDirString())
 
     def __str__(self):
@@ -55,8 +60,27 @@ class Model:
                 calculation.analyse(type_=type_)
 
     def check(self):
-        for calculation in self.calculations:
-            calculation.check()
+        self.setSpecies(strict=True)
+
+        speciesCompletedTime = {species: 0.0 for species in self.species.keys()}
+        speciesRunningTime = {species: 0.0 for species in self.species.keys()}
+
+        speciesNumCompleted = Counter()
+        speciesNumRunning = Counter()
+
+        for c in self.calculations:
+            status = c.getStatus()
+
+            if status == 'completed':
+                speciesNumCompleted.update(c.name)
+                speciesCompletedTime[c.name] = speciesCompletedTime.get(c.name) + c.getCompletedTime()
+
+            elif status == 'running':
+                speciesNumRunning.update(c.name)
+                speciesRunningTime[c.name] = speciesRunningTime.get(c.name) + c.getRunningTime()
+
+        for c in self.calculations:
+            c.check()
 
     def create(self, force=False, passive=False):
         assert type(force) is bool
@@ -89,6 +113,17 @@ class Model:
         string = string[:-1]  # Remove last line break.
 
         return string
+
+    def setSpecies(self, strict=False):
+        assert type(strict) is bool
+
+        if all(self.species.keys()):
+            return
+
+        for calculation in self.calculations:
+            calculation.setName(strict=strict)
+
+        self.species = Counter(calculation.name for calculation in self.calculations)
 
     def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
         assert type(all_) is bool

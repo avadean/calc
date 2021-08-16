@@ -227,6 +227,9 @@ class Calculation:
         self.name = name
         self.setName(strict=False)
 
+        self.completedTime = None
+        self.runTime = None
+
     def __str__(self):
         string = 'Calculation ->'
 
@@ -437,6 +440,101 @@ class Calculation:
                         f.write(line)
 
         print('Created calculation for {} in {}'.format(self.name, directory))
+
+    def getCompletedTime(self):
+        if self.completedTime is not None:
+            return self.completedTime
+
+        assert self.getStatus() == 'completed', 'Calculation not complete so cannot get completed time'
+
+        castepFile = '{}{}.castep'.format(self.directory, self.name)
+
+        assert Path(castepFile).is_file(), 'Cannot find castep file to get completed time'
+
+        with open(castepFile) as f:
+            castepLines = f.read().splitlines()
+
+        castepLines.reverse()
+
+        for line in castepLines:
+            line = line.strip().lower()
+
+            if line.startswith('total time'):
+                index = line.index('=')
+
+                assert index != -1, 'Error in total time in castep file {}'.format(castepFile)
+
+                line = line[index+1:].strip()
+
+                line = line[:-1].strip()
+
+                try:
+                    time = float(line)
+                except ValueError:
+                    raise ValueError('Error in total time in castep file {}'.format(castepFile))
+                else:
+                    break
+        else:
+            raise ValueError('Cannot find total time in castep file {}'.format(castepFile))
+
+        return time
+
+    def getRunningTime(self):
+        assert self.getStatus() == 'running', 'Calculation not running so cannot get running time'
+
+        castepFile = '{}{}.castep'.format(self.directory, self.name)
+
+        assert Path(castepFile).is_file(), 'Cannot find castep file to get running time'
+
+        with open(castepFile) as f:
+            castepLines = f.read().splitlines()
+
+        castepLines.reverse()
+
+        for line in castepLines:
+            line = line.strip()
+
+            if line.lower().startswith('run started:'):
+                line = line[12:].strip()  # len('Run started:') = 12
+
+                try:
+                    startTime = datetime.strptime(line, '%a, %d %b %Y %H:%M:%S %z')
+                except ValueError:
+                    pass
+                else:
+                    startTime = startTime.strftime('%Y-%m-%d %H:%M:%S')
+                    string += '***  {}running{}  -> {} ***'.format(PrintColors.running,
+                                                                   PrintColors.reset,
+                                                                   startTime)
+                    break
+
+            if line.startswith('run started'):
+                index = line.index('=')
+
+                assert index != -1, 'Error in total time in castep file {}'.format(castepFile)
+
+                line = line[index + 1:].strip()
+
+                line = line[:-1].strip()
+
+                try:
+                    time = float(line)
+                except ValueError:
+                    raise ValueError('Error in total time in castep file {}'.format(castepFile))
+
+                break
+        else:
+            raise ValueError('Cannot find total time in castep file {}'.format(castepFile))
+
+        return time
+
+
+
+
+
+
+
+
 
     def getStatus(self):
         if self.directory is None:
