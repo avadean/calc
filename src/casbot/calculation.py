@@ -227,8 +227,6 @@ class Calculation:
         self.name = name
         self.setName(strict=False)
 
-        self.completedTime = None
-        self.runTime = None
         self.expectedSecToFinish = None
 
     def __str__(self):
@@ -474,8 +472,7 @@ class Calculation:
         print('Created calculation for {} in {}'.format(self.name, directory))
 
     def getCompletedTime(self):
-        if self.completedTime is not None:
-            return self.completedTime
+        """ This function will work out (in seconds) how long it will take this calculation to complete """
 
         assert self.getStatus() == 'completed', 'Calculation not complete so cannot get completed time'
 
@@ -501,18 +498,23 @@ class Calculation:
                 line = line[:-1].strip()
 
                 try:
-                    time = float(line)
+                    return float(line)
                 except ValueError:
                     raise ValueError('Error in total time in castep file {}'.format(castepFile))
-                else:
-                    break
         else:
             raise ValueError('Cannot find total time in castep file {}'.format(castepFile))
 
-        return time
-
     def getRunningTime(self):
+        """ This function will work out how long (in seconds) this calculation has been running for """
+
         assert self.getStatus() == 'running', 'Calculation not running so cannot get running time'
+
+        return datetime.now().timestamp() - self.getStartTime()
+
+    def getStartTime(self):
+        """ This function will work out when the calculation started as a timestamp """
+
+        assert self.getStatus() in ['completed', 'running'], 'Calculation not completed or running so cannot get start time'
 
         castepFile = '{}{}.castep'.format(self.directory, self.name)
 
@@ -521,7 +523,7 @@ class Calculation:
         with open(castepFile) as f:
             castepLines = f.read().splitlines()
 
-        castepLines.reverse()
+        castepLines.reverse()  # If multiple 'run started:' lines then the most recent will be last
 
         for line in castepLines:
             line = line.strip()
@@ -530,15 +532,41 @@ class Calculation:
                 line = line[12:].strip()  # len('Run started:') = 12
 
                 try:
-                    time = datetime.now().timestamp() - datetime.strptime(line, '%a, %d %b %Y %H:%M:%S %z').timestamp()
+                    return datetime.strptime(line, '%a, %d %b %Y %H:%M:%S %z').timestamp()
                 except ValueError:
-                    raise ValueError('Error in run started time in castep file {}'.format(castepFile))
-                else:
-                    break
+                    pass
         else:
-            raise ValueError('Cannot calculate running time from castep file {}'.format(castepFile))
+            raise ValueError('Cannot find start time in castep file {}'.format(castepFile))
 
-        return time
+    def getSubTime(self):
+        """ This function will find the sub time as a timestamp """
+
+        assert self.getStatus() in ['completed', 'running', 'submitted'],\
+            'Calculation not completed, running or submitted so cannot get submitted time'
+
+        subFile = '{}{}.sub'.format(self.directory, self.name)
+
+        assert Path(subFile).is_file(), 'Cannot find sub file to get submitted time'
+
+        with open(subFile) as f:
+            subLines = f.read().splitlines()
+
+        subLines.reverse()  # Most recent submit will be last if there are multiple
+
+        for line in subLines:
+            line = line.strip()
+
+            if line.lower().startswith('run started:'):
+                subTime = search(r'\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}', line)
+
+                if subTime is not None:
+                    subTime = subTime.group()
+
+                    subTime.replace('/', '-')
+
+                    return datetime.strptime(subTime, '%Y-%m-%d %H:%M:%S').timestamp()
+        else:
+            raise ValueError('Cannot find submitted time in sub file {}'.format(subFile))
 
     def getStatus(self):
         if self.directory is None:

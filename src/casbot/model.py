@@ -2,6 +2,7 @@ from casbot.calculation import Calculation
 
 from collections import Counter
 from pathlib import Path
+from random import sample
 from tqdm import tqdm
 
 
@@ -81,7 +82,6 @@ class Model:
 
             elif status == 'running':
                 numRunning[c.name] += 1
-                #totalTimeRunning[c.name] += c.getRunningTime()
 
             elif status == 'submitted':
                 numSubmitted[c.name] += 1
@@ -90,7 +90,8 @@ class Model:
             averageTimeCompleted = {species: None if numCompleted[species] == 0 else totalTimeCompleted[species] / numCompleted[species] for species in self.species.keys()}
             #averageTimeRunning = {species: None if numRunning[species] == 0 else totalTimeRunning[species] / numRunning[species] for species in self.species.keys()}
 
-            calculations = sorted([calc for calc in self.calculations if calc.getStatus() in ['running', 'submitted']], key=lambda calc: calc.getStatus())
+            calculations = sorted([calc for calc in self.calculations if calc.getStatus() in ['running', 'submitted']],
+                                  key=lambda calc: (calc.getStatus(), calc.getSubTime()))
 
             # If we can run n calculations at once, we don't need to work in serial, so we create a parallel set of finish times where n = number running at that moment.
             numParallelRunning = sum(numRunning.values()) if sum(numRunning.values()) else 1
@@ -181,9 +182,10 @@ class Model:
             calculation.printHyperfine(all_=all_, dipolar=dipolar, fermi=fermi, showTensors=showTensors, element=element)
             print('')
 
-    def run(self, test=False, force=False, serial=None, bashAliasesFile=None, notificationAlias=None):
+    def run(self, test=False, force=False, shuffle=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         assert type(test) is bool
         assert type(force) is bool
+        assert type(shuffle) is bool
 
         if serial is not None:
             assert type(serial) is bool
@@ -203,10 +205,12 @@ class Model:
 
         if len(self.calculations) > 5:
             if test:
-                print('*** WARNING: this is too many calculations ***')
+                print('*** WARNING: this is too many calculations - consider calling sub instead ***')
                 print('*** Continuing test... ***')
             else:
-                raise MemoryError('No seriously - don\'t do this many calculations...')
+                raise MemoryError('No seriously - don\'t do this many calculations - consider calling sub instead')
+
+        calculations = sample(self.calculations, k=len(self.calculations)) if shuffle else self.calculations
 
         for calculation in self.calculations:
             calculation.run(test=test,
@@ -219,14 +223,17 @@ class Model:
         else:
             print('*** Ran {} calculations ***'.format(len(self.calculations)))
 
-    def sub(self, test=False, force=False, queueFile=None):
+    def sub(self, test=False, force=False, shuffle=False, queueFile=None):
         assert type(test) is bool
         assert type(force) is bool
+        assert type(shuffle) is bool
 
         if queueFile is not None:
             assert type(queueFile) is str
 
-        for calculation in self.calculations:
+        calculations = sample(self.calculations, k=len(self.calculations)) if shuffle else self.calculations
+
+        for calculation in calculations:
             calculation.sub(test=test,
                             force=force,
                             queueFile=queueFile)
