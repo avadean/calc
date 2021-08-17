@@ -20,9 +20,6 @@ class Model:
             assert all(type(calculation) == Calculation for calculation in calculations)
             self.calculations = calculations
 
-        print('*** Model defined with {} calculation{} ***'.format(len(self.calculations),
-                                                                   '' if len(self.calculations) == 1 else 's'))
-
         self.species = Counter()
         self.setSpecies(strict=False)
 
@@ -61,10 +58,10 @@ class Model:
                 calculation.analyse(type_=type_)
 
     def check(self):
+        # TODO: add in summary option and maybe default to only showing running and the next 3(?) submitted calculations - could also print the expected finish time of the fine calculation, too
         self.setSpecies(strict=True)
 
         totalTimeCompleted = {species: 0.0 for species in self.species.keys()}
-        #totalTimeRunning = {species: 0.0 for species in self.species.keys()}
 
         numCompleted = Counter()
         numRunning = Counter()
@@ -88,7 +85,6 @@ class Model:
 
         if sum((numRunning + numSubmitted).values()) > 0 and sum(numCompleted.values()):
             averageTimeCompleted = {species: None if numCompleted[species] == 0 else totalTimeCompleted[species] / numCompleted[species] for species in self.species.keys()}
-            #averageTimeRunning = {species: None if numRunning[species] == 0 else totalTimeRunning[species] / numRunning[species] for species in self.species.keys()}
 
             # Get the running calculations first
             calculations = [calc for calc in self.calculations if calc.getStatus() == 'running']
@@ -130,7 +126,6 @@ class Model:
             c.expectedSecToFinish = None
 
     def create(self, force=False, passive=False):
-        # TODO: add in summary option and maybe default to only showing running and the next 3(?) submitted calculations - could also print the expected finish time of the fine calculation, too
         assert type(force) is bool
         assert type(passive) is bool
 

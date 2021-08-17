@@ -299,7 +299,7 @@ class Calculation:
             return
         else:
             maxDirLength = dirOutputLen if dirOutputLen else len(self.directory)
-            string += '  {:<{spaces}}'.format('({})'.format(self.directory), spaces=maxDirLength + 2)  # 2 for brackets ()
+            string += '  {:<{spaces}}'.format('({})'.format(self.directory), spaces=maxDirLength + 2)  # 2 for brackets, ()
 
         status = self.getStatus()
 
@@ -324,84 +324,6 @@ class Calculation:
                                                    status,
                                                    PrintColors.reset,
                                                    ' {}'.format(extraMessage) if extraMessage else '')
-
-        '''
-        if Path(self.directory).is_dir():
-            self.setName(strict=True)
-
-            subFile = '{}{}.sub'.format(self.directory, self.name)
-            castepFile = '{}{}.castep'.format(self.directory, self.name)
-
-            if any((self.name in file_ and '.err' in file_) for file_ in listdir(self.directory)):
-                string += '***  {}errored{}  ***'.format(PrintColors.errored,
-                                                         PrintColors.reset)
-
-            elif Path(castepFile).is_file():
-                with open(castepFile) as f:
-                    castepLines = f.read().splitlines()
-
-                castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
-
-                for line in castepLines:
-                    line = line.strip().lower()
-
-                    if line.startswith('total time'):
-                        string += '*** {}completed{} ***'.format(PrintColors.complete,
-                                                                 PrintColors.reset)
-                        break
-                else:
-                    for line in castepLines:
-                        line = line.strip()
-
-                        if line.lower().startswith('run started:'):
-                            line = line[12:].strip()  # len('Run started:') = 12
-
-                            try:
-                                startTime = datetime.strptime(line, '%a, %d %b %Y %H:%M:%S %z')
-                            except ValueError:
-                                pass
-                            else:
-                                startTime = startTime.strftime('%Y-%m-%d %H:%M:%S')
-                                string += '***  {}running{}  -> {} ***'.format(PrintColors.running,
-                                                                               PrintColors.reset,
-                                                                               startTime)
-                                break
-                    else:
-                        string += '***  {}running{}  -> unknown time ***'.format(PrintColors.running,
-                                                                                 PrintColors.reset)
-
-            elif Path(subFile).is_file():
-                with open(subFile) as f:
-                    subLines = f.read().splitlines()
-
-                subLines.reverse()
-
-                for line in subLines:
-                    subTime = search(r'\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}', line)
-
-                    if subTime is not None:
-                        subTime = subTime.group()
-
-                        subTime.replace('/', '-')
-
-                        #subTime = datetime.strptime(subTime, '%Y-%m-%d %H:%M:%S')
-
-                        string += '*** {}submitted{} -> {} ***'.format(PrintColors.submitted,
-                                                                       PrintColors.reset,
-                                                                       subTime)
-                        break
-                else:
-                    string += '*** {}submitted{} -> unknown time ***'.format(PrintColors.submitted,
-                                                                             PrintColors.reset)
-
-            else:
-                string += '***  {}created{}  ***'.format(PrintColors.created,
-                                                         PrintColors.reset)
-
-        else:
-            string += '*** {}not yet created{} ***'.format(PrintColors.notYetCreated,
-                                                           PrintColors.reset)
-        '''
 
         print(string)
 
