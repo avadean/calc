@@ -6,12 +6,13 @@ from casbot.results import getResult
 
 from collections import Counter
 from datetime import datetime
+from dateutil import parser
 from fnmatch import filter
 from itertools import product
 from math import floor
 from os import chdir, getcwd, listdir
 from pathlib import Path
-from re import search
+#from re import search
 from subprocess import run as subProcessRun
 
 
@@ -555,16 +556,24 @@ class Calculation:
 
         for line in subLines:
             line = line.strip()
+            line = line[:-1] if line[-1] == '.' else line  # Get rid of annoying full stop which will cause chaos
 
-            if line.lower().startswith('run started:'):
-                subTime = search(r'\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}', line)
+            '''
+            subTime = search(r'\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}.\d{6}', line)
 
-                if subTime is not None:
-                    subTime = subTime.group()
+            if subTime is not None:
+                subTime = subTime.group()
 
-                    subTime.replace('/', '-')
+                subTime.replace('/', '-')
 
-                    return datetime.strptime(subTime, '%Y-%m-%d %H:%M:%S').timestamp()
+                return datetime.strptime(subTime, '%Y-%m-%d %H:%M:%S.%f').timestamp()
+            '''
+
+            try:
+                return parser.parse(line, fuzzy=True).timestamp()
+            except parser.ParserError:
+                pass
+
         else:
             raise ValueError('Cannot find submitted time in sub file {}'.format(subFile))
 
