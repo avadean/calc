@@ -90,8 +90,14 @@ class Model:
             averageTimeCompleted = {species: None if numCompleted[species] == 0 else totalTimeCompleted[species] / numCompleted[species] for species in self.species.keys()}
             #averageTimeRunning = {species: None if numRunning[species] == 0 else totalTimeRunning[species] / numRunning[species] for species in self.species.keys()}
 
-            calculations = sorted([calc for calc in self.calculations if calc.getStatus() in ['running', 'submitted']],
-                                  key=lambda calc: (calc.getStatus(), calc.getSubTime()))
+            # Get the running calculations first
+            calculations = [calc for calc in self.calculations if calc.getStatus() == 'running']
+
+            # Now add the submitted calculations based on when they were submitted
+            # We need them ordered this way so we know what order they will be ran in
+            # Of course, this doesn't matter for the running calculations because they've already started!
+            calculations += sorted([calc for calc in self.calculations if calc.getStatus() == 'submitted'],
+                                   key=lambda calc: calc.getSubTime())
 
             # If we can run n calculations at once, we don't need to work in serial, so we create a parallel set of finish times where n = number running at that moment.
             numRunning = max(sum(numRunning.values()), 1)
