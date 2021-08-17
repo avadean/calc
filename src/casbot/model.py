@@ -94,8 +94,8 @@ class Model:
                                   key=lambda calc: (calc.getStatus(), calc.getSubTime()))
 
             # If we can run n calculations at once, we don't need to work in serial, so we create a parallel set of finish times where n = number running at that moment.
-            numParallelRunning = sum(numRunning.values()) if sum(numRunning.values()) else 1
-            finishTimes = [0.0 for _ in range(numParallelRunning)]  # Number of seconds away from now a calculation is expected to finish.
+            numRunning = max(sum(numRunning.values()), 1)
+            finishTimes = [0.0 for _ in range(numRunning)]  # Number of seconds away from now a calculation is expected to finish.
 
             for c in calculations:
 
