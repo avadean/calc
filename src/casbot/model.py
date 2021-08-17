@@ -188,9 +188,10 @@ class Model:
             calculation.printHyperfine(all_=all_, dipolar=dipolar, fermi=fermi, showTensors=showTensors, element=element)
             print('')
 
-    def run(self, test=False, force=False, shuffle=False, serial=None, bashAliasesFile=None, notificationAlias=None):
+    def run(self, test=False, force=False, passive=False, shuffle=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         assert type(test) is bool
         assert type(force) is bool
+        assert type(passive) is bool
         assert type(shuffle) is bool
 
         if serial is not None:
@@ -202,42 +203,53 @@ class Model:
         if notificationAlias is not None:
             assert type(notificationAlias) is str
 
-        if len(self.calculations) > 3 and not force:
+        calculations = [c for c in self.calculations if c.getStatus() not in ['completed', 'running', 'submitted']]
+
+        if len(calculations) != len(self.calculations) and not passive:
+            raise ValueError('Some calculations are complete, already running or submitted - use passive=True to skip them')
+
+        if len(calculations) > 3 and not force:
             if test:
                 print('*** WARNING: this is a lot of calculations to run at once - use force=True to ignore on real run ***')
                 print('*** Continuing test... ***')
             else:
                 raise MemoryError('Too many calculations to run at once - use force=True to ignore')
 
-        if len(self.calculations) > 5:
+        if len(calculations) > 5:
             if test:
                 print('*** WARNING: this is too many calculations - consider calling sub instead ***')
                 print('*** Continuing test... ***')
             else:
                 raise MemoryError('No seriously - don\'t do this many calculations - consider calling sub instead')
 
-        calculations = sample(self.calculations, k=len(self.calculations)) if shuffle else self.calculations
+        calculations = sample(calculations, k=len(calculations)) if shuffle else calculations
 
-        for calculation in self.calculations:
+        for calculation in calculations:
             calculation.run(test=test,
                             serial=serial,
                             bashAliasesFile=bashAliasesFile,
                             notificationAlias=notificationAlias)
 
         if test:
-            print('*** Total of {} calculations to run - none have gone yet ***'.format(len(self.calculations)))
+            print('*** Total of {} calculations to run - none have gone yet ***'.format(len(calculations)))
         else:
-            print('*** Ran {} calculations ***'.format(len(self.calculations)))
+            print('*** Ran {} calculations ***'.format(len(calculations)))
 
-    def sub(self, test=False, force=False, shuffle=False, queueFile=None):
+    def sub(self, test=False, force=False, passive=False, shuffle=False, queueFile=None):
         assert type(test) is bool
         assert type(force) is bool
+        assert type(passive) is bool
         assert type(shuffle) is bool
+
+        calculations = [c for c in self.calculations if c.getStatus() not in ['completed', 'running', 'submitted']]
+
+        if len(calculations) != len(self.calculations) and not passive:
+            raise ValueError('Some calculations are complete, running or already submitted - use passive=True to skip them')
 
         if queueFile is not None:
             assert type(queueFile) is str
 
-        calculations = sample(self.calculations, k=len(self.calculations)) if shuffle else self.calculations
+        calculations = sample(calculations, k=len(calculations)) if shuffle else calculations
 
         for calculation in calculations:
             calculation.sub(test=test,
@@ -245,9 +257,9 @@ class Model:
                             queueFile=queueFile)
 
         if test:
-            print('*** Total of {} calculations to submit - none have gone yet ***'.format(len(self.calculations)))
+            print('*** Total of {} calculations to submit - none have gone yet ***'.format(len(calculations)))
         else:
-            print('*** Submitted {} calculations ***'.format(len(self.calculations)))
+            print('*** Submitted {} calculations ***'.format(len(calculations)))
 
     def updateSettings(self, *settings):
         for calculation in self.calculations:
