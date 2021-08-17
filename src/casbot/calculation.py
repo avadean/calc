@@ -760,7 +760,7 @@ class Calculation:
                 raise FileExistsError('Calculation may already be submitted {} - use force=True to ignore'.format(subFile))
 
             with open(subFile, 'a') as f:
-                f.write('{} calculation queued at {}.\n'.format(self.name, datetime.now()))
+                f.write('{} calculation queued at {}\n'.format(self.name, datetime.now()))
 
             with open(queueFile, 'a') as f:
                 f.write('{}  {}\n'.format(self.name, directory.resolve()))
