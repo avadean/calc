@@ -130,6 +130,7 @@ class Model:
             c.expectedSecToFinish = None
 
     def create(self, force=False, passive=False):
+        # TODO: add in summary option and maybe default to only showing running and the next 3(?) submitted calculations - could also print the expected finish time of the fine calculation, too
         assert type(force) is bool
         assert type(passive) is bool
 
