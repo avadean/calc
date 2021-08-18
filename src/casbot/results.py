@@ -116,7 +116,7 @@ class Tensor(Result):
         assert type(value) is ndarray, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, ndarray)
 
         self.value = value
-        self.unit = unit if unit is None else getUnit()
+        self.unit = unit if unit is None else getUnit(key=key, unit=unit)
 
         assert type(shape) is tuple
 
