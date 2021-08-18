@@ -583,7 +583,7 @@ class Calculation:
         for tensors, color in tensorsList:
             for tensor in tensors:
                 if element is None or (element is not None and tensor.element == element):
-                    string += tensor.__str__(nameColor=color, showTensors=showTensors) + '\n'
+                    string += tensor.__str__(nameColor=color, showTensor=showTensors) + '\n'
 
         string = string[:-1]  # Remove last line break.
 

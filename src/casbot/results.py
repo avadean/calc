@@ -1,22 +1,20 @@
 from casbot.data import elements,\
     getAllowedUnits, getNiceUnit, getFromDict,\
     PrintColors,\
-    VectorInt, VectorFloat
+    strListToArray
 
-from casbot.data import strListToArray
-
-import numpy as np
+from numpy import ndarray
 
 
 resultKnown = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
                'hyperfine_fermi', 'hyperfine_total']
 
-resultTypes = {'hyperfine_dipolarbare': np.ndarray,
-               'hyperfine_dipolaraug': np.ndarray,
-               'hyperfine_dipolaraug2': np.ndarray,
-               'hyperfine_dipolar': np.ndarray,
-               'hyperfine_fermi': np.ndarray,
-               'hyperfine_total': np.ndarray}
+resultTypes = {'hyperfine_dipolarbare': ndarray,
+               'hyperfine_dipolaraug': ndarray,
+               'hyperfine_dipolaraug2': ndarray,
+               'hyperfine_dipolar': ndarray,
+               'hyperfine_fermi': ndarray,
+               'hyperfine_total': ndarray}
 
 resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
                'hyperfine_dipolaraug': 'DIPOLAR AUG',
@@ -70,7 +68,7 @@ def getResult(resultToGet=None, lines=None):
 
                     arr = strListToArray(arrLines)
 
-                    tensor = NMRTensor(key=resultToGet, value=arr, unit='MHz', element=element, ion=ion)
+                    tensor = NMR(key=resultToGet, value=arr, unit='MHz', element=element, ion=ion)
 
                     tensors.append(tensor)
 
@@ -84,10 +82,23 @@ def getResult(resultToGet=None, lines=None):
         raise ValueError('Do not know how to get result {}'.format(resultToGet))
 
 
+def getUnit(key=None, unit=None):
+    assert type(key) is str
+    assert type(unit) is str
+
+    unitType = getFromDict(key=key, dct=resultUnits, strict=True)
+
+    unit = unit.strip().lower()
+
+    assert unit in getAllowedUnits(unitType)
+
+    unit = getNiceUnit(unit)
+
+    return unit
 
 
 class Result:
-    def __init__(self, key=None, value=None, unit=None):
+    def __init__(self, key=None):
         assert type(key) is str
 
         key = key.strip().lower()
@@ -95,67 +106,40 @@ class Result:
         assert key in resultKnown, '{} not a known result'.format(key)
 
         self.key = key
-        self.type = getFromDict(key=key, dct=resultTypes, strict=True)
         self.name = getFromDict(key=key, dct=resultNames, strict=True)
 
-        if type(value) is int and self.type is float:
-            value = float(value)
 
-        if type(value) in [str, VectorInt] and self.type is VectorFloat:
-            value = VectorFloat(vector=value)
+class Tensor(Result):
+    def __init__(self, key=None, value=None, unit=None, shape=None):
+        super().__init__(key=key)
 
-        if type(value) in [list, tuple] and self.type is np.ndarray:
-            value = np.array(value)
-
-        assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, self.type)
-
-        # Quick basic checks on bool, other result types aren't checked
-        if self.type is bool:
-            assert value in [True, False], 'Value of {} not accepted for {}, should be True or False'.format(value, self.key)
+        assert type(value) is ndarray, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, ndarray)
 
         self.value = value
+        self.unit = unit if unit is None else getUnit()
 
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=resultUnits, strict=False, default=None)
+        assert type(shape) is tuple
 
-            assert type(unit) is str
+        assert self.value.shape == shape, 'Tensor should be dimension {} not {}'.format(shape, self.value.shape)
 
-            unit = unit.strip().lower()
+        self.shape = self.value.shape
+        self.size = self.value.size
 
-            assert unit in getAllowedUnits(self.unitType)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
+        self.trace = self.value
 
     def __str__(self):
-        if self.type is float:
-            return '{:<12.4f}{}'.format(self.value, ' {}'.format(self.unit) if self.unit is not None else '')
-
-        elif self.type is int:
-            return '{:<3d}'.format(self.value)
-
-        elif self.type is np.ndarray:
-            return '   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n'.format(
-                self.value[0][0], self.value[0][1], self.value[0][2],
-                self.value[1][0], self.value[1][1], self.value[1][2],
-                self.value[2][0], self.value[2][1], self.value[2][2])
-
-        else:
-            # Includes VectorInt and VectorFloat as well as strings
-            return str(self.value)
+        return '  '.join('{:>12.5E}' for _ in range(self.size)).format(*self.value.flatten())
 
 
-class NMRTensor(Result):
+class NMR(Tensor):
     def __init__(self, key=None, value=None, unit=None, element=None, ion=None):
-        super().__init__(key=key, value=value, unit=unit)
-
-        assert np.shape(self.value) == (3, 3), 'NMR tensors should be dimension (3,3), not {}'.format(np.shape(self.value))
+        super().__init__(key=key, value=value, unit=unit, shape=(3, 3))
 
         assert type(element) is str
 
-        element = element.lower()
+        element = element.strip().lower()
 
+        assert len(element) > 0
         assert element in elements
 
         self.element = element[0].upper() + element[1:].lower()
@@ -165,19 +149,20 @@ class NMRTensor(Result):
 
         self.ion = str(int(float(ion)))
 
-        self.trace = np.trace(self.value)
         self.iso = self.trace / 3.0
 
-        self.eigenVals, self.eigenVects = np.linalg.eig(self.value)
-        self.diag = np.diag(self.eigenVals)
-
-    def __str__(self, nameColor='', showTensors=False):
+    def __str__(self, nameColor='', showTensor=False):
         assert type(nameColor) is str
-        assert type(showTensors) is bool
+        assert type(showTensor) is bool
 
-        string = '  |->   {:<3s} {}{:^16}{} {:>11.5f}   <-|'.format(self.element + self.ion, nameColor, self.name, PrintColors.reset, self.iso)
+        string = '  |->   {:<3s} {}{:^16}{} {:>11.5f}   <-|'.format(self.element + self.ion,
+                                                                    nameColor,
+                                                                    self.name,
+                                                                    PrintColors.reset,
+                                                                    self.iso)
 
-        if showTensors:
-            string += '\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}\n   {:>12.5E}   {:>12.5E}   {:>12.5E}'.format(*self.value.flatten())
+        if showTensor:
+            rows = 3 * '\n   {:>12.5E}   {:>12.5E}   {:>12.5E}'
+            string += rows.format(*self.value.flatten())
 
         return string

@@ -41,25 +41,24 @@ class Model:
 
         assert len(self.calculations) > 0, 'No calculations to analyse'
 
-        numCompleted = sum(c.getStatus() == 'completed' for c in self.calculations)
+        completedCalculations = [c for c in self.calculations if c.getStatus() == 'completed']
 
-        assert numCompleted > 0, 'No calculations have completed'
+        assert len(completedCalculations) > 0, 'No calculations have completed'
 
-        if numCompleted == len(self.calculations):
+        if len(completedCalculations) == len(self.calculations):
             print('All {} calculations have completed. Analysing...'.format(len(self.calculations)))
 
         elif not passive:
             raise ValueError('Not all calculations have completed - use passive=True to ignore incomplete calculations')
 
         else:
-            print('{} calculations have completed out of {}. Analysing completed calculations...'.format(numCompleted, len(self.calculations)))
+            print('{} calculations have completed out of {}. Analysing completed calculations...'.format(len(completedCalculations), len(self.calculations)))
 
         type_ = type_.strip().lower()
 
         # tqdm is for loading bar
-        for calculation in tqdm(iterable=self.calculations, ncols=100, unit='calculation'):
-            if calculation.getStatus() == 'completed':
-                calculation.analyse(type_=type_)
+        for calculation in tqdm(iterable=completedCalculations, ncols=100, unit='calculation'):
+            calculation.analyse(type_=type_)
 
     def check(self):
         # TODO: add in summary option and maybe default to only showing running and the next 3(?) submitted calculations - could also print the expected finish time of the fine calculation, too
