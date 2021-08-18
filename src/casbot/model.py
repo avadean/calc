@@ -39,9 +39,11 @@ class Model:
         assert type(type_) is str
         assert type(passive) is bool
 
-        type_ = type_.strip().lower()
+        assert len(self.calculations) > 0, 'No calculations to analyse'
 
         numCompleted = sum(c.getStatus() == 'completed' for c in self.calculations)
+
+        assert numCompleted > 0, 'No calculations have completed'
 
         if numCompleted == len(self.calculations):
             print('All {} calculations have completed. Analysing...'.format(len(self.calculations)))
@@ -51,6 +53,8 @@ class Model:
 
         else:
             print('{} calculations have completed out of {}. Analysing completed calculations...'.format(numCompleted, len(self.calculations)))
+
+        type_ = type_.strip().lower()
 
         # tqdm is for loading bar
         for calculation in tqdm(iterable=self.calculations, ncols=100, unit='calculation'):
