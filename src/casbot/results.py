@@ -125,7 +125,7 @@ class Tensor(Result):
         self.shape = self.value.shape
         self.size = self.value.size
 
-        self.trace = self.value
+        self.trace = self.value.trace()
 
     def __str__(self):
         return '  '.join('{:>12.5E}' for _ in range(self.size)).format(*self.value.flatten())
