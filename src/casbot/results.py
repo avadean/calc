@@ -9,13 +9,6 @@ from numpy import ndarray
 resultKnown = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
                'hyperfine_fermi', 'hyperfine_total']
 
-resultTypes = {'hyperfine_dipolarbare': ndarray,
-               'hyperfine_dipolaraug': ndarray,
-               'hyperfine_dipolaraug2': ndarray,
-               'hyperfine_dipolar': ndarray,
-               'hyperfine_fermi': ndarray,
-               'hyperfine_total': ndarray}
-
 resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
                'hyperfine_dipolaraug': 'DIPOLAR AUG',
                'hyperfine_dipolaraug2': 'DIPOLAR AUG2',
