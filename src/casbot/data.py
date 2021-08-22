@@ -1,6 +1,5 @@
 from collections import Counter
-
-import numpy as np
+from numpy import array, empty
 
 
 # Variables for running calculations.
@@ -80,7 +79,7 @@ class VectorInt:
         #return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
 
     def getMagnitude(self):
-        return np.sqrt(sum(val ** 2.0 for val in self.values))
+        return sum(val ** 2.0 for val in self.values) ** 0.5
 
 
 class VectorFloat:
@@ -116,7 +115,7 @@ class VectorFloat:
         #return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
 
     def getMagnitude(self):
-        return np.sqrt(sum(val ** 2.0 for val in self.values))
+        return sum(val ** 2.0 for val in self.values) ** 0.5
 
 
 
@@ -125,12 +124,12 @@ def strListToArray(lst=None):
     assert all(type(line) is str for line in lst)
 
     if len(lst) == 0:
-        return np.empty(0, dtype=float)
+        return empty(0, dtype=float)
 
     assert all(len(line.split()) == len(lst[0].split()) for line in lst), 'Shape mismatch when converting to array'
 
     try:
-        arr = np.array([line.split() for line in lst], dtype=float)
+        arr = array([line.split() for line in lst], dtype=float)
     except ValueError:
         raise ValueError('Error in tensor format {}'.format('  '.join(lst)))
 
