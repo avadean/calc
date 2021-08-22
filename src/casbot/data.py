@@ -30,7 +30,7 @@ def createDirectories(*directoryNames):
             assert all(type(name) is str for name in directory)
         else:
             assert type(directory) is str,\
-                'Specify only shortcut strings or lists for directories, not {}'.format(type(directory))
+                f'Specify only shortcut strings or lists for directories, not {type(directory)}'
 
     directoryNames = [(getVariableDirectories(directory.strip().lower()) if type(directory) is str else directory)
                       for directory in directoryNames]
@@ -207,7 +207,7 @@ def assertCount(lst=None, count=1):
 
     counter = Counter(lst)
     assert all(val == count for val in counter.values()), \
-        '{} must be specified {} time(s)'.format(counter.most_common(1)[0][0], count)
+        f'{counter.most_common(1)[0][0]} must be specified {count} time(s)'
 
 
 def assertBetween(*values, minimum=None, maximum=None, key=None):
@@ -232,15 +232,14 @@ def getFromDict(key=None, dct=None, strict=True, default=None):
     assert type(strict) is bool
 
     if default is not None:
-        assert type(default) in [str, float, int],\
-            'getFromDict default does not work for type {} yet'.format(type(default))
+        assert type(default) in [str, float, int], f'getFromDict default does not work for type {type(default)} yet'
 
     key = key.strip().lower()
 
     value = dct.get(key, default)
 
     if value == default and strict:
-        raise ValueError('Key {} does not have a value'.format(key))
+        raise ValueError(f'Key {key} does not have a value')
 
     return value
 
@@ -262,7 +261,7 @@ def getVariableDirectories(string=None):
 
     variableDirectories = stringToVariableDirectories.get(string.strip().lower(), None)
 
-    assert variableDirectories is not None, 'Shortcut to variable directories {} not recognised'.format(string)
+    assert variableDirectories is not None, f'Shortcut to variable directories {string} not recognised'
 
     return variableDirectories
 
