@@ -86,7 +86,7 @@ class Model:
             elif status == 'submitted':
                 numSubmitted[c.name] += 1
 
-        if sum((numRunning + numSubmitted).values()) > 0 and sum(numCompleted.values()):
+        if sum((numRunning + numSubmitted).values()) and sum(numCompleted.values()):
             averageTimeCompleted = {species: None if numCompleted[species] == 0 else totalTimeCompleted[species] / numCompleted[species] for species in self.species.keys()}
 
             # Get the running calculations first
@@ -95,6 +95,11 @@ class Model:
             # Now add the submitted calculations based on when they were submitted
             # We need them ordered this way so we know what order they will be ran in
             # Of course, this doesn't matter for the running calculations because they've already started!
+            # If a running calculation started from calling run and not being submitted then it won't have a subTime
+            # This is why we can't just create the calculations in one list... We could using this:
+            # calculations = sorted([calc for calc in self.calculations if calc.getStatus() in ['running', 'submitted']],
+            #                        key=lambda calc: (calc.getRunTime() or float("inf"), calc.getSubTime() or float("inf")))
+            # but that's a bit messy and is technically a little hard-codey - the inf are to account for None values
             calculations += sorted([calc for calc in self.calculations if calc.getStatus() == 'submitted'],
                                    key=lambda calc: calc.getSubTime())
 

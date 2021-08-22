@@ -433,11 +433,13 @@ class Calculation:
     def getStartTime(self):
         """ This function will work out when the calculation started as a timestamp """
 
-        assert self.getStatus() in ['completed', 'running'], 'Calculation not completed or running so cannot get start time'
+        #assert self.getStatus() in ['completed', 'running'], 'Calculation not completed or running so cannot get start time'
 
         castepFile = f'{self.directory}{self.name}.castep'
 
-        assert Path(castepFile).is_file(), 'Cannot find castep file to get running time'
+        if not Path(castepFile).is_file():
+            return None
+        #assert Path(castepFile).is_file(), 'Cannot find castep file to get running time'
 
         with open(castepFile) as f:
             castepLines = f.read().splitlines()
@@ -460,12 +462,15 @@ class Calculation:
     def getSubTime(self):
         """ This function will find the sub time as a timestamp """
 
-        assert self.getStatus() in ['completed', 'running', 'submitted'],\
-            'Calculation not completed, running or submitted so cannot get submitted time'
+        #assert self.getStatus() in ['completed', 'running', 'submitted'],\
+        #    'Calculation not completed, running or submitted so cannot get submitted time'
 
         subFile = f'{self.directory}{self.name}.sub'
 
-        assert Path(subFile).is_file(), 'Cannot find sub file to get submitted time'
+        if not Path(subFile).is_file():
+            return None
+
+        #assert Path(subFile).is_file(), 'Cannot find sub file to get submitted time'
 
         with open(subFile) as f:
             subLines = f.read().splitlines()
