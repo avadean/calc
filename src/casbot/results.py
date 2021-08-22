@@ -55,7 +55,7 @@ def getResult(resultToGet=None, lines=None):
                     element = parts[0][0].upper() + parts[0][1:].lower()
                     ion = parts[1]
 
-                    assert ion.isdigit(), 'Error in element ion on line {} of results file'.format(num)
+                    assert ion.isdigit(), f'Error in element ion on line {num} of results file'
 
                     arrLines = lines[num+2:num+5]
 
@@ -72,7 +72,7 @@ def getResult(resultToGet=None, lines=None):
 
 
     else:
-        raise ValueError('Do not know how to get result {}'.format(resultToGet))
+        raise ValueError(f'Do not know how to get result {resultToGet}')
 
 
 def getUnit(key=None, unit=None):
@@ -96,7 +96,7 @@ class Result:
 
         key = key.strip().lower()
 
-        assert key in resultKnown, '{} not a known result'.format(key)
+        assert key in resultKnown, f'{key} not a known result'
 
         self.key = key
         self.name = getFromDict(key=key, dct=resultNames, strict=True)
@@ -106,14 +106,14 @@ class Tensor(Result):
     def __init__(self, key=None, value=None, unit=None, shape=None):
         super().__init__(key=key)
 
-        assert type(value) is ndarray, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, ndarray)
+        assert type(value) is ndarray, f'Value {value} not acceptable for {self.key}, should be {ndarray}'
 
         self.value = value
         self.unit = unit if unit is None else getUnit(key=key, unit=unit)
 
         assert type(shape) is tuple
 
-        assert self.value.shape == shape, 'Tensor should be dimension {} not {}'.format(shape, self.value.shape)
+        assert self.value.shape == shape, f'Tensor should be dimension {shape} not {self.value.shape}'
 
         self.shape = self.value.shape
         self.size = self.value.size
@@ -148,11 +148,7 @@ class NMR(Tensor):
         assert type(nameColor) is str
         assert type(showTensor) is bool
 
-        string = '  |->   {:<3s} {}{:^16}{} {:>11.5f}   <-|'.format(self.element + self.ion,
-                                                                    nameColor,
-                                                                    self.name,
-                                                                    PrintColors.reset,
-                                                                    self.iso)
+        string = f'  |->   {self.element+self.ion:<3s} {nameColor}{self.name:^16}{PrintColors.reset} {self.iso:>11.5f}   <-|'
 
         if showTensor:
             rows = 3 * '\n   {:>12.5E}   {:>12.5E}   {:>12.5E}'

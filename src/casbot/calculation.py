@@ -44,11 +44,11 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
 
         # Add numbers to the start of each directory name.
         #directoryNames = [['{:03}_{}'.format(n, directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
-        directoryNames = [['{}'.format(directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
+        directoryNames = [[f'{directoryNames[num][n-1]}' for n in range(1, len(var) + 1)]
                           for num, var in enumerate(variableSettings)]
     else:
         # If we don't have directory names then default to just numbers.
-        directoryNames = [['{:03}'.format(n) for n in range(1, len(var) + 1)] for var in variableSettings]
+        directoryNames = [[f'{n:03}' for n in range(1, len(var) + 1)] for var in variableSettings]
 
     #assert sum(any(type(a) is str for a in variable) for variable in varSettingsProcessed) == 1,\
     #    'Can only have one iterable argument that is not a cell or param'
@@ -107,7 +107,7 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
                     specificSettings.append(setting)
 
                 else:
-                    raise TypeError('Only cells/params define a calculation, not {}'.format(type(setting)))
+                    raise TypeError(f'Only cells/params define a calculation, not {type(setting)}')
 
             directory += '/'
 
@@ -140,7 +140,7 @@ def processCalculations(*directories):
     calculations = []
 
     for directory in directories:
-        assert Path(directory).is_dir(), 'Cannot find directory {}'.format(directory)
+        assert Path(directory).is_dir(), f'Cannot find directory {directory}'
 
         prefix = None
         cellPrefix = None
@@ -152,13 +152,13 @@ def processCalculations(*directories):
 
         if len(cellFiles) == 1:
             cellPrefix = cellFiles[0][:-5] # Removes '.cell'
-            cells = readSettings(file_='{}{}'.format(directory, cellFiles[0]))
+            cells = readSettings(file_=f'{directory}{cellFiles[0]}')
 
         elif len(cellFiles) > 1:
-            raise NameError('Too many cell files to read in directory {}'.format(directory))
+            raise NameError(f'Too many cell files to read in directory {directory}')
 
         else:
-            print('*** Caution: no cell file found in {}'.format(directory))
+            print(f'*** Caution: no cell file found in {directory}')
 
         # Now do param file.
         paramFiles = filter(listdir(directory), '*.param')
@@ -167,16 +167,16 @@ def processCalculations(*directories):
         if len(paramFiles) == 1:
             paramPrefix = paramFiles[0][:-6]  # Removes '.param'
 
-            params = readSettings(file_='{}{}'.format(directory, paramFiles[0]))
+            params = readSettings(file_=f'{directory}{paramFiles[0]}')
         elif len(paramFiles) > 1:
-            raise NameError('Too many param files to read in directory {}'.format(directory))
+            raise NameError(f'Too many param files to read in directory {directory}')
         else:
-            print('*** Caution: no param file found in {}'.format(directory))
+            print(f'*** Caution: no param file found in {directory}')
 
         # Check cell and param prefixes are the same.
         if cellPrefix is not None and paramPrefix is not None:
             assert paramPrefix == cellPrefix, \
-                'Different prefixes for cell and param files: {}.cell, {}.param'.format(cellPrefix, paramPrefix)
+                f'Different prefixes for cell and param files: {cellPrefix}.cell, {paramPrefix}.param'
 
         elif cellPrefix is not None:
             prefix = cellPrefix
@@ -234,10 +234,10 @@ class Calculation:
         string = 'Calculation ->'
 
         if self.name is not None:
-            string += ' {}'.format(self.name)
+            string += f' {self.name}'
 
         if self.directory is not None:
-            string += ' ({})'.format(self.directory)
+            string += f' ({self.directory})'
 
         if self.settings is None:
             string += '\n  *** empty ***'
@@ -248,9 +248,7 @@ class Calculation:
         string += '\n'
 
         for setting in self.settings:
-            string += '  {key:>{spaces}} : {value:<{spaces}}\n'.format(key=setting.key,
-                                                                       spaces=spaces,
-                                                                       value=str(setting))
+            string += f'  {setting.key:>{spaces}} : {str(setting):<{spaces}}\n'
 
         return string
 
@@ -264,9 +262,9 @@ class Calculation:
         self.setName(strict=True)
 
         # TODO: allow for looking in different files (e.g .magres) not just .castep
-        castepFile = '{}{}.castep'.format(self.directory, self.name)
+        castepFile = f'{self.directory}{self.name}.castep'
 
-        assert Path(castepFile).is_file(), 'Cannot find castep file {}'.format(castepFile)
+        assert Path(castepFile).is_file(), f'Cannot find castep file {castepFile}'
 
         with open(castepFile) as f:
             castepLines = f.read().splitlines()
@@ -280,7 +278,7 @@ class Calculation:
             self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
         else:
-            raise ValueError('Do not know how to put result {} into calculation (yet)'.format(type_))
+            raise ValueError(f'Do not know how to put result {type_} into calculation (yet)')
 
     def check(self, nameOutputLen=0, dirOutputLen=0):
         assert type(nameOutputLen) is int
@@ -291,15 +289,16 @@ class Calculation:
         string = ' ->'
 
         if self.name is not None:
-            nameOutputLen = nameOutputLen if nameOutputLen else len(self.name)
-            string += '  {:<{spaces}}'.format(self.name if self.name is not None else '', spaces=nameOutputLen)
+            nameOutputLen = max(len(self.name), nameOutputLen)
+            string += f'  {self.name:<{nameOutputLen}}'
 
         if self.directory is None:
             string += '  (no directory specified)'
             return
         else:
-            maxDirLength = dirOutputLen if dirOutputLen else len(self.directory)
-            string += '  {:<{spaces}}'.format('({})'.format(self.directory), spaces=maxDirLength + 2)  # 2 for brackets, ()
+            dirOutputLen = max(len(self.directory), dirOutputLen)
+            directory = f'({self.directory})'
+            string += f'  {directory:<{dirOutputLen+2}}'  # +2 for brackets, ()
 
         status = self.getStatus()
 
@@ -311,19 +310,16 @@ class Calculation:
             'created': PrintColors.created,
             'not yet created': PrintColors.notYetCreated}.get(status, None)
 
-        assert color is not None, 'Status {} not recognised'.format(status)
+        assert color is not None, f'Status {status} not recognised'
 
         if status in ['running', 'submitted'] and self.expectedSecToFinish is not None:
             finishDateTimeInSec = datetime.now().timestamp() + self.expectedSecToFinish
             finishDateTime = datetime.fromtimestamp(finishDateTimeInSec).strftime('%Y-%m-%d %H:%M:%S')
-            extraMessage = 'expected finish time {}'.format(finishDateTime)
+            extraMessage = f' expected finish time {finishDateTime}'
         else:
             extraMessage = ''
 
-        string += '  *** {}{:^15}{} *** {}'.format(color,
-                                                   status,
-                                                   PrintColors.reset,
-                                                   ' {}'.format(extraMessage) if extraMessage else '')
+        string += f'  *** {color}{status:^15}{PrintColors.reset} ***{extraMessage}'
 
         print(string)
 
@@ -341,7 +337,7 @@ class Calculation:
 
         if directory.exists():
             if passive:
-                print('Skipping creation of calculation for {} in {}'.format(self.name, directory))
+                print(f'Skipping creation of calculation for {self.name} in {directory}')
                 return
 
             elif not force:
@@ -350,7 +346,7 @@ class Calculation:
         try:
             directory.mkdir(parents=True, exist_ok=True)
         except FileExistsError:
-            raise FileExistsError('Directory {} exists but is a file'.format(directory))
+            raise FileExistsError(f'Directory {directory} exists but is a file')
 
         cells = [setting for setting in self.settings if setting.file == 'cell']
         params = [setting for setting in self.settings if setting.file == 'param']
@@ -365,7 +361,7 @@ class Calculation:
         self.setName(strict=True)
 
         if len(cells) > 0:
-            cellFile = '{}/{}.cell'.format(directory, self.name)
+            cellFile = f'{directory}/{self.name}.cell'
 
             with open(cellFile, 'w') as f:
                 for cell in cells:
@@ -375,7 +371,7 @@ class Calculation:
                     f.write('\n')
 
         if len(params) > 0:
-            paramFile = '{}/{}.param'.format(directory, self.name)
+            paramFile = f'{directory}/{self.name}.param'
 
             longestParam = max([len(param.key) for param in params])
 
@@ -392,14 +388,14 @@ class Calculation:
                     for line in param.getLines(longestParam):
                         f.write(line)
 
-        print('Created calculation for {} in {}'.format(self.name, directory))
+        print(f'Created calculation for {self.name} in {directory}')
 
     def getCompletedTime(self):
         """ This function will work out (in seconds) how long it will take this calculation to complete """
 
         assert self.getStatus() == 'completed', 'Calculation not complete so cannot get completed time'
 
-        castepFile = '{}{}.castep'.format(self.directory, self.name)
+        castepFile = f'{self.directory}{self.name}.castep'
 
         assert Path(castepFile).is_file(), 'Cannot find castep file to get completed time'
 
@@ -414,7 +410,7 @@ class Calculation:
             if line.startswith('total time'):
                 index = line.index('=')
 
-                assert index != -1, 'Error in total time in castep file {}'.format(castepFile)
+                assert index != -1, f'Error in total time in castep file {castepFile}'
 
                 line = line[index+1:].strip()
 
@@ -423,9 +419,9 @@ class Calculation:
                 try:
                     return float(line)
                 except ValueError:
-                    raise ValueError('Error in total time in castep file {}'.format(castepFile))
+                    raise ValueError(f'Error in total time in castep file {castepFile}')
         else:
-            raise ValueError('Cannot find total time in castep file {}'.format(castepFile))
+            raise ValueError(f'Cannot find total time in castep file {castepFile}')
 
     def getRunningTime(self):
         """ This function will work out how long (in seconds) this calculation has been running for """
@@ -439,7 +435,7 @@ class Calculation:
 
         assert self.getStatus() in ['completed', 'running'], 'Calculation not completed or running so cannot get start time'
 
-        castepFile = '{}{}.castep'.format(self.directory, self.name)
+        castepFile = f'{self.directory}{self.name}.castep'
 
         assert Path(castepFile).is_file(), 'Cannot find castep file to get running time'
 
@@ -459,7 +455,7 @@ class Calculation:
                 except ValueError:
                     pass
         else:
-            raise ValueError('Cannot find start time in castep file {}'.format(castepFile))
+            raise ValueError(f'Cannot find start time in castep file {castepFile}')
 
     def getSubTime(self):
         """ This function will find the sub time as a timestamp """
@@ -467,7 +463,7 @@ class Calculation:
         assert self.getStatus() in ['completed', 'running', 'submitted'],\
             'Calculation not completed, running or submitted so cannot get submitted time'
 
-        subFile = '{}{}.sub'.format(self.directory, self.name)
+        subFile = f'{self.directory}{self.name}.sub'
 
         assert Path(subFile).is_file(), 'Cannot find sub file to get submitted time'
 
@@ -497,7 +493,7 @@ class Calculation:
                 pass
 
         else:
-            raise ValueError('Cannot find submitted time in sub file {}'.format(subFile))
+            raise ValueError(f'Cannot find submitted time in sub file {subFile}')
 
     def getStatus(self):
         if self.directory is None:
@@ -509,8 +505,8 @@ class Calculation:
         elif Path(self.directory).is_dir():
             self.setName(strict=True)
 
-            subFile = '{}{}.sub'.format(self.directory, self.name)
-            castepFile = '{}{}.castep'.format(self.directory, self.name)
+            subFile = f'{self.directory}{self.name}.sub'
+            castepFile = f'{self.directory}{self.name}.castep'
 
             if Path(castepFile).is_file():
                 with open(castepFile) as f:
@@ -548,10 +544,10 @@ class Calculation:
         string = 'Calculation ->'
 
         if self.name is not None:
-            string += ' {}'.format(self.name)
+            string += f' {self.name}'
 
         if self.directory is not None:
-            string += ' ({})'.format(self.directory)
+            string += f' ({self.directory})'
 
         string += '\n'
 
@@ -606,7 +602,7 @@ class Calculation:
             assert type(bashAliasesFile) is str
 
             if not Path(bashAliasesFile).is_file():
-                raise FileNotFoundError('Cannot find alias file {}'.format(bashAliasesFile))
+                raise FileNotFoundError(f'Cannot find alias file {bashAliasesFile}')
 
         if notificationAlias is None:
             notificationAlias = notificationAliasDefault
@@ -619,18 +615,18 @@ class Calculation:
         directory = Path(self.directory)
 
         if not directory.is_dir():
-            raise NotADirectoryError('Cannot find directory {} to run calculation'.format(self.directory))
+            raise NotADirectoryError(f'Cannot find directory {self.directory} to run calculation')
 
         origDir = getcwd()
 
         chdir(self.directory)
 
-        castep = 'castep.serial {}'.format(self.name) if serial else 'castep.mpi {}'.format(self.name)
+        castep = f'castep.serial {self.name}' if serial else f'castep.mpi {self.name}'
 
-        command = 'bash -c \'. {} ; {} {} &\''.format(bashAliasesFile, notificationAlias, castep)
+        command = f'bash -c \'. {bashAliasesFile} ; {notificationAlias} {castep} &\''
 
         if test:
-            print('|-> {} <-| will be run in {}'.format(command, getcwd()))
+            print(f'|-> {command} <-| will be run in {getcwd()}')
         else:
             result = subProcessRun(command, check=True, shell=True, text=True)
 
@@ -649,9 +645,9 @@ class Calculation:
             assert type(queueFile) is str
 
         if not Path(queueFile).is_file():
-            raise FileNotFoundError('Cannot find queue file {}'.format(queueFile))
+            raise FileNotFoundError(f'Cannot find queue file {queueFile}')
         elif test:
-            print('Found queue file {}'.format(queueFile))
+            print(f'Found queue file {queueFile}')
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName(strict=True)
@@ -659,33 +655,29 @@ class Calculation:
         directory = Path(self.directory)
 
         if not directory.is_dir():
-            raise NotADirectoryError('Cannot find directory {} to run calculation'.format(self.directory))
+            raise NotADirectoryError(f'Cannot find directory {self.directory} to run calculation')
 
-        subFile = '{}{}.sub'.format(self.directory, self.name)
+        subFile = f'{self.directory}{self.name}.sub'
 
         if test:
-            print('|-> {} calculation queued at {} <-| will be appended to {}'.format(self.name,
-                                                                                      datetime.now(),
-                                                                                      subFile))
+            print(f'|-> {self.name} calculation queued at {datetime.now()} <-| will be appended to {subFile}')
 
-            print('|-> {}  {} <-| will be appended to {}'.format(self.name,
-                                                                 directory.resolve(),
-                                                                 queueFile))
+            print(f'|-> {self.name}  {directory.resolve()} <-| will be appended to {queueFile}')
 
             if Path(subFile).is_file():
-                print('*** CAUTION: sub file {} found - calculation may already be submitted ***'.format(subFile))
+                print(f'*** CAUTION: sub file {subFile} found - calculation may already be submitted ***')
 
             print('')
 
         else:
             if Path(subFile).is_file() and not force:
-                raise FileExistsError('Calculation may already be submitted {} - use force=True to ignore'.format(subFile))
+                raise FileExistsError(f'Calculation may already be submitted {subFile} - use force=True to ignore')
 
             with open(subFile, 'a') as f:
-                f.write('{} calculation queued at {}\n'.format(self.name, datetime.now()))
+                f.write(f'{self.name} calculation queued at {datetime.now()}\n')
 
             with open(queueFile, 'a') as f:
-                f.write('{}  {}\n'.format(self.name, directory.resolve()))
+                f.write(f'{self.name}  {directory.resolve()}\n')
 
     def setName(self, strict=False):
         assert type(strict) is bool
@@ -709,7 +701,7 @@ class Calculation:
             try:
                 element = line.split(' ')[0]
             except IndexError:
-                raise ValueError('Cannot find element in atomic positions line {} to help set name'.format(line))
+                raise ValueError(f'Cannot find element in atomic positions line {line} to help set name')
 
             element = element.strip()
 
@@ -720,14 +712,15 @@ class Calculation:
                 elements.append(element)
 
         if len(elements) == 0:
-            raise ValueError('Could not find any elements in {} block to help set name'.format(positionSetting.key))
+            raise ValueError(f'Could not find any elements in {positionSetting.key} block to help set name')
 
         elements = Counter(elements)
 
         self.name = ''
 
         for element, num in elements.items():
-            self.name += '{}{}'.format(element, '' if num == 1 else num)
+            n = '' if num == 1 else num
+            self.name += f'{element}{n}'
 
     def sortSettings(self):
         self.settings = sorted(self.settings, key=lambda setting: (setting.file, setting.priority))

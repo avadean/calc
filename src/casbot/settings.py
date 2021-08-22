@@ -556,7 +556,7 @@ class Setting:
         elif key in paramKnown:
             self.file = 'param'
         else:
-            raise ValueError('{} not a known setting'.format(key))
+            raise ValueError(f'{key} not a known setting')
 
         self.key = key
         self.type = getFromDict(key=key, dct=settingTypes, strict=True)
@@ -573,15 +573,15 @@ class Setting:
             if type(value) in [str, VectorInt] and self.type is VectorFloat:
                 value = VectorFloat(vector=value)
 
-            assert type(value) is self.type, 'Value {} not acceptable for {}, should be {}'.format(value, self.key, self.type)
+            assert type(value) is self.type, f'Value {value} not acceptable for {self.key}, should be {self.type}'
 
             if self.type is str:
                 value = value.strip().lower()
-                assert value in settingValues.get(self.key), 'Value of {} not accepted for {}'.format(value, self.key)
+                assert value in settingValues.get(self.key), f'Value of {value} not accepted for {self.key}'
                 value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
 
             elif self.type is bool:
-                assert value in [True, False], 'Value of {} not accepted for {}, should be True or False'.format(value, self.key)
+                assert value in [True, False], f'Value of {value} not accepted for {self.key}, should be True or False'
 
             elif self.type in [float, int]:
                 minimum = min(settingValues.get(self.key))
@@ -615,10 +615,11 @@ class Setting:
             return '; '.join(self.lines)
 
         elif self.type is float:
-            return '{:<12.4f}{}'.format(self.value, ' {}'.format(self.unit) if self.unit is not None else '')
+            unit = f' {self.unit}' if self.unit is not None else ''
+            return f'{self.value:<12.4f}{unit}'
 
         elif self.type is int:
-            return '{:<3d}'.format(self.value)
+            return f'{self.value:<3d}'
 
         else:
             # Includes VectorInt and VectorFloat as well as strings
@@ -1505,7 +1506,7 @@ stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams |
 
 def readSettings(file_=None):
     assert type(file_) is str
-    assert Path(file_).is_file(), 'Cannot find file {} when reading settings'.format(file_)
+    assert Path(file_).is_file(), f'Cannot find file {file_} when reading settings'
 
     with open(file_) as f:
         lines = f.read().splitlines()
@@ -1543,10 +1544,9 @@ def readSettings(file_=None):
                     if len(settingKeys) == 1:
                         settingKeyOther = settingKeys[0]
                     else:
-                        raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+                        raise ValueError(f'Error in block in line \'{line}\' of file {file_}')
 
-                    assert settingKey == settingKeyOther, 'Entered block {} but found endblock {}'.format(settingKey,
-                                                                                                          settingKeyOther)
+                    assert settingKey == settingKeyOther, f'Entered block {settingKey} but found endblock {settingKeyOther}'
 
                     newSetting = Setting(key=settingKey, lines=blockLines)
                     settings.append(newSetting)
@@ -1556,7 +1556,7 @@ def readSettings(file_=None):
                     blockLines = []
 
                 else:
-                    raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+                    raise ValueError(f'Error in block in line \'{line}\' of file {file_}')
             else:
                 blockLines.append(line)
 
@@ -1580,10 +1580,10 @@ def readSettings(file_=None):
                     if len(settingKeys) == 1:
                         settingKey = settingKeys[0]
                     else:
-                        raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+                        raise ValueError(f'Error in block in line \'{line}\' of file {file_}')
 
                 else:
-                    raise ValueError('Error in block in line \'{}\' of file {}'.format(line, file_))
+                    raise ValueError(f'Error in block in line \'{line}\' of file {file_}')
 
             else:
                 # If we're here then we have a keyword.
@@ -1614,12 +1614,12 @@ def readSettings(file_=None):
                 elif len(parts) == 4:
                     # e.g. kpoints_mp_grid : 1.0 1.0 1.0
                     key = parts[0].lower()
-                    value = stringToValue('{} {} {}'.format(parts[1], parts[2], parts[3]))
+                    value = stringToValue(' '.join(parts[1:3]))
 
                     newSetting = Setting(key=key, value=value)
 
                 else:
-                    raise ValueError('Error in keyword {} of file {}'.format(line, file_))
+                    raise ValueError(f'Error in keyword {line} of file {file_}')
 
                 settings.append(newSetting)
 
@@ -1645,7 +1645,7 @@ def createSettings(*settings):
         if type(setting) is Setting:
             settings.append(setting)
         else:
-            raise TypeError('{} type not recognised in shortcut'.format(type(setting)))
+            raise TypeError(f'{type(setting)} type not recognised in shortcut')
 
     # Check that none of the shortcuts themselves have now duplicated any cells/params.
     assertCount([setting.key for setting in settings])
@@ -1668,7 +1668,7 @@ def createVariableSettings(*variableSettings):
 
     for variable in variableSettings:
         assert type(variable) in [str, list, tuple],\
-            'Specify only shortcut strings, lists or tuples for variable cells/params, not {}'.format(type(variable))
+            f'Specify only shortcut strings, lists or tuples for variable cells/params, not {type(variable)}'
 
         # Strings are shortcuts, but shortcuts to specific combinations of cells/params.
         # E.g. 'soc' is a tuple of three different settings:
@@ -1719,7 +1719,7 @@ def shortcutsToSettings(*shortcuts):
 
         newSettings = [settingOrList] if type(settingOrList) is Setting else settingOrList
 
-        assert newSettings is not None, 'Shortcut string {} not recognised'.format(shortcut)
+        assert newSettings is not None, f'Shortcut string {shortcut} not recognised'
 
         settings += newSettings
 
@@ -1735,7 +1735,7 @@ def getVariableSetting(string=None):
 
     variableSetting = stringToVariableSettings.get(string.lower(), None)
 
-    assert variableSetting is not None, 'Shortcut to variable settings {} not recognised'.format(string)
+    assert variableSetting is not None, f'Shortcut to variable settings {string} not recognised'
 
     return variableSetting
 
@@ -1760,7 +1760,7 @@ def getCellsParams(settings=None):
         elif setting.file == 'param':
             params.append(setting)
         else:
-            raise ValueError('File {} not recognised'.format(setting.file))
+            raise ValueError(f'File {setting.file} not recognised')
 
     cells = sorted(cells, key=lambda cell: cell.priority)
     params = sorted(params, key=lambda param: param.priority)
@@ -1796,7 +1796,7 @@ def parseArgs(*stringsAndSettings):
                     settings.append(arg2)
 
                 else:
-                    raise TypeError('Cannot have type {} in tuple'.format(t2))
+                    raise TypeError(f'Cannot have type {t2} in tuple')
 
         elif t is list:
             for arg2 in arg:
@@ -1809,9 +1809,9 @@ def parseArgs(*stringsAndSettings):
                     settings.append(arg2)
 
                 else:
-                    raise TypeError('Cannot have type {} in list'.format(t2))
+                    raise TypeError(f'Cannot have type {t2} in list')
 
         else:
-            raise TypeError('Cannot have type {}'.format(t))
+            raise TypeError(f'Cannot have type {t}')
 
     return settings, strings

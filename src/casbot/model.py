@@ -46,13 +46,13 @@ class Model:
         assert len(completedCalculations) > 0, 'No calculations have completed'
 
         if len(completedCalculations) == len(self.calculations):
-            print('All {} calculations have completed. Analysing...'.format(len(self.calculations)))
+            print(f'All {len(self.calculations)} calculations have completed. Analysing...')
 
         elif not passive:
             raise ValueError('Not all calculations have completed - use passive=True to ignore incomplete calculations')
 
         else:
-            print('{} calculations have completed out of {}. Analysing completed calculations...'.format(len(completedCalculations), len(self.calculations)))
+            print(f'{len(completedCalculations)} calculations have completed out of {len(self.calculations)}. Analysing completed calculations...')
 
         type_ = type_.strip().lower()
 
@@ -154,7 +154,7 @@ class Model:
         string = ''
 
         for calculation in self.calculations:
-            string += '{}\n'.format(calculation.directory)
+            string += f'{calculation.directory}\n'
 
         string = string[:-1]  # Remove last line break.
 
@@ -230,9 +230,9 @@ class Model:
                             notificationAlias=notificationAlias)
 
         if test:
-            print('*** Total of {} calculations to run - none have gone yet ***'.format(len(calculations)))
+            print(f'*** Total of {len(calculations)} calculations to run - none have gone yet ***')
         else:
-            print('*** Ran {} calculations ***'.format(len(calculations)))
+            print(f'*** Ran {len(calculations)} calculations ***')
 
     def sub(self, test=False, force=False, passive=False, shuffle=False, queueFile=None):
         assert type(test) is bool
@@ -256,9 +256,9 @@ class Model:
                             queueFile=queueFile)
 
         if test:
-            print('*** Total of {} calculations to submit - none have gone yet ***'.format(len(calculations)))
+            print(f'*** Total of {len(calculations)} calculations to submit - none have gone yet ***')
         else:
-            print('*** Submitted {} calculations ***'.format(len(calculations)))
+            print(f'*** Submitted {len(calculations)} calculations ***')
 
     def updateSettings(self, *settings):
         for calculation in self.calculations:
