@@ -624,27 +624,18 @@ class Setting:
             # Includes VectorInt and VectorFloat as well as strings
             return str(self.value)
 
-    def getLines(self, longestSetting=None):
-        if longestSetting is not None:
-            assert type(longestSetting) is int
-
-        lines = []
-
+    def getLines(self, longestSetting=0):
         if self.type is Block:
-            lines.append('%block {}\n'.format(self.key))
-
-            for line in self.lines:
-                lines.append('{}\n'.format(line))
-
-            lines.append('%endblock {}\n'.format(self.key))
+            return [f'%block {self.key}\n'] + [f'{line}\n' for line in self.lines] + [f'%endblock {self.key}\n']
 
         else:
-            lines.append('{}{} : {} {}\n'.format(self.key,
-                                                 '' if longestSetting is None else ' ' * (longestSetting - len(self.key)),
-                                                 self.value,
-                                                 '' if self.unit is None else self.unit))
+            assert type(longestSetting) is int
 
-        return lines
+            spaces = max(len(self.key), longestSetting)
+
+            unit = '' if self.unit is None else self.unit
+
+            return [f'{self.key:<{spaces}s} : {self.value} {unit}\n']
 
 
 
