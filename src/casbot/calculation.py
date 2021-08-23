@@ -739,3 +739,13 @@ class Calculation:
             self.settings.append(setting)
 
             self.sortSettings()
+
+    def removeSettings(self, *settingsToDeleteKeys):
+        assert all(type(settingToDeleteKey) is str for settingToDeleteKey in settingsToDeleteKeys)
+
+        for settingToDeleteKey in settingsToDeleteKeys:
+            if settingToDeleteKey not in [setting.key for setting in self.settings]:
+                print(f'*** Setting {settingToDeleteKey} not in settings - skipping ***')
+                continue
+
+            self.settings = [setting for setting in self.settings if setting.key != settingToDeleteKey]

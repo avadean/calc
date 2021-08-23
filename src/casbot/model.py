@@ -268,3 +268,7 @@ class Model:
     def updateSettings(self, *settings):
         for calculation in self.calculations:
             calculation.updateSettings(*settings)
+
+    def removeSettings(self, *settingsToDeleteKeys):
+        for calculation in self.calculations:
+            calculation.removeSettings(*settingsToDeleteKeys)
