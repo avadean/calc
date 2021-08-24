@@ -40,9 +40,6 @@ def createDirectories(*directoryNames):
     return directoryNames
 
 
-class Block:
-    pass
-
 
 class VectorInt:
     def __init__(self, *values, vector=None):

@@ -1,6 +1,6 @@
 from casbot.data import assertBetween, assertCount,\
     getAllowedUnits, getNiceUnit, getFromDict,\
-    Block, VectorInt, VectorFloat, stringToValue
+    VectorInt, VectorFloat, stringToValue
 
 from pathlib import Path
 
@@ -546,7 +546,7 @@ settingUnits = cellUnits | paramUnits
 
 
 class Setting:
-    def __init__(self, key=None, value=None, unit=None, lines=None):
+    def __init__(self, key=None):
         assert type(key) is str, 'Key for setting should be a string'
         key = key.strip().lower()
 
@@ -559,266 +559,403 @@ class Setting:
             raise ValueError(f'{key} not a known setting')
 
         self.key = key
-        self.type = getFromDict(key=key, dct=settingTypes, strict=True)
 
-        if self.type is Block:
+        self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
+
+    def getLines(self, longestSetting=0):
+        assert type(longestSetting) is int
+
+        spaces = max(len(self.key), longestSetting)
+
+        unit = '' if self.unit is None else self.unit
+
+        return [f'{self.key:<{spaces}s} : {self.value} {unit}\n']
+
+
+
+
+class BoolSetting(Setting):
+    def __init__(self, key=None, value=None):
+        super().__init__(key=key)
+
+        assert value is True or value is False, f'Value of {value} not accepted for {self.key}, should be True or False'
+
+        self.value = bool(value)
+
+    def __str__(self):
+        return str(self.value)
+
+
+class StrSetting(Setting):
+    def __init__(self, key=None, value=None):
+        super().__init__(key=key)
+
+        assert type(value) is str
+
+        value = value.strip().lower()
+
+        assert value in settingValues.get(self.key), f'Value of {value} not accepted for {self.key}, should be a float'
+
+        self.value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
+
+    def __str__(self):
+        return str(self.value)
+
+
+class FloatSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        assert type(value) in [float, int], f'Value of {value} not accepted for {self.key}, should be an int or float'
+
+        if type(value) is int:
+            value = float(value)
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        unit = f' {self.unit}' if self.unit is not None else ''
+
+        return f'{self.value:<12.4f}{unit}'
+
+
+class IntSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        assert type(value) is int, f'Value of {value} not accepted for {self.key}, should be an int'
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        return f'{self.value:<3d}'
+
+
+class VectorFloatSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        if type(value) in [str, VectorInt]:
+            value = VectorFloat(vector=value)
+
+        assert type(value) is VectorFloat, f'Value of {value} not accepted for {self.key}, should be a VectorFloat'
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        return str(self.value)
+
+
+class VectorIntSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        assert type(value) is VectorInt, f'Value of {value} not accepted for {self.key}, should be a VectorInt'
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        return str(self.value)
+
+
+
+
+
+
+
+
+
+class Block(Setting):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key)
+
+        self.lines = []
+
+        if lines is not None:
             assert type(lines) is list, 'Lines for block should be a list'
             assert all(type(line) is str for line in lines), 'Each line for the block should be a string'
             self.lines = [line.strip() for line in lines]
 
-        else:
-            if type(value) is int and self.type is float:
-                value = float(value)
-
-            if type(value) in [str, VectorInt] and self.type is VectorFloat:
-                value = VectorFloat(vector=value)
-
-            assert type(value) is self.type, f'Value {value} not acceptable for {self.key}, should be {self.type}'
-
-            if self.type is str:
-                value = value.strip().lower()
-                assert value in settingValues.get(self.key), f'Value of {value} not accepted for {self.key}'
-                value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
-
-            elif self.type is bool:
-                assert value in [True, False], f'Value of {value} not accepted for {self.key}, should be True or False'
-
-            elif self.type in [float, int]:
-                minimum = min(settingValues.get(self.key))
-                maximum = max(settingValues.get(self.key))
-                assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
-
-            elif self.type in [VectorInt, VectorFloat]:
-                minimum = min(settingValues.get(self.key))
-                maximum = max(settingValues.get(self.key))
-                assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
-
-            self.value = value
-
-            if unit is not None:
-                self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-                assert type(unit) is str
-
-                unit = unit.strip().lower()
-
-                assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-                unit = getNiceUnit(unit)
-
-            self.unit = unit
-
-        self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
-
     def __str__(self):
-        if self.type is Block:
-            return '; '.join(self.lines)
-
-        elif self.type is float:
-            unit = f' {self.unit}' if self.unit is not None else ''
-            return f'{self.value:<12.4f}{unit}'
-
-        elif self.type is int:
-            return f'{self.value:<3d}'
-
-        else:
-            # Includes VectorInt and VectorFloat as well as strings
-            return str(self.value)
+        return '; '.join(self.lines)
 
     def getLines(self, longestSetting=0):
-        if self.type is Block:
-            return [f'%block {self.key}\n'] + [f'{line}\n' for line in self.lines] + [f'%endblock {self.key}\n']
-
-        else:
-            assert type(longestSetting) is int
-
-            spaces = max(len(self.key), longestSetting)
-
-            unit = '' if self.unit is None else self.unit
-
-            return [f'{self.key:<{spaces}s} : {self.value} {unit}\n']
+        return [f'%block {self.key}\n'] + [f'{line}\n' for line in self.lines] + [f'%endblock {self.key}\n']
 
 
+class ElementVectorFloatBlock(Block): pass
 
-shortcutToCells = {'usp': Setting(key='species_pot', lines=[]),
-                   'ncp': Setting(key='species_pot', lines=['NCP']),
-                   'c19': Setting(key='species_pot', lines=['C19']),
-                   'soc19': Setting(key='species_pot', lines=['SOC19']),
 
-                   'h': [Setting(key='lattice_cart', lines=[' BOHR',
+class VectorFloatBlock(Block): pass
+
+
+class VectorFloatWeightBlock(Block): pass
+
+
+class VectorIntBlock(Block): pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+shortcutToCells = {'usp': Block(key='species_pot', lines=[]),
+                   'ncp': Block(key='species_pot', lines=['NCP']),
+                   'c19': Block(key='species_pot', lines=['C19']),
+                   'soc19': Block(key='species_pot', lines=['SOC19']),
+
+                   'h': [Block(key='lattice_cart', lines=[' BOHR',
+                                                          '  10.0   0.0   0.0',
+                                                          '   0.0  10.0   0.0',
+                                                          '   0.0   0.0  10.0']),
+
+                         Block(key='positions_abs', lines=['H   0.0  0.0  0.0']),
+
+                         Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'ch4distorted': [Block(key='lattice_cart', lines=[' ANG',
+                                                                     '  10.0   0.0   0.0',
+                                                                     '   0.0  10.0   0.0',
+                                                                     '   0.0   0.0  10.0']),
+
+                                    Block(key='positions_abs', lines=['C    0.10000  -0.20000  -0.10000',
+                                                                      'H    1.18913   1.18913   1.18913',
+                                                                      'H   -1.18913  -1.18913   1.18913',
+                                                                      'H   -1.18913   1.48913  -1.18913',
+                                                                      'H    1.28913  -1.18913  -1.18913']),
+
+                                    Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'ch3': [Block(key='lattice_cart', lines=['BOHR',
                                                             '  10.0   0.0   0.0',
                                                             '   0.0  10.0   0.0',
                                                             '   0.0   0.0  10.0']),
 
-                         Setting(key='positions_abs', lines=['H   0.0  0.0  0.0']),
+                           Block(key='positions_abs', lines=['ANG',
+                                                             'C   0.000000000  0.000000000  0.000000000',
+                                                             'H   1.079000000  0.000000000  0.000000000',
+                                                             'H  -0.539500000  0.934441411  0.000000000',
+                                                             'H  -0.539500000 -0.934441411  0.000000000']),
 
-                         Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                           Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'ch4distorted': [Setting(key='lattice_cart', lines=[' ANG',
-                                                                       '  10.0   0.0   0.0',
-                                                                       '   0.0  10.0   0.0',
-                                                                       '   0.0   0.0  10.0']),
+                   'hf': [Block(key='lattice_cart', lines=[' ANG',
+                                                           '  10.0   0.0   0.0',
+                                                           '   0.0  10.0   0.0',
+                                                           '   0.0   0.0  10.0']),
 
-                                    Setting(key='positions_abs', lines=['C    0.10000  -0.20000  -0.10000',
-                                                                        'H    1.18913   1.18913   1.18913',
-                                                                        'H   -1.18913  -1.18913   1.18913',
-                                                                        'H   -1.18913   1.48913  -1.18913',
-                                                                        'H    1.28913  -1.18913  -1.18913']),
+                          Block(key='positions_frac',
+                                lines=['  H   0.1   0.1   0.099380480724825',
+                                       '  F   0.1   0.1   0.192319519275175']),
 
-                                    Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                          Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'ch3': [Setting(key='lattice_cart', lines=['BOHR',
+                   'hcl': [Block(key='lattice_cart', lines=[' ANG',
+                                                            '  10.0   0.0   0.0',
+                                                            '   0.0  10.0   0.0',
+                                                            '   0.0   0.0  10.0']),
+
+                           Block(key='positions_frac',
+                                 lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
+                                        '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
+
+                           Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hbr': [Block(key='lattice_cart', lines=[' ANG',
+                                                            '  12.0   0.0   0.0',
+                                                            '   0.0  12.0   0.0',
+                                                            '   0.0   0.0  12.0']),
+
+                           Block(key='positions_frac',
+                                 lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
+                                        '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
+
+                           Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hi': [Block(key='lattice_cart', lines=[' ANG',
+                                                           '  12.0   0.0   0.0',
+                                                           '   0.0  12.0   0.0',
+                                                           '   0.0   0.0  12.0']),
+
+                          Block(key='positions_frac',
+                                lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
+                                       '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
+
+                          Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hfrot': [Block(key='lattice_cart', lines=[' ANG',
                                                               '  10.0   0.0   0.0',
                                                               '   0.0  10.0   0.0',
                                                               '   0.0   0.0  10.0']),
 
-                           Setting(key='positions_abs', lines=['ANG',
-                                                               'C   0.000000000  0.000000000  0.000000000',
-                                                               'H   1.079000000  0.000000000  0.000000000',
-                                                               'H  -0.539500000  0.934441411  0.000000000',
-                                                               'H  -0.539500000 -0.934441411  0.000000000']),
+                             Block(key='positions_frac',
+                                   # lines=['  H   0.12040092  0.12040092 -0.02972739',
+                                   #       '  F   0.16687044  0.16687044  0.03599044']),
+                                   lines=['H         0.120400920000000  0.120400920000000 -0.029727390000000',
+                                          'F         0.166870440000000  0.166870440000000  0.035990440000000']),
 
-                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                             Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'hf': [Setting(key='lattice_cart', lines=[' ANG',
-                                                             '  10.0   0.0   0.0',
-                                                             '   0.0  10.0   0.0',
-                                                             '   0.0   0.0  10.0']),
+                   'hclrot': [Block(key='lattice_cart', lines=[' ANG',
+                                                               '  10.0   0.0   0.0',
+                                                               '   0.0  10.0   0.0',
+                                                               '   0.0   0.0  10.0']),
 
-                          Setting(key='positions_frac',
-                                  lines=['  H   0.1   0.1   0.099380480724825',
-                                         '  F   0.1   0.1   0.192319519275175']),
+                              Block(key='positions_frac',
+                                    # lines=['  H    0.01168401  0.01168401 -0.00347605',
+                                    #       '  Cl   0.07615812  0.07615812  0.08770359']),
+                                    lines=['H         0.011684010000000  0.011684010000000 -0.003476050000000',
+                                           'Cl        0.076158120000000  0.076158120000000  0.087703590000000']),
 
-                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                              Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'hcl': [Setting(key='lattice_cart', lines=[' ANG',
-                                                              '  10.0   0.0   0.0',
-                                                              '   0.0  10.0   0.0',
-                                                              '   0.0   0.0  10.0']),
+                   'hbrrot': [Block(key='lattice_cart', lines=[' ANG',
+                                                               '  12.0   0.0   0.0',
+                                                               '   0.0  12.0   0.0',
+                                                               '   0.0   0.0  12.0']),
 
-                           Setting(key='positions_frac',
-                                   lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
-                                          '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
+                              Block(key='positions_frac',
+                                    # lines=['  H    0.00555653 0.00555643 0.00786405',
+                                    #       '  Br   0.06514347 0.06514357 0.09212085']),
+                                    lines=['H         0.005556530000000  0.005556430000000  0.007864050000000',
+                                           'Br        0.065143470000000  0.065143570000000  0.092120850000000']),
 
-                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                              Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'hbr': [Setting(key='lattice_cart', lines=[' ANG',
+                   'hirot': [Block(key='lattice_cart', lines=[' ANG',
                                                               '  12.0   0.0   0.0',
                                                               '   0.0  12.0   0.0',
                                                               '   0.0   0.0  12.0']),
 
-                           Setting(key='positions_frac',
-                                   lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
-                                          '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
+                             Block(key='positions_frac',
+                                   # lines=['  H   -0.00047645 -0.00047645 -0.0006738',
+                                   #       '  I    0.06751811  0.06751811  0.09548503']),
+                                   lines=['H        -0.000476450000000 -0.000476450000000 -0.000673800000000',
+                                          'I         0.067518110000000  0.067518110000000  0.095485030000000']),
 
-                           Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                             Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'hi': [Setting(key='lattice_cart', lines=[' ANG',
-                                                             '  12.0   0.0   0.0',
-                                                             '   0.0  12.0   0.0',
-                                                             '   0.0   0.0  12.0']),
-
-                          Setting(key='positions_frac',
-                                  lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
-                                         '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
-
-                          Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
-
-                   'hfrot': [Setting(key='lattice_cart', lines=[' ANG',
+                   'hftrans': [Block(key='lattice_cart', lines=[' ANG',
                                                                 '  10.0   0.0   0.0',
                                                                 '   0.0  10.0   0.0',
                                                                 '   0.0   0.0  10.0']),
 
-                             Setting(key='positions_frac',
-                                     #lines=['  H   0.12040092  0.12040092 -0.02972739',
-                                     #       '  F   0.16687044  0.16687044  0.03599044']),
-                                     lines=['H         0.120400920000000  0.120400920000000 -0.029727390000000',
-                                            'F         0.166870440000000  0.166870440000000  0.035990440000000']),
+                               Block(key='positions_frac',
+                                     lines=['  H   1.1   -1.1   2.099380480724825',
+                                            '  F   1.1   -1.1   2.192319519275175']),
 
-                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                               Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'hclrot': [Setting(key='lattice_cart', lines=[' ANG',
+                   'hcltrans': [Block(key='lattice_cart', lines=[' ANG',
                                                                  '  10.0   0.0   0.0',
                                                                  '   0.0  10.0   0.0',
                                                                  '   0.0   0.0  10.0']),
 
-                              Setting(key='positions_frac',
-                                      #lines=['  H    0.01168401  0.01168401 -0.00347605',
-                                      #       '  Cl   0.07615812  0.07615812  0.08770359']),
-                                      lines=['H         0.011684010000000  0.011684010000000 -0.003476050000000',
-                                             'Cl        0.076158120000000  0.076158120000000  0.087703590000000']),
+                                Block(key='positions_frac',
+                                      lines=['  H    1.009999871806914  -1.009999872045901   2.009226072370290',
+                                             '  Cl   1.010000128193086  -1.010000127954099   2.138173927629710']),
 
-                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                                Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'hbrrot': [Setting(key='lattice_cart', lines=[' ANG',
+                   'hbrtrans': [Block(key='lattice_cart', lines=[' ANG',
                                                                  '  12.0   0.0   0.0',
                                                                  '   0.0  12.0   0.0',
                                                                  '   0.0   0.0  12.0']),
 
-                              Setting(key='positions_frac',
-                                      #lines=['  H    0.00555653 0.00555643 0.00786405',
-                                      #       '  Br   0.06514347 0.06514357 0.09212085']),
-                                      lines=['H         0.005556530000000  0.005556430000000  0.007864050000000',
-                                             'Br        0.065143470000000  0.065143570000000  0.092120850000000']),
+                                Block(key='positions_frac',
+                                      lines=['  H     0.999997053809360  -1.000003049675148   2.011117199951347',
+                                             '  Br    1.000002946190640  -0.999996950324852   2.130282800048653']),
 
-                              Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                                Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   'hirot': [Setting(key='lattice_cart', lines=[' ANG',
+                   'hitrans': [Block(key='lattice_cart', lines=[' ANG',
                                                                 '  12.0   0.0   0.0',
                                                                 '   0.0  12.0   0.0',
                                                                 '   0.0   0.0  12.0']),
 
-                             Setting(key='positions_frac',
-                                     #lines=['  H   -0.00047645 -0.00047645 -0.0006738',
-                                     #       '  I    0.06751811  0.06751811  0.09548503']),
-                                     lines=['H        -0.000476450000000 -0.000476450000000 -0.000673800000000',
-                                            'I         0.067518110000000  0.067518110000000  0.095485030000000']),
+                               Block(key='positions_frac',
+                                     lines=['  H   1.000000000013618  -0.999999999836844   1.999047105232599',
+                                            '  I   0.999999999986382  -1.000000000163156   2.135036228100734']),
 
-                             Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
-
-                   'hftrans': [Setting(key='lattice_cart', lines=[' ANG',
-                                                                  '  10.0   0.0   0.0',
-                                                                  '   0.0  10.0   0.0',
-                                                                  '   0.0   0.0  10.0']),
-
-                               Setting(key='positions_frac',
-                                       lines=['  H   1.1   -1.1   2.099380480724825',
-                                              '  F   1.1   -1.1   2.192319519275175']),
-
-                               Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
-
-                   'hcltrans': [Setting(key='lattice_cart', lines=[' ANG',
-                                                                   '  10.0   0.0   0.0',
-                                                                   '   0.0  10.0   0.0',
-                                                                   '   0.0   0.0  10.0']),
-
-                                Setting(key='positions_frac',
-                                        lines=['  H    1.009999871806914  -1.009999872045901   2.009226072370290',
-                                               '  Cl   1.010000128193086  -1.010000127954099   2.138173927629710']),
-
-                                Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
-
-                   'hbrtrans': [Setting(key='lattice_cart', lines=[' ANG',
-                                                                   '  12.0   0.0   0.0',
-                                                                   '   0.0  12.0   0.0',
-                                                                   '   0.0   0.0  12.0']),
-
-                                Setting(key='positions_frac',
-                                        lines=['  H     0.999997053809360  -1.000003049675148   2.011117199951347',
-                                               '  Br    1.000002946190640  -0.999996950324852   2.130282800048653']),
-
-                                Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
-
-                   'hitrans': [Setting(key='lattice_cart', lines=[' ANG',
-                                                                  '  12.0   0.0   0.0',
-                                                                  '   0.0  12.0   0.0',
-                                                                  '   0.0   0.0  12.0']),
-
-                               Setting(key='positions_frac',
-                                       lines=['  H   1.000000000013618  -0.999999999836844   1.999047105232599',
-                                              '  I   0.999999999986382  -1.000000000163156   2.135036228100734']),
-
-                               Setting(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                               Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    }
 
