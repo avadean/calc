@@ -5,6 +5,271 @@ from casbot.data import assertBetween, assertCount,\
 from pathlib import Path
 
 
+
+class Setting:
+    def __init__(self, key=None):
+        assert type(key) is str, 'Key for setting should be a string'
+        key = key.strip().lower()
+
+        # See if we can find the key in cells, then params, if not then we don't know what it is.
+        if key in cellKnown:
+            self.file = 'cell'
+        elif key in paramKnown:
+            self.file = 'param'
+        else:
+            raise ValueError(f'{key} not a known setting')
+
+        self.key = key
+
+        self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
+
+        self.value = None
+        self.unit = None
+
+    '''
+    def getLines(self, longestSetting=0):
+        assert type(longestSetting) is int
+
+        spaces = max(len(self.key), longestSetting)
+
+        unit = '' if self.unit is None else self.unit
+
+        return [f'{self.key:<{spaces}s} : {self.value} {unit}\n']
+    '''
+
+
+
+
+
+class BoolSetting(Setting):
+    def __init__(self, key=None, value=None):
+        super().__init__(key=key)
+
+        assert value is True or value is False, f'Value of {value} not accepted for {self.key}, should be True or False'
+
+        self.value = bool(value)
+
+    def __str__(self):
+        return str(self.value)
+
+    def getLines(self):
+        return [f'{self.key:<s} : {self.value}\n']
+
+
+class StrSetting(Setting):
+    def __init__(self, key=None, value=None):
+        super().__init__(key=key)
+
+        assert type(value) is str
+
+        value = value.strip().lower()
+
+        assert value in settingValues.get(self.key), f'Value of {value} not accepted for {self.key}, should be a float'
+
+        self.value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
+
+    def __str__(self):
+        return str(self.value)
+
+    def getLines(self):
+        return [f'{self.key:<s} : {self.value}\n']
+
+
+class FloatSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        assert type(value) in [float, int], f'Value of {value} not accepted for {self.key}, should be an int or float'
+
+        if type(value) is int:
+            value = float(value)
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        unit = f' {self.unit}' if self.unit is not None else ''
+
+        return f'{self.value:<12.4f}{unit}'
+
+    def getLines(self):
+        unit = '' if self.unit is None else self.unit
+
+        return [f'{self.key:<s} : {self.value} {unit}\n']
+
+
+class IntSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        assert type(value) is int, f'Value of {value} not accepted for {self.key}, should be an int'
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        return f'{self.value:<3d}'
+
+    def getLines(self):
+        unit = '' if self.unit is None else self.unit
+
+        return [f'{self.key:<s} : {self.value} {unit}\n']
+
+
+class VectorFloatSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        if type(value) in [str, VectorInt]:
+            value = VectorFloat(vector=value)
+
+        assert type(value) is VectorFloat, f'Value of {value} not accepted for {self.key}, should be a VectorFloat'
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        return str(self.value)
+
+    def getLines(self):
+        unit = '' if self.unit is None else self.unit
+
+        return [f'{self.key:<s} : {self.value} {unit}\n']
+
+
+class VectorIntSetting(Setting):
+    def __init__(self, key=None, value=None, unit=None):
+        super().__init__(key=key)
+
+        assert type(value) is VectorInt, f'Value of {value} not accepted for {self.key}, should be a VectorInt'
+
+        minimum = min(settingValues.get(self.key))
+        maximum = max(settingValues.get(self.key))
+        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
+
+        self.value = value
+
+        if unit is not None:
+            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
+
+            assert type(unit) is str
+
+            unit = unit.strip().lower()
+
+            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
+
+            unit = getNiceUnit(unit)
+
+        self.unit = unit
+
+    def __str__(self):
+        return str(self.value)
+
+    def getLines(self):
+        unit = '' if self.unit is None else self.unit
+
+        return [f'{self.key:<s} : {self.value} {unit}\n']
+
+
+
+
+
+
+
+
+
+class Block(Setting):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key)
+
+        self.lines = []
+
+        if lines is not None:
+            assert type(lines) is list, 'Lines for block should be a list'
+            assert all(type(line) is str for line in lines), 'Each line for the block should be a string'
+            self.lines = [line.strip() for line in lines]
+
+    def __str__(self):
+        return '; '.join(self.lines)
+
+    def getLines(self):
+        return [f'%block {self.key}\n'] + [f'{line}\n' for line in self.lines] + [f'%endblock {self.key}\n']
+
+
+class ElementVectorFloatBlock(Block): pass
+
+
+class VectorFloatBlock(Block): pass
+
+
+class VectorFloatWeightBlock(Block): pass
+
+
+class VectorIntBlock(Block): pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 cellKnown = [
     # Lattice.
     'lattice_abc',
@@ -145,16 +410,16 @@ cellTypes = {
     'spectral_kpoints_list': Block,
 
     # Keywords.
-    'kpoint_mp_spacing': float,
-    'kpoints_mp_spacing': float,
+    'kpoint_mp_spacing': FloatSetting,
+    'kpoints_mp_spacing': FloatSetting,
     'kpoint_mp_grid': VectorInt,
     'kpoints_mp_grid': VectorInt,
     'kpoint_mp_offset': VectorFloat,
     'kpoints_mp_offset': VectorFloat,
-    'fix_all_cell': bool,
-    'fix_com': bool,
-    'symmetry_tol': float,
-    'symmetry_generate': bool
+    'fix_all_cell': BoolSetting,
+    'fix_com': BoolSetting,
+    'symmetry_tol': FloatSetting,
+    'symmetry_generate': BoolSetting
 }
 
 cellValues = {
@@ -378,67 +643,67 @@ paramDefaults = {
 
 paramTypes = {
     # tasks
-    'task': str,
-    'magres_task': str,
-    'magres_method': str,
-    'spectral_task': str,
+    'task': StrSetting,
+    'magres_task': StrSetting,
+    'magres_method': StrSetting,
+    'spectral_task': StrSetting,
 
     # general
-    'xcfunctional': str,
-    'opt_strategy': str,
-    'cut_off_energy': float,
-    'fix_occupancy': bool,
-    'basis_precision': str,
-    'relativistic_treatment': str,
+    'xcfunctional': StrSetting,
+    'opt_strategy': StrSetting,
+    'cut_off_energy': FloatSetting,
+    'fix_occupancy': BoolSetting,
+    'basis_precision': StrSetting,
+    'relativistic_treatment': StrSetting,
 
     # metals
-    'smearing_width': float,
-    'metals_method': str,
-    'nextra_bands': int,
+    'smearing_width': FloatSetting,
+    'metals_method': StrSetting,
+    'nextra_bands': IntSetting,
 
     # spin
-    'spin': float,
-    'spin_polarised': bool,
-    #'spin_polarized': bool,
-    'spin_treatment': str,
-    'spin_orbit_coupling': bool,
+    'spin': FloatSetting,
+    'spin_polarised': BoolSetting,
+    #'spin_polarized': BoolSetting,
+    'spin_treatment': StrSetting,
+    'spin_orbit_coupling': BoolSetting,
 
     # bandstructure
-    'bs_nbands': int,
+    'bs_nbands': IntSetting,
 
     # phonons
-    'phonon_method': str,
-    'phonon_sum_rule': bool,
-    'phonon_fine_cutoff_method': str,
+    'phonon_method': StrSetting,
+    'phonon_sum_rule': BoolSetting,
+    'phonon_fine_cutoff_method': StrSetting,
 
     # charge
-    'charge': float,
+    'charge': FloatSetting,
 
     # calculate
-    'calc_molecular_dipole': bool,
-    'popn_calculate': bool,
-    'calculate_raman': bool,
-    'calculate_densdiff': bool,
+    'calc_molecular_dipole': BoolSetting,
+    'popn_calculate': BoolSetting,
+    'calculate_raman': BoolSetting,
+    'calculate_densdiff': BoolSetting,
 
     # write
-    'write_cell_structure': bool,
-    'write_formatted_density': bool,
-    'popn_write': bool,
+    'write_cell_structure': BoolSetting,
+    'write_formatted_density': BoolSetting,
+    'popn_write': BoolSetting,
 
     # units
-    'dipole_unit': str,
+    'dipole_unit': StrSetting,
 
     # miscellaneous.
-    'max_scf_cycles': int,
-    'num_dump_cycles': int,
-    'elec_energy_tol': float,
-    'bs_eigenvalue_tol': float,
+    'max_scf_cycles': IntSetting,
+    'num_dump_cycles': IntSetting,
+    'elec_energy_tol': FloatSetting,
+    'bs_eigenvalue_tol': FloatSetting,
 
     # extra
-    'continuation': str,
-    'iprint': int,
-    'rand_seed': int,
-    'comment': str,
+    'continuation': StrSetting,
+    'iprint': IntSetting,
+    'rand_seed': IntSetting,
+    'comment': StrSetting,
 
     # blocks
     'devel_code': Block
@@ -542,237 +807,6 @@ settingPriorities = cellPriorities | paramPriorities
 settingTypes = cellTypes | paramTypes
 settingValues = cellValues | paramValues
 settingUnits = cellUnits | paramUnits
-
-
-
-class Setting:
-    def __init__(self, key=None):
-        assert type(key) is str, 'Key for setting should be a string'
-        key = key.strip().lower()
-
-        # See if we can find the key in cells, then params, if not then we don't know what it is.
-        if key in cellKnown:
-            self.file = 'cell'
-        elif key in paramKnown:
-            self.file = 'param'
-        else:
-            raise ValueError(f'{key} not a known setting')
-
-        self.key = key
-
-        self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
-
-    def getLines(self, longestSetting=0):
-        assert type(longestSetting) is int
-
-        spaces = max(len(self.key), longestSetting)
-
-        unit = '' if self.unit is None else self.unit
-
-        return [f'{self.key:<{spaces}s} : {self.value} {unit}\n']
-
-
-
-
-class BoolSetting(Setting):
-    def __init__(self, key=None, value=None):
-        super().__init__(key=key)
-
-        assert value is True or value is False, f'Value of {value} not accepted for {self.key}, should be True or False'
-
-        self.value = bool(value)
-
-    def __str__(self):
-        return str(self.value)
-
-
-class StrSetting(Setting):
-    def __init__(self, key=None, value=None):
-        super().__init__(key=key)
-
-        assert type(value) is str
-
-        value = value.strip().lower()
-
-        assert value in settingValues.get(self.key), f'Value of {value} not accepted for {self.key}, should be a float'
-
-        self.value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
-
-    def __str__(self):
-        return str(self.value)
-
-
-class FloatSetting(Setting):
-    def __init__(self, key=None, value=None, unit=None):
-        super().__init__(key=key)
-
-        assert type(value) in [float, int], f'Value of {value} not accepted for {self.key}, should be an int or float'
-
-        if type(value) is int:
-            value = float(value)
-
-        minimum = min(settingValues.get(self.key))
-        maximum = max(settingValues.get(self.key))
-        assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
-
-        self.value = value
-
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
-
-    def __str__(self):
-        unit = f' {self.unit}' if self.unit is not None else ''
-
-        return f'{self.value:<12.4f}{unit}'
-
-
-class IntSetting(Setting):
-    def __init__(self, key=None, value=None, unit=None):
-        super().__init__(key=key)
-
-        assert type(value) is int, f'Value of {value} not accepted for {self.key}, should be an int'
-
-        minimum = min(settingValues.get(self.key))
-        maximum = max(settingValues.get(self.key))
-        assertBetween(value, minimum=minimum, maximum=maximum, key=self.key)
-
-        self.value = value
-
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
-
-    def __str__(self):
-        return f'{self.value:<3d}'
-
-
-class VectorFloatSetting(Setting):
-    def __init__(self, key=None, value=None, unit=None):
-        super().__init__(key=key)
-
-        if type(value) in [str, VectorInt]:
-            value = VectorFloat(vector=value)
-
-        assert type(value) is VectorFloat, f'Value of {value} not accepted for {self.key}, should be a VectorFloat'
-
-        minimum = min(settingValues.get(self.key))
-        maximum = max(settingValues.get(self.key))
-        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
-
-        self.value = value
-
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
-
-    def __str__(self):
-        return str(self.value)
-
-
-class VectorIntSetting(Setting):
-    def __init__(self, key=None, value=None, unit=None):
-        super().__init__(key=key)
-
-        assert type(value) is VectorInt, f'Value of {value} not accepted for {self.key}, should be a VectorInt'
-
-        minimum = min(settingValues.get(self.key))
-        maximum = max(settingValues.get(self.key))
-        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
-
-        self.value = value
-
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
-
-    def __str__(self):
-        return str(self.value)
-
-
-
-
-
-
-
-
-
-class Block(Setting):
-    def __init__(self, key=None, lines=None):
-        super().__init__(key=key)
-
-        self.lines = []
-
-        if lines is not None:
-            assert type(lines) is list, 'Lines for block should be a list'
-            assert all(type(line) is str for line in lines), 'Each line for the block should be a string'
-            self.lines = [line.strip() for line in lines]
-
-    def __str__(self):
-        return '; '.join(self.lines)
-
-    def getLines(self, longestSetting=0):
-        return [f'%block {self.key}\n'] + [f'{line}\n' for line in self.lines] + [f'%endblock {self.key}\n']
-
-
-class ElementVectorFloatBlock(Block): pass
-
-
-class VectorFloatBlock(Block): pass
-
-
-class VectorFloatWeightBlock(Block): pass
-
-
-class VectorIntBlock(Block): pass
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -963,49 +997,49 @@ shortcutToCellsAliases = {}
 
 
 
-shortcutToParams = {'singlepoint': Setting('task', 'singlepoint'),
-                    'geometryoptimisation': Setting('task', 'geometryoptimisation'),
+shortcutToParams = {'singlepoint': StrSetting(key='task', value='singlepoint'),
+                    'geometryoptimisation': StrSetting(key='task', value='geometryoptimisation'),
 
-                    'lda': Setting('xcfunctional', 'lda'),
-                    'pbe': Setting('xcfunctional', 'pbe'),
-                    'pw91': Setting('xcfunctional', 'pw91'),
-                    'b3lyp': Setting('xcfunctional', 'b3lyp'),
+                    'lda': StrSetting(key='xcfunctional', value='lda'),
+                    'pbe': StrSetting(key='xcfunctional', value='pbe'),
+                    'pw91': StrSetting(key='xcfunctional', value='pw91'),
+                    'b3lyp': StrSetting(key='xcfunctional', value='b3lyp'),
 
-                    'lowcutoff': Setting('cut_off_energy', 300, 'eV'),
-                    'normalcutoff': Setting('cut_off_energy', 500, 'eV'),
-                    'cutoff': Setting('cut_off_energy', 700, 'eV'),
-                    'highcutoff': Setting('cut_off_energy', 900, 'eV'),
+                    'lowcutoff': FloatSetting(key='cut_off_energy', value=300.0, unit='eV'),
+                    'normalcutoff': FloatSetting(key='cut_off_energy', value=500.0, unit='eV'),
+                    'cutoff': FloatSetting(key='cut_off_energy', value=700.0, unit='eV'),
+                    'highcutoff': FloatSetting(key='cut_off_energy', value=900.0, unit='eV'),
 
-                    'schroedinger': Setting('relativistic_treatment', 'schroedinger'),
-                    'dirac': Setting('relativistic_treatment', 'dirac'),
+                    'schroedinger': StrSetting(key='relativistic_treatment', value='schroedinger'),
+                    'dirac': StrSetting(key='relativistic_treatment', value='dirac'),
 
-                    'spinpolarised': Setting('spin_polarised', True),
+                    'spinpolarised': BoolSetting(key='spin_polarised', value=True),
 
-                    'efg': [Setting('task', 'magres'),
-                            Setting('magres_task', 'efg')],
+                    'efg': [StrSetting(key='task', value='magres'),
+                            StrSetting(key='magres_task', value='efg')],
 
-                    'shielding': [Setting('task', 'magres'),
-                                  Setting('magres_task', 'shielding')],
+                    'shielding': [StrSetting(key='task', value='magres'),
+                                  StrSetting(key='magres_task', value='shielding')],
 
-                    'nmr': [Setting('task', 'magres'),
-                            Setting('magres_task', 'nmr')],
+                    'nmr': [StrSetting(key='task', value='magres'),
+                            StrSetting(key='magres_task', value='nmr')],
 
-                    'hyperfine': [Setting('task', 'magres'),
-                                  Setting('magres_task', 'hyperfine')],
+                    'hyperfine': [StrSetting(key='task', value='magres'),
+                                  StrSetting(key='magres_task', value='hyperfine')],
 
                     # 'jcoupling': (!) NotImplementedError,
 
-                    'soc': [Setting('spin_polarised', True),
-                            Setting('spin_treatment', 'vector'),
-                            Setting('spin_orbit_coupling', True)],
+                    'soc': [BoolSetting(key='spin_polarised', value=True),
+                            StrSetting(key='spin_treatment', value='vector'),
+                            BoolSetting(key='spin_orbit_coupling', value=True)],
 
-                    'writecell': Setting('write_cell_structure', True),
+                    'writecell': BoolSetting(key='write_cell_structure', value=True),
 
-                    'iprint': Setting('iprint', 3),
+                    'iprint': IntSetting(key='iprint', value=3),
 
-                    'xdensity': Setting('devel_code', lines=['density_in_x=true']),
-                    'ydensity': Setting('devel_code', lines=['density_in_y=true']),
-                    'zdensity': Setting('devel_code', lines=['density_in_z=true'])
+                    'xdensity': Block('devel_code', lines=['density_in_x=true']),
+                    'ydensity': Block('devel_code', lines=['density_in_y=true']),
+                    'zdensity': Block('devel_code', lines=['density_in_z=true'])
                     }
 
 shortcutToParamsAliases = {'geom': [shortcutToParams.get('geometryoptimisation'),
@@ -1042,570 +1076,570 @@ shortcutToParamsAliases = {'geom': [shortcutToParams.get('geometryoptimisation')
 
 
 
-stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Setting('spin_orbit_coupling', False)),
-                                      (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', False)),
-                                      (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True))],
+stringToVariableSettings = { 'soc' : [(StrSetting(key='spin_treatment', value='scalar'), BoolSetting(key='spin_orbit_coupling', value=False)),
+                                      (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=False)),
+                                      (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True))],
 
-                             'density' : [Setting('devel_code', lines=['density_in_x=true']),
-                                          Setting('devel_code', lines=['density_in_y=true']),
-                                          Setting('devel_code', lines=['density_in_z=true'])],
+                             'density' : [Block(key='devel_code', lines=['density_in_x=true']),
+                                          Block(key='devel_code', lines=['density_in_y=true']),
+                                          Block(key='devel_code', lines=['density_in_z=true'])],
 
-                             'socdensity' : [(Setting('spin_treatment', 'scalar'), Setting('spin_orbit_coupling', False)),
+                             'socdensity' : [(StrSetting(key='spin_treatment', value='scalar'), BoolSetting(key='spin_orbit_coupling', value=False)),
 
-                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', False)),
+                                             (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=False)),
 
-                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True),
-                                              Setting('devel_code', lines=['density_in_x=true'])),
+                                             (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True),
+                                              Block(key='devel_code', lines=['density_in_x=true'])),
 
-                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True),
-                                              Setting('devel_code', lines=['density_in_y=true'])),
+                                             (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True),
+                                              Block(key='devel_code', lines=['density_in_y=true'])),
 
-                                             (Setting('spin_treatment', 'vector'), Setting('spin_orbit_coupling', True),
-                                              Setting('devel_code', lines=['density_in_z=true']))],
+                                             (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True),
+                                              Block(key='devel_code', lines=['density_in_z=true']))],
 
-                             'hyperfinebfield': [(Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinebfield': [(Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '1.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '1.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 1.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 1.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 1.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 1.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '2.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '2.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 2.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 2.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 2.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 2.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '3.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '3.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 3.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 3.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 3.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 3.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '4.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '4.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 4.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 4.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 4.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 4.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '5.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '5.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 5.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 5.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 5.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 5.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '6.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '6.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 6.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 6.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 6.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 6.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '7.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '7.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 7.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 7.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 7.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 7.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '8.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '8.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 8.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 8.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 8.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 8.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '9.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '9.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 9.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 9.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 9.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 9.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_x=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_x=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_y=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
+                                                 (Block(key='devel_code', lines=['density_in_y=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
 
-                                                 (Setting('devel_code', lines=['density_in_z=true']),
-                                                  Setting('external_bfield', lines=['TESLA', '0.0 0.0 10.0']))
+                                                 (Block(key='devel_code', lines=['density_in_z=true']),
+                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 10.0']))
                                                  ],
 
-                             'hyperfinetensbfield': [(Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinetensbfield': [(Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 10.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 10.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '20.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '20.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 20.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 20.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 20.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 20.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '30.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '30.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 30.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 30.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 30.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 30.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '40.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '40.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 40.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 40.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 40.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 40.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '50.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '50.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 50.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 50.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 50.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 50.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '60.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '60.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 60.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 60.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 60.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 60.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '70.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '70.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 70.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 70.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 70.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 70.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '80.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '80.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 80.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 80.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 80.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 80.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '90.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '90.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 90.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 90.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 90.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 90.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_x=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_x=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_y=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
+                                                     (Block(key='devel_code', lines=['density_in_y=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
 
-                                                     (Setting('devel_code', lines=['density_in_z=true']),
-                                                      Setting('external_bfield', lines=['TESLA', '0.0 0.0 100.0']))
+                                                     (Block(key='devel_code', lines=['density_in_z=true']),
+                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 100.0']))
                                                      ],
 
-                             'hyperfinehundredsbfield': [(Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinehundredsbfield': [(Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 100.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 100.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '200.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '200.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 200.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 200.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 200.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 200.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '300.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '300.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 300.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 300.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 300.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 300.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '400.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '400.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 400.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 400.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 400.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 400.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 500.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '600.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '600.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 600.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 600.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 600.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 600.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '700.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '700.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 700.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 700.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 700.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 700.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '800.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '800.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 800.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 800.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 800.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 800.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '900.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '900.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 900.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 900.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 900.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 900.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_x=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_x=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_y=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
+                                                         (Block(key='devel_code', lines=['density_in_y=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
 
-                                                         (Setting('devel_code', lines=['density_in_z=true']),
-                                                          Setting('external_bfield', lines=['TESLA', '0.0 0.0 1000.0']))
+                                                         (Block(key='devel_code', lines=['density_in_z=true']),
+                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 1000.0']))
                                                          ],
 
-                             'hyperfinekilosbfield': [(Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinekilosbfield': [(Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 1000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 1000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '2000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '2000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 2000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 2000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 2000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 2000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '3000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '3000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 3000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 3000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 3000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 3000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '4000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '4000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 4000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 4000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 4000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 4000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '5000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '5000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 5000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 5000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 5000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 5000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '6000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '6000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 6000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 6000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 6000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 6000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '7000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '7000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 7000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 7000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 7000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 7000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '8000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '8000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 8000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 8000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 8000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 8000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '9000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '9000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 9000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 9000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 9000.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 9000.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_x=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '10000.0 0.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_x=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '10000.0 0.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_y=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 10000.0 0.0'])),
+                                                      (Block(key='devel_code', lines=['density_in_y=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 10000.0 0.0'])),
 
-                                                      (Setting('devel_code', lines=['density_in_z=true']),
-                                                       Setting('external_bfield', lines=['TESLA', '0.0 0.0 10000.0']))
+                                                      (Block(key='devel_code', lines=['density_in_z=true']),
+                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 10000.0']))
                                                       ],
 
-                             'xbfield': [Setting('external_bfield', lines=['TESLA', ' 0.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 1.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 2.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 3.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 4.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 5.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 6.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 7.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 8.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', ' 9.0  0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '10.0  0.0   0.0'])],
+                             'xbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 1.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 2.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 3.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 4.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 5.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 6.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 7.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 8.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', ' 9.0  0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '10.0  0.0   0.0'])],
 
-                             'ybfield': [Setting('external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   1.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   2.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   3.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   4.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   5.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   6.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   7.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   8.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   9.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0  10.0   0.0'])],
+                             'ybfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   1.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   2.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   3.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   4.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   5.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   6.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   7.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   8.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   9.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0  10.0   0.0'])],
 
-                             'zbfield': [Setting('external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   1.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   2.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   3.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   4.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   5.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   6.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   7.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   8.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0   9.0']),
-                                         Setting('external_bfield', lines=['TESLA', '0.0   0.0  10.0'])],
+                             'zbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   1.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   2.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   3.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   4.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   5.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   6.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   7.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   8.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   9.0']),
+                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0  10.0'])],
 
-                             'tensxbfield': [Setting('external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 10.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 20.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 30.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 40.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 50.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 60.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 70.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 80.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', ' 90.0  0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '100.0  0.0   0.0'])],
+                             'tensxbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 10.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 20.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 30.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 40.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 50.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 60.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 70.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 80.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', ' 90.0  0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '100.0  0.0   0.0'])],
 
-                             'tensybfield': [Setting('external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   10.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   20.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   30.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   40.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   50.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   60.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   70.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   80.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   90.0   0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0  100.0   0.0'])],
+                             'tensybfield': [Block(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   10.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   20.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   30.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   40.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   50.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   60.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   70.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   80.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   90.0   0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0  100.0   0.0'])],
 
-                             'tenszbfield': [Setting('external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   10.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   20.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   30.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   40.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   50.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   60.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   70.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   80.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0   90.0']),
-                                             Setting('external_bfield', lines=['TESLA', '0.0   0.0  100.0'])],
+                             'tenszbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   10.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   20.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   30.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   40.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   50.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   60.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   70.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   80.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   90.0']),
+                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0  100.0'])],
 
-                             'hundredsxbfield': [Setting('external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 100.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 200.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 300.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 400.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 500.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 600.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 700.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 800.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', ' 900.0  0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '1000.0  0.0   0.0'])],
+                             'hundredsxbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 100.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 200.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 300.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 400.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 500.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 600.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 700.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 800.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', ' 900.0  0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '1000.0  0.0   0.0'])],
 
-                             'hundredsybfield': [Setting('external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   100.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   200.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   300.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   400.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   500.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   600.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   700.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   800.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   900.0   0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0  1000.0   0.0'])],
+                             'hundredsybfield': [Block(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   100.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   200.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   300.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   400.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   500.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   600.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   700.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   800.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   900.0   0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0  1000.0   0.0'])],
 
-                             'hundredszbfield': [Setting('external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   100.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   200.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   300.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   400.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   500.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   600.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   700.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   800.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0   900.0']),
-                                                 Setting('external_bfield', lines=['TESLA', '0.0   0.0  1000.0'])],
+                             'hundredszbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   100.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   200.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   300.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   400.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   500.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   600.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   700.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   800.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   900.0']),
+                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0  1000.0'])],
 
-                             'kilosxbfield': [Setting('external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 1000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 2000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 3000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 4000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 5000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 6000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 7000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 8000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', ' 9000.0  0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '10000.0  0.0   0.0'])],
+                             'kilosxbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 1000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 2000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 3000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 4000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 5000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 6000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 7000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 8000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', ' 9000.0  0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '10000.0  0.0   0.0'])],
 
-                             'kilosybfield': [Setting('external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   1000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   2000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   3000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   4000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   5000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   6000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   7000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   8000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   9000.0   0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0  10000.0   0.0'])],
+                             'kilosybfield': [Block(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   1000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   2000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   3000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   4000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   5000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   6000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   7000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   8000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   9000.0   0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0  10000.0   0.0'])],
 
-                             'kiloszbfield': [Setting('external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   1000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   2000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   3000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   4000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   5000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   6000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   7000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   8000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0   9000.0']),
-                                              Setting('external_bfield', lines=['TESLA', '0.0   0.0  10000.0'])],
+                             'kiloszbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   1000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   2000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   3000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   4000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   5000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   6000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   7000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   8000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   9000.0']),
+                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0  10000.0'])],
 
                              'halides': [shortcutToCells.get('hf'),
                                          shortcutToCells.get('hcl'),
@@ -1625,20 +1659,35 @@ stringToVariableSettings = { 'soc' : [(Setting('spin_treatment', 'scalar'), Sett
 
 
 
-defaultShortcut = { 'defaults': [Setting('cell_constraints', lines=['0   0   0', '0   0   0']),
-                                 Setting('species_pot', lines=['SOC19']),
-                                 Setting('fix_com', True),
-                                 Setting('task', 'singlepoint'),
-                                 Setting('xcfunctional', 'LDA'),
-                                 Setting('cut_off_energy', 700, 'eV'),
-                                 Setting('fix_occupancy', True),
-                                 Setting('iprint', 3)]
+defaultShortcut = { 'defaults': [Block(key='cell_constraints', lines=['0   0   0', '0   0   0']),
+                                 Block(key='species_pot', lines=['SOC19']),
+                                 BoolSetting(key='fix_com', value=True),
+                                 StrSetting(key='task', value='singlepoint'),
+                                 StrSetting(key='xcfunctional', value='LDA'),
+                                 FloatSetting(key='cut_off_energy', value=700.0, unit='eV'),
+                                 BoolSetting(key='fix_occupancy', value=True),
+                                 IntSetting(key='iprint', value=3)]
                     }
 
 
 
 stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases | defaultShortcut
 
+
+
+
+def getSetting(key=None, **kwargs):
+    assert type(key) is str
+
+    key = key.strip().lower()
+
+    settingObject = settingTypes.get(key=key, default=None)
+
+    assert settingObject is not None, f'Key {key} does not correspond to setting'
+
+    newSetting = settingObject(key=key, **kwargs)
+
+    return newSetting
 
 
 def readSettings(file_=None):
@@ -1685,7 +1734,10 @@ def readSettings(file_=None):
 
                     assert settingKey == settingKeyOther, f'Entered block {settingKey} but found endblock {settingKeyOther}'
 
-                    newSetting = Setting(key=settingKey, lines=blockLines)
+                    arguments = {'lines': blockLines}
+
+                    newSetting = getSetting(key=settingKey, **arguments)
+
                     settings.append(newSetting)
 
                     # We have now exited a block.
@@ -1733,30 +1785,32 @@ def readSettings(file_=None):
                     key = parts[0].lower()
                     value = True
 
-                    newSetting = Setting(key=key, value=value)
+                    arguments = {'value': value}
 
                 elif len(parts) == 2:
                     key = parts[0].lower()
                     value = stringToValue(parts[1])
 
-                    newSetting = Setting(key=key, value=value)
+                    arguments = {'value': value}
 
                 elif len(parts) == 3:
                     key = parts[0].lower()
                     value = stringToValue(parts[1])
                     unit = parts[2]
 
-                    newSetting = Setting(key=key, value=value, unit=unit)
+                    arguments = {'value': value, 'unit': unit}
 
                 elif len(parts) == 4:
                     # e.g. kpoints_mp_grid : 1.0 1.0 1.0
                     key = parts[0].lower()
                     value = stringToValue(' '.join(parts[1:3]))
 
-                    newSetting = Setting(key=key, value=value)
+                    arguments = {'value': value}
 
                 else:
                     raise ValueError(f'Error in keyword {line} of file {file_}')
+
+                newSetting = getSetting(key=key, **arguments)
 
                 settings.append(newSetting)
 
