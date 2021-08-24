@@ -2,6 +2,7 @@ from casbot.calculation import Calculation
 
 from collections import Counter
 from pathlib import Path
+from pickle import dump, load
 from random import sample
 from tqdm import tqdm
 
@@ -264,6 +265,27 @@ class Model:
             print(f'*** Total of {len(calculations)} calculations to submit - none have gone yet ***')
         else:
             print(f'*** Submitted {len(calculations)} calculations ***')
+
+    def save(self, file=None, overwrite=False):
+        assert type(file) is str
+        assert type(overwrite) is bool
+
+        assert not Path(file).is_file() or overwrite, f'File {file} exists - use overwrite=True to overwrite'
+
+        dump(self, open(file, 'wb'))
+
+        print(f'Model with {len(self.calculations)} calculations saved to {file} successfully')
+
+    @staticmethod
+    def load(file=None):
+        assert type(file) is str
+        assert Path(file).is_file(), f'Cannot find file {file}'
+
+        model = load(open(file, 'rb'))
+
+        print(f'Model with {len(model.calculations)} calculations loaded successfully')
+
+        return model
 
     def updateSettings(self, *settings):
         for calculation in self.calculations:

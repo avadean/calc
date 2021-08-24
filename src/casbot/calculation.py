@@ -324,22 +324,6 @@ class Calculation:
         print(string)
 
     def create(self, force=False, passive=False):
-
-        def getSettingLines(setting=None, maxSettingLength=0):
-            assert isinstance(setting, Keyword) or isinstance(setting, Block), f'Setting {setting} not a class of Keyword or Block'
-            assert type(maxSettingLength) is int
-
-            if isinstance(setting, Keyword):
-                spaces = max(len(setting.key), maxSettingLength)
-                unit = '' if setting.unit is None else f' {setting.unit}'
-                return [f'{setting.key:<{spaces}s} : {setting.value}{unit}']
-
-            elif isinstance(setting, Block):
-                return [f'%block {setting.key}'] + setting.getLines() + [f'%endblock {setting.key}']
-
-            else:
-                raise TypeError(f'Setting {setting} not a class of Keyword or Block')
-
         assert type(force) is bool
         assert type(passive) is bool
 
@@ -382,7 +366,7 @@ class Calculation:
             with open(cellFile, 'w') as f:
                 for cell in cells:
 
-                    for line in getSettingLines(setting=cell, maxSettingLength=0):
+                    for line in self.getSettingLines(setting=cell, maxSettingLength=0):
                         f.write(f'{line}\n')
 
                     f.write('\n')
@@ -402,7 +386,7 @@ class Calculation:
                         f.write('\n')
                         currentPriorityLevel = floor(param.priority)
 
-                    for line in getSettingLines(setting=param, maxSettingLength=longestParam):
+                    for line in self.getSettingLines(setting=param, maxSettingLength=longestParam):
                         f.write(f'{line}\n')
 
         print(f'Created calculation for {self.name} in {directory}')
@@ -550,6 +534,23 @@ class Calculation:
 
         else:
             return 'not yet created'
+
+    @staticmethod
+    def getSettingLines(setting=None, maxSettingLength=0):
+        assert isinstance(setting, Keyword) or isinstance(setting,
+                                                          Block), f'Setting {setting} not a class of Keyword or Block'
+        assert type(maxSettingLength) is int
+
+        if isinstance(setting, Keyword):
+            spaces = max(len(setting.key), maxSettingLength)
+            unit = '' if setting.unit is None else f' {setting.unit}'
+            return [f'{setting.key:<{spaces}s} : {setting.value}{unit}']
+
+        elif isinstance(setting, Block):
+            return [f'%block {setting.key}'] + setting.getLines() + [f'%endblock {setting.key}']
+
+        else:
+            raise TypeError(f'Setting {setting} not a class of Keyword or Block')
 
     def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
         assert type(all_) is bool
