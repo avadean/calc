@@ -1,8 +1,36 @@
 from casbot.data import assertBetween, assertCount,\
+    elements, isFloat, isInt,\
     getAllowedUnits, getNiceUnit, getFromDict,\
     VectorInt, VectorFloat, stringToValue
 
 from pathlib import Path
+
+
+
+def checkForUnit(lines=None, unitLine=0):
+    assert type(lines) is list
+    assert type(unitLine) is int
+
+    try:
+        potentialUnitLine = lines[unitLine]
+    except IndexError:
+        return None
+
+    comment = potentialUnitLine.find('!')
+
+    if comment != -1:
+        potentialUnitLine = potentialUnitLine[:comment].strip()
+
+    parts = potentialUnitLine.split()
+
+    if len(parts) != 1:
+        return None
+
+    unit = parts[0]
+
+    unit = getNiceUnit(unit=unit, strict=False)
+
+    return unit
 
 
 
@@ -22,9 +50,6 @@ class Setting:
         self.key = key
 
         self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
-
-        self.value = None
-        self.unit = None
 
     '''
     def getLines(self, longestSetting=0):
@@ -230,31 +255,164 @@ class Block(Setting):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key)
 
-        self.lines = []
+        self.lines = lines
 
         if lines is not None:
             assert type(lines) is list, 'Lines for block should be a list'
             assert all(type(line) is str for line in lines), 'Each line for the block should be a string'
-            self.lines = [line.strip() for line in lines]
 
-    def __str__(self):
-        return '; '.join(self.lines)
+            self.lines = []
 
-    def getLines(self):
-        return [f'%block {self.key}\n'] + [f'{line}\n' for line in self.lines] + [f'%endblock {self.key}\n']
+            for line in lines:
+                line = line.strip()
+
+                if line:
+                    # Check for comment.
+                    comment = line.find('!')
+
+                    # Remove it if need be.
+                    if comment != -1:
+                        line = line[:comment].strip()
+
+                    self.lines.append(line)
 
 
-class ElementVectorFloatBlock(Block): pass
+class ElementThreeVectorFloatBlock(Block):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key, lines=lines)
+
+        self.values = {}
+        self.unit = None
+
+        if self.lines:
+            linesToRead = self.lines
+
+            # Check for unit line
+            potentialUnit = checkForUnit(lines=self.lines, unitLine=0)
+
+            if potentialUnit is not None:
+                self.unit = potentialUnit
+                linesToRead = linesToRead[1:]
+
+            for line in linesToRead:
+                parts = line.split()
+
+                assert len(parts) == 4, f'Error in {key} on line {line}'
+
+                element, x, y, z = parts
+
+                element = element.strip().lower()
+
+                assert element in elements, f'Element {element} not known'
+
+                element = element[0].upper() + element[1:].lower()
+
+                value = VectorFloat(x, y, z)
+
+                self.values[element] = value
 
 
-class VectorFloatBlock(Block): pass
+
+class ThreeVectorFloatBlock(Block):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key, lines=lines)
+
+        self.values = []
+        self.unit = None
+
+        if self.lines:
+            linesToRead = self.lines
+
+            # Check for unit line
+            potentialUnit = checkForUnit(lines=self.lines, unitLine=0)
+
+            if potentialUnit is not None:
+                self.unit = potentialUnit
+                linesToRead = linesToRead[1:]
+
+            for line in linesToRead:
+                parts = line.split()
+
+                assert len(parts) == 3, f'Error in {key} on line {line}'
+
+                x, y, z = parts
+
+                value = VectorFloat(x, y, z)
+
+                self.values.append(value)
 
 
-class VectorFloatWeightBlock(Block): pass
+class ThreeVectorFloatWeightedBlock(Block):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key, lines=lines)
+
+        self.values = []
+
+        for line in self.lines:
+            parts = line.split()
+
+            assert len(parts) == 4, f'Error in {key} on line {line}'
+
+            x, y, z, w = parts
+
+            assert isFloat(w), f'Weight in {key} on line {line} should be a float'
+
+            value = VectorFloat(x, y, z)
+
+            w = float(w)
+
+            self.values.append((value, w))
 
 
-class VectorIntBlock(Block): pass
 
+class ThreeVectorIntBlock(Block):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key, lines=lines)
+
+        self.values = []
+
+        for line in self.lines:
+            parts = line.split()
+
+            assert len(parts) == 3, f'Error in {key} on line {line}'
+
+            x, y, z = parts
+
+            value = VectorInt(x, y, z)
+
+            self.values.append(value)
+
+
+
+class StrBlock(Block):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key, lines=lines)
+
+        self.values = self.lines
+
+
+'''
+class ElementStrBlock(Block):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key, lines=lines)
+
+        self.values = {}
+
+        for line in self.lines:
+            parts = line.split()
+
+            assert len(parts) == 2, f'Error in {key} on line {line}'
+
+            element, string = parts
+
+            element = element.strip().lower()
+
+            assert element in elements, f'Element {element} not known'
+
+            element = element[0].upper() + element[1:].lower()
+
+            self.values[element] = string
+'''
 
 
 
@@ -374,40 +532,40 @@ cellPriorities = {
 
 cellTypes = {
     # Lattice.
-    'lattice_abc': Block,
-    'lattice_cart': Block,
+    'lattice_abc': ThreeVectorFloatBlock,
+    'lattice_cart': ThreeVectorFloatBlock,
 
     # Positions.
-    'positions_abs': Block,
-    'positions_frac': Block,
+    'positions_abs': ElementThreeVectorFloatBlock,
+    'positions_frac': ElementThreeVectorFloatBlock,
 
     # Constraints.
-    'cell_constraints': Block,
+    'cell_constraints': ThreeVectorIntBlock,
 
     # Pseudopotentials.
-    'species_pot': Block,
+    'species_pot': StrBlock,
 
     # Symmetry.
-    'symmetry_ops': Block,
+    'symmetry_ops': ThreeVectorFloatBlock,
 
     # Fields.
-    'external_bfield': Block,
+    'external_bfield': ThreeVectorFloatBlock,
 
     # Kpoints.
-    'kpoint_list': Block,
-    'kpoints_list': Block,
-    'bs_kpoint_list': Block,
-    'bs_kpoints_list': Block,
-    'phonon_kpoint_list': Block,
-    'phonon_kpoints_list': Block,
-    'phonon_fine_kpoint_list': Block,
-    'optics_kpoint_list': Block,
-    'optics_kpoints_list': Block,
-    'magres_kpoint_list': Block,
-    'supercell_kpoint_list': Block,
-    'supercell_kpoints_list': Block,
-    'spectral_kpoint_list': Block,
-    'spectral_kpoints_list': Block,
+    'kpoint_list': ThreeVectorFloatWeightedBlock,
+    'kpoints_list': ThreeVectorFloatWeightedBlock,
+    'bs_kpoint_list': ThreeVectorFloatBlock,
+    'bs_kpoints_list': ThreeVectorFloatBlock,
+    'phonon_kpoint_list': ThreeVectorFloatBlock,
+    'phonon_kpoints_list': ThreeVectorFloatBlock,
+    'phonon_fine_kpoint_list': ThreeVectorFloatBlock,
+    'optics_kpoint_list': ThreeVectorFloatWeightedBlock,
+    'optics_kpoints_list': ThreeVectorFloatWeightedBlock,
+    'magres_kpoint_list': ThreeVectorFloatWeightedBlock,
+    'supercell_kpoint_list': ThreeVectorFloatWeightedBlock,
+    'supercell_kpoints_list': ThreeVectorFloatWeightedBlock,
+    'spectral_kpoint_list': ThreeVectorFloatWeightedBlock,
+    'spectral_kpoints_list': ThreeVectorFloatWeightedBlock,
 
     # Keywords.
     'kpoint_mp_spacing': FloatSetting,
@@ -706,7 +864,7 @@ paramTypes = {
     'comment': StrSetting,
 
     # blocks
-    'devel_code': Block
+    'devel_code': StrBlock
 }
 
 paramValues = {
@@ -810,186 +968,185 @@ settingUnits = cellUnits | paramUnits
 
 
 
+shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
+                   'ncp': StrBlock(key='species_pot', lines=['NCP']),
+                   'c19': StrBlock(key='species_pot', lines=['C19']),
+                   'soc19': StrBlock(key='species_pot', lines=['SOC19']),
 
-shortcutToCells = {'usp': Block(key='species_pot', lines=[]),
-                   'ncp': Block(key='species_pot', lines=['NCP']),
-                   'c19': Block(key='species_pot', lines=['C19']),
-                   'soc19': Block(key='species_pot', lines=['SOC19']),
+                   'h': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' BOHR',
+                                                                          '  10.0   0.0   0.0',
+                                                                          '   0.0  10.0   0.0',
+                                                                          '   0.0   0.0  10.0']),
 
-                   'h': [Block(key='lattice_cart', lines=[' BOHR',
-                                                          '  10.0   0.0   0.0',
-                                                          '   0.0  10.0   0.0',
-                                                          '   0.0   0.0  10.0']),
+                         ElementThreeVectorFloatBlock(key='positions_abs', lines=['H   0.0  0.0  0.0']),
 
-                         Block(key='positions_abs', lines=['H   0.0  0.0  0.0']),
+                         ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                         Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'ch4distorted': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                                     '  10.0   0.0   0.0',
+                                                                                     '   0.0  10.0   0.0',
+                                                                                     '   0.0   0.0  10.0']),
 
-                   'ch4distorted': [Block(key='lattice_cart', lines=[' ANG',
-                                                                     '  10.0   0.0   0.0',
-                                                                     '   0.0  10.0   0.0',
-                                                                     '   0.0   0.0  10.0']),
+                                    ElementThreeVectorFloatBlock(key='positions_abs', lines=['C    0.10000  -0.20000  -0.10000',
+                                                                                             'H    1.18913   1.18913   1.18913',
+                                                                                             'H   -1.18913  -1.18913   1.18913',
+                                                                                             'H   -1.18913   1.48913  -1.18913',
+                                                                                             'H    1.28913  -1.18913  -1.18913']),
 
-                                    Block(key='positions_abs', lines=['C    0.10000  -0.20000  -0.10000',
-                                                                      'H    1.18913   1.18913   1.18913',
-                                                                      'H   -1.18913  -1.18913   1.18913',
-                                                                      'H   -1.18913   1.48913  -1.18913',
-                                                                      'H    1.28913  -1.18913  -1.18913']),
+                                    ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                                    Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'ch3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['BOHR',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
 
-                   'ch3': [Block(key='lattice_cart', lines=['BOHR',
-                                                            '  10.0   0.0   0.0',
-                                                            '   0.0  10.0   0.0',
-                                                            '   0.0   0.0  10.0']),
+                           ElementThreeVectorFloatBlock(key='positions_abs', lines=['ANG',
+                                                                                    'C   0.000000000  0.000000000  0.000000000',
+                                                                                    'H   1.079000000  0.000000000  0.000000000',
+                                                                                    'H  -0.539500000  0.934441411  0.000000000',
+                                                                                    'H  -0.539500000 -0.934441411  0.000000000']),
 
-                           Block(key='positions_abs', lines=['ANG',
-                                                             'C   0.000000000  0.000000000  0.000000000',
-                                                             'H   1.079000000  0.000000000  0.000000000',
-                                                             'H  -0.539500000  0.934441411  0.000000000',
-                                                             'H  -0.539500000 -0.934441411  0.000000000']),
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                           Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hf': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                           '  10.0   0.0   0.0',
+                                                                           '   0.0  10.0   0.0',
+                                                                           '   0.0   0.0  10.0']),
 
-                   'hf': [Block(key='lattice_cart', lines=[' ANG',
-                                                           '  10.0   0.0   0.0',
-                                                           '   0.0  10.0   0.0',
-                                                           '   0.0   0.0  10.0']),
+                          ElementThreeVectorFloatBlock(key='positions_frac',
+                                                       lines=['  H   0.1   0.1   0.099380480724825',
+                                                              '  F   0.1   0.1   0.192319519275175']),
 
-                          Block(key='positions_frac',
-                                lines=['  H   0.1   0.1   0.099380480724825',
-                                       '  F   0.1   0.1   0.192319519275175']),
+                          ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                          Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hcl': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
 
-                   'hcl': [Block(key='lattice_cart', lines=[' ANG',
-                                                            '  10.0   0.0   0.0',
-                                                            '   0.0  10.0   0.0',
-                                                            '   0.0   0.0  10.0']),
+                           ElementThreeVectorFloatBlock(key='positions_frac',
+                                                        lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
+                                                               '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
 
-                           Block(key='positions_frac',
-                                 lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
-                                        '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                           Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hbr': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  12.0   0.0   0.0',
+                                                                            '   0.0  12.0   0.0',
+                                                                            '   0.0   0.0  12.0']),
 
-                   'hbr': [Block(key='lattice_cart', lines=[' ANG',
-                                                            '  12.0   0.0   0.0',
-                                                            '   0.0  12.0   0.0',
-                                                            '   0.0   0.0  12.0']),
+                           ElementThreeVectorFloatBlock(key='positions_frac',
+                                                        lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
+                                                               '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
 
-                           Block(key='positions_frac',
-                                 lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
-                                        '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                           Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hi': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                           '  12.0   0.0   0.0',
+                                                                           '   0.0  12.0   0.0',
+                                                                           '   0.0   0.0  12.0']),
 
-                   'hi': [Block(key='lattice_cart', lines=[' ANG',
-                                                           '  12.0   0.0   0.0',
-                                                           '   0.0  12.0   0.0',
-                                                           '   0.0   0.0  12.0']),
+                          ElementThreeVectorFloatBlock(key='positions_frac',
+                                                       lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
+                                                              '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
 
-                          Block(key='positions_frac',
-                                lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
-                                       '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
+                          ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                          Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hfrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                              '  10.0   0.0   0.0',
+                                                                              '   0.0  10.0   0.0',
+                                                                              '   0.0   0.0  10.0']),
 
-                   'hfrot': [Block(key='lattice_cart', lines=[' ANG',
-                                                              '  10.0   0.0   0.0',
-                                                              '   0.0  10.0   0.0',
-                                                              '   0.0   0.0  10.0']),
+                             ElementThreeVectorFloatBlock(key='positions_frac',
+                                                          # lines=['  H   0.12040092  0.12040092 -0.02972739',
+                                                          #       '  F   0.16687044  0.16687044  0.03599044']),
+                                                          lines=['H         0.120400920000000  0.120400920000000 -0.029727390000000',
+                                                                 'F         0.166870440000000  0.166870440000000  0.035990440000000']),
 
-                             Block(key='positions_frac',
-                                   # lines=['  H   0.12040092  0.12040092 -0.02972739',
-                                   #       '  F   0.16687044  0.16687044  0.03599044']),
-                                   lines=['H         0.120400920000000  0.120400920000000 -0.029727390000000',
-                                          'F         0.166870440000000  0.166870440000000  0.035990440000000']),
+                             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                             Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hclrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                               '  10.0   0.0   0.0',
+                                                                               '   0.0  10.0   0.0',
+                                                                               '   0.0   0.0  10.0']),
 
-                   'hclrot': [Block(key='lattice_cart', lines=[' ANG',
-                                                               '  10.0   0.0   0.0',
-                                                               '   0.0  10.0   0.0',
-                                                               '   0.0   0.0  10.0']),
+                              ElementThreeVectorFloatBlock(key='positions_frac',
+                                                           # lines=['  H    0.01168401  0.01168401 -0.00347605',
+                                                           #       '  Cl   0.07615812  0.07615812  0.08770359']),
+                                                           lines=['H         0.011684010000000  0.011684010000000 -0.003476050000000',
+                                                                  'Cl        0.076158120000000  0.076158120000000  0.087703590000000']),
 
-                              Block(key='positions_frac',
-                                    # lines=['  H    0.01168401  0.01168401 -0.00347605',
-                                    #       '  Cl   0.07615812  0.07615812  0.08770359']),
-                                    lines=['H         0.011684010000000  0.011684010000000 -0.003476050000000',
-                                           'Cl        0.076158120000000  0.076158120000000  0.087703590000000']),
+                              ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                              Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hbrrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                               '  12.0   0.0   0.0',
+                                                                               '   0.0  12.0   0.0',
+                                                                               '   0.0   0.0  12.0']),
 
-                   'hbrrot': [Block(key='lattice_cart', lines=[' ANG',
-                                                               '  12.0   0.0   0.0',
-                                                               '   0.0  12.0   0.0',
-                                                               '   0.0   0.0  12.0']),
+                              ElementThreeVectorFloatBlock(key='positions_frac',
+                                                           # lines=['  H    0.00555653 0.00555643 0.00786405',
+                                                           #       '  Br   0.06514347 0.06514357 0.09212085']),
+                                                           lines=['H         0.005556530000000  0.005556430000000  0.007864050000000',
+                                                                  'Br        0.065143470000000  0.065143570000000  0.092120850000000']),
 
-                              Block(key='positions_frac',
-                                    # lines=['  H    0.00555653 0.00555643 0.00786405',
-                                    #       '  Br   0.06514347 0.06514357 0.09212085']),
-                                    lines=['H         0.005556530000000  0.005556430000000  0.007864050000000',
-                                           'Br        0.065143470000000  0.065143570000000  0.092120850000000']),
+                              ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                              Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hirot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                              '  12.0   0.0   0.0',
+                                                                              '   0.0  12.0   0.0',
+                                                                              '   0.0   0.0  12.0']),
 
-                   'hirot': [Block(key='lattice_cart', lines=[' ANG',
-                                                              '  12.0   0.0   0.0',
-                                                              '   0.0  12.0   0.0',
-                                                              '   0.0   0.0  12.0']),
+                             ElementThreeVectorFloatBlock(key='positions_frac',
+                                                          # lines=['  H   -0.00047645 -0.00047645 -0.0006738',
+                                                          #       '  I    0.06751811  0.06751811  0.09548503']),
+                                                          lines=['H        -0.000476450000000 -0.000476450000000 -0.000673800000000',
+                                                                 'I         0.067518110000000  0.067518110000000  0.095485030000000']),
 
-                             Block(key='positions_frac',
-                                   # lines=['  H   -0.00047645 -0.00047645 -0.0006738',
-                                   #       '  I    0.06751811  0.06751811  0.09548503']),
-                                   lines=['H        -0.000476450000000 -0.000476450000000 -0.000673800000000',
-                                          'I         0.067518110000000  0.067518110000000  0.095485030000000']),
+                             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                             Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hftrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                                '  10.0   0.0   0.0',
+                                                                                '   0.0  10.0   0.0',
+                                                                                '   0.0   0.0  10.0']),
 
-                   'hftrans': [Block(key='lattice_cart', lines=[' ANG',
-                                                                '  10.0   0.0   0.0',
-                                                                '   0.0  10.0   0.0',
-                                                                '   0.0   0.0  10.0']),
+                               ElementThreeVectorFloatBlock(key='positions_frac',
+                                                            lines=['  H   1.1   -1.1   2.099380480724825',
+                                                                   '  F   1.1   -1.1   2.192319519275175']),
 
-                               Block(key='positions_frac',
-                                     lines=['  H   1.1   -1.1   2.099380480724825',
-                                            '  F   1.1   -1.1   2.192319519275175']),
+                               ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                               Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hcltrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                                 '  10.0   0.0   0.0',
+                                                                                 '   0.0  10.0   0.0',
+                                                                                 '   0.0   0.0  10.0']),
 
-                   'hcltrans': [Block(key='lattice_cart', lines=[' ANG',
-                                                                 '  10.0   0.0   0.0',
-                                                                 '   0.0  10.0   0.0',
-                                                                 '   0.0   0.0  10.0']),
+                                ElementThreeVectorFloatBlock(key='positions_frac',
+                                                             lines=['  H    1.009999871806914  -1.009999872045901   2.009226072370290',
+                                                                    '  Cl   1.010000128193086  -1.010000127954099   2.138173927629710']),
 
-                                Block(key='positions_frac',
-                                      lines=['  H    1.009999871806914  -1.009999872045901   2.009226072370290',
-                                             '  Cl   1.010000128193086  -1.010000127954099   2.138173927629710']),
+                                ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                                Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hbrtrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                                 '  12.0   0.0   0.0',
+                                                                                 '   0.0  12.0   0.0',
+                                                                                 '   0.0   0.0  12.0']),
 
-                   'hbrtrans': [Block(key='lattice_cart', lines=[' ANG',
-                                                                 '  12.0   0.0   0.0',
-                                                                 '   0.0  12.0   0.0',
-                                                                 '   0.0   0.0  12.0']),
+                                ElementThreeVectorFloatBlock(key='positions_frac',
+                                                             lines=['  H     0.999997053809360  -1.000003049675148   2.011117199951347',
+                                                                    '  Br    1.000002946190640  -0.999996950324852   2.130282800048653']),
 
-                                Block(key='positions_frac',
-                                      lines=['  H     0.999997053809360  -1.000003049675148   2.011117199951347',
-                                             '  Br    1.000002946190640  -0.999996950324852   2.130282800048653']),
+                                ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                                Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                   'hitrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                                '  12.0   0.0   0.0',
+                                                                                '   0.0  12.0   0.0',
+                                                                                '   0.0   0.0  12.0']),
 
-                   'hitrans': [Block(key='lattice_cart', lines=[' ANG',
-                                                                '  12.0   0.0   0.0',
-                                                                '   0.0  12.0   0.0',
-                                                                '   0.0   0.0  12.0']),
+                               ElementThreeVectorFloatBlock(key='positions_frac',
+                                                            lines=['  H   1.000000000013618  -0.999999999836844   1.999047105232599',
+                                                                   '  I   0.999999999986382  -1.000000000163156   2.135036228100734']),
 
-                               Block(key='positions_frac',
-                                     lines=['  H   1.000000000013618  -0.999999999836844   1.999047105232599',
-                                            '  I   0.999999999986382  -1.000000000163156   2.135036228100734']),
-
-                               Block(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                               ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    }
 
@@ -1037,9 +1194,9 @@ shortcutToParams = {'singlepoint': StrSetting(key='task', value='singlepoint'),
 
                     'iprint': IntSetting(key='iprint', value=3),
 
-                    'xdensity': Block('devel_code', lines=['density_in_x=true']),
-                    'ydensity': Block('devel_code', lines=['density_in_y=true']),
-                    'zdensity': Block('devel_code', lines=['density_in_z=true'])
+                    'xdensity': StrBlock('devel_code', lines=['density_in_x=true']),
+                    'ydensity': StrBlock('devel_code', lines=['density_in_y=true']),
+                    'zdensity': StrBlock('devel_code', lines=['density_in_z=true'])
                     }
 
 shortcutToParamsAliases = {'geom': [shortcutToParams.get('geometryoptimisation'),
@@ -1080,566 +1237,566 @@ stringToVariableSettings = { 'soc' : [(StrSetting(key='spin_treatment', value='s
                                       (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=False)),
                                       (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True))],
 
-                             'density' : [Block(key='devel_code', lines=['density_in_x=true']),
-                                          Block(key='devel_code', lines=['density_in_y=true']),
-                                          Block(key='devel_code', lines=['density_in_z=true'])],
+                             'density' : [StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                          StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                          StrBlock(key='devel_code', lines=['density_in_z=true'])],
 
                              'socdensity' : [(StrSetting(key='spin_treatment', value='scalar'), BoolSetting(key='spin_orbit_coupling', value=False)),
 
                                              (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=False)),
 
                                              (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True),
-                                              Block(key='devel_code', lines=['density_in_x=true'])),
+                                              StrBlock(key='devel_code', lines=['density_in_x=true'])),
 
                                              (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True),
-                                              Block(key='devel_code', lines=['density_in_y=true'])),
+                                              StrBlock(key='devel_code', lines=['density_in_y=true'])),
 
                                              (StrSetting(key='spin_treatment', value='vector'), BoolSetting(key='spin_orbit_coupling', value=True),
-                                              Block(key='devel_code', lines=['density_in_z=true']))],
+                                              StrBlock(key='devel_code', lines=['density_in_z=true']))],
 
-                             'hyperfinebfield': [(Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinebfield': [(StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '1.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '1.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 1.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 1.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 1.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 1.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '2.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '2.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 2.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 2.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 2.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 2.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '3.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '3.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 3.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 3.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 3.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 3.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '4.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '4.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 4.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 4.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 4.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 4.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '5.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '5.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 5.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 5.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 5.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 5.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '6.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '6.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 6.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 6.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 6.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 6.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '7.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '7.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 7.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 7.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 7.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 7.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '8.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '8.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 8.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 8.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 8.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 8.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '9.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '9.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 9.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 9.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 9.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 9.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_x=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_y=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
 
-                                                 (Block(key='devel_code', lines=['density_in_z=true']),
-                                                  Block(key='external_bfield', lines=['TESLA', '0.0 0.0 10.0']))
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 10.0']))
                                                  ],
 
-                             'hyperfinetensbfield': [(Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinetensbfield': [(StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '10.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 10.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 10.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 10.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '20.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '20.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 20.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 20.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 20.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 20.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '30.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '30.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 30.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 30.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 30.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 30.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '40.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '40.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 40.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 40.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 40.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 40.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '50.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '50.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 50.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 50.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 50.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 50.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '60.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '60.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 60.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 60.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 60.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 60.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '70.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '70.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 70.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 70.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 70.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 70.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '80.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '80.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 80.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 80.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 80.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 80.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '90.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '90.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 90.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 90.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 90.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 90.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_x=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_y=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
+                                                     (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
 
-                                                     (Block(key='devel_code', lines=['density_in_z=true']),
-                                                      Block(key='external_bfield', lines=['TESLA', '0.0 0.0 100.0']))
+                                                     (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                      ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 100.0']))
                                                      ],
 
-                             'hyperfinehundredsbfield': [(Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinehundredsbfield': [(StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '100.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 100.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 100.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 100.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '200.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '200.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 200.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 200.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 200.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 200.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '300.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '300.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 300.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 300.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 300.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 300.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '400.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '400.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 400.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 400.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 400.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 400.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '600.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '600.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 600.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 600.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 600.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 600.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '700.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '700.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 700.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 700.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 700.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 700.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '800.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '800.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 800.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 800.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 800.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 800.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '900.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '900.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 900.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 900.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 900.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 900.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_x=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_y=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
+                                                         (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
 
-                                                         (Block(key='devel_code', lines=['density_in_z=true']),
-                                                          Block(key='external_bfield', lines=['TESLA', '0.0 0.0 1000.0']))
+                                                         (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                          ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 1000.0']))
                                                          ],
 
-                             'hyperfinekilosbfield': [(Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                             'hyperfinekilosbfield': [(StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '1000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 1000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 1000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 1000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '2000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '2000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 2000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 2000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 2000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 2000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '3000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '3000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 3000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 3000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 3000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 3000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '4000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '4000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 4000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 4000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 4000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 4000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '5000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '5000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 5000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 5000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 5000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 5000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '6000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '6000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 6000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 6000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 6000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 6000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '7000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '7000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 7000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 7000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 7000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 7000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '8000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '8000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 8000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 8000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 8000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 8000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '9000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '9000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 9000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 9000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 9000.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 9000.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_x=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '10000.0 0.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '10000.0 0.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_y=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 10000.0 0.0'])),
+                                                      (StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 10000.0 0.0'])),
 
-                                                      (Block(key='devel_code', lines=['density_in_z=true']),
-                                                       Block(key='external_bfield', lines=['TESLA', '0.0 0.0 10000.0']))
+                                                      (StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                       ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 10000.0']))
                                                       ],
 
-                             'xbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 1.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 2.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 3.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 4.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 5.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 6.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 7.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 8.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', ' 9.0  0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '10.0  0.0   0.0'])],
+                             'xbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 0.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 1.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 2.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 3.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 4.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 5.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 6.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 7.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 8.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 9.0  0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '10.0  0.0   0.0'])],
 
-                             'ybfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   1.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   2.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   3.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   4.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   5.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   6.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   7.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   8.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   9.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0  10.0   0.0'])],
+                             'ybfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   1.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   2.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   3.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   4.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   5.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   6.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   7.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   8.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   9.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0  10.0   0.0'])],
 
-                             'zbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   1.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   2.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   3.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   4.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   5.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   6.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   7.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   8.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0   9.0']),
-                                         Block(key='external_bfield', lines=['TESLA', '0.0   0.0  10.0'])],
+                             'zbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   0.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   1.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   2.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   3.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   4.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   5.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   6.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   7.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   8.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   9.0']),
+                                         ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0  10.0'])],
 
-                             'tensxbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 10.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 20.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 30.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 40.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 50.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 60.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 70.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 80.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', ' 90.0  0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '100.0  0.0   0.0'])],
+                             'tensxbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 10.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 20.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 30.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 40.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 50.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 60.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 70.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 80.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 90.0  0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '100.0  0.0   0.0'])],
 
-                             'tensybfield': [Block(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   10.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   20.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   30.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   40.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   50.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   60.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   70.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   80.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   90.0   0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0  100.0   0.0'])],
+                             'tensybfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   10.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   20.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   30.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   40.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   50.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   60.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   70.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   80.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   90.0   0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0  100.0   0.0'])],
 
-                             'tenszbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   10.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   20.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   30.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   40.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   50.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   60.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   70.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   80.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0   90.0']),
-                                             Block(key='external_bfield', lines=['TESLA', '0.0   0.0  100.0'])],
+                             'tenszbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   10.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   20.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   30.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   40.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   50.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   60.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   70.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   80.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   90.0']),
+                                             ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0  100.0'])],
 
-                             'hundredsxbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 100.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 200.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 300.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 400.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 500.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 600.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 700.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 800.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', ' 900.0  0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '1000.0  0.0   0.0'])],
+                             'hundredsxbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 100.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 200.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 300.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 400.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 500.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 600.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 700.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 800.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 900.0  0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '1000.0  0.0   0.0'])],
 
-                             'hundredsybfield': [Block(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   100.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   200.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   300.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   400.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   500.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   600.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   700.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   800.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   900.0   0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0  1000.0   0.0'])],
+                             'hundredsybfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   100.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   200.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   300.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   400.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   500.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   600.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   700.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   800.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   900.0   0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0  1000.0   0.0'])],
 
-                             'hundredszbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   100.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   200.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   300.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   400.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   500.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   600.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   700.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   800.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0   900.0']),
-                                                 Block(key='external_bfield', lines=['TESLA', '0.0   0.0  1000.0'])],
+                             'hundredszbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   100.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   200.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   300.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   400.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   500.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   600.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   700.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   800.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   900.0']),
+                                                 ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0  1000.0'])],
 
-                             'kilosxbfield': [Block(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 1000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 2000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 3000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 4000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 5000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 6000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 7000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 8000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', ' 9000.0  0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '10000.0  0.0   0.0'])],
+                             'kilosxbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 0.0   0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 1000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 2000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 3000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 4000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 5000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 6000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 7000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 8000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', ' 9000.0  0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '10000.0  0.0   0.0'])],
 
-                             'kilosybfield': [Block(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   1000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   2000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   3000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   4000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   5000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   6000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   7000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   8000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   9000.0   0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0  10000.0   0.0'])],
+                             'kilosybfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0    0.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   1000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   2000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   3000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   4000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   5000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   6000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   7000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   8000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   9000.0   0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0  10000.0   0.0'])],
 
-                             'kiloszbfield': [Block(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   1000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   2000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   3000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   4000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   5000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   6000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   7000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   8000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0   9000.0']),
-                                              Block(key='external_bfield', lines=['TESLA', '0.0   0.0  10000.0'])],
+                             'kiloszbfield': [ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0    0.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   1000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   2000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   3000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   4000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   5000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   6000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   7000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   8000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0   9000.0']),
+                                              ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0   0.0  10000.0'])],
 
                              'halides': [shortcutToCells.get('hf'),
                                          shortcutToCells.get('hcl'),
@@ -1659,8 +1816,8 @@ stringToVariableSettings = { 'soc' : [(StrSetting(key='spin_treatment', value='s
 
 
 
-defaultShortcut = { 'defaults': [Block(key='cell_constraints', lines=['0   0   0', '0   0   0']),
-                                 Block(key='species_pot', lines=['SOC19']),
+defaultShortcut = { 'defaults': [ThreeVectorIntBlock(key='cell_constraints', lines=['0   0   0', '0   0   0']),
+                                 StrBlock(key='species_pot', lines=['SOC19']),
                                  BoolSetting(key='fix_com', value=True),
                                  StrSetting(key='task', value='singlepoint'),
                                  StrSetting(key='xcfunctional', value='LDA'),

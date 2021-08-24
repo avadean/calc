@@ -44,9 +44,13 @@ def createDirectories(*directoryNames):
 class VectorInt:
     def __init__(self, *values, vector=None):
         if vector is None:
-            assert all(type(val) is int for val in values)
+            for val in values:
+                if type(val) is str:
+                    assert isInt(val)
+                else:
+                    assert type(val) is int
 
-            self.values = values
+            self.values = [int(float(val)) for val in values]
 
         else:
             if type(vector) is VectorInt:
@@ -82,9 +86,13 @@ class VectorInt:
 class VectorFloat:
     def __init__(self, *values, vector=None):
         if vector is None:
-            assert all(type(val) is float for val in values)
+            for val in values:
+                if type(val) is str:
+                    assert isFloat(val)
+                else:
+                    assert type(val) is float
 
-            self.values = values
+            self.values = [float(val) for val in values]
 
         else:
             if type(vector) is VectorInt:
@@ -242,7 +250,7 @@ def getFromDict(key=None, dct=None, strict=True, default=None):
 
 
 def getNiceUnit(unit=None, strict=True):
-    return getFromDict(key=unit, dct=unitToNiceUnit, strict=strict)
+    return getFromDict(key=unit, dct=unitToNiceUnit, strict=strict, default=unit)
 
 
 def getAllowedUnits(unitType=None, strict=True):

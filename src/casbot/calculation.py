@@ -713,6 +713,7 @@ class Calculation:
             element = element[0].upper() + element[1:].lower()
 
             # Manually get rid of lines that are just units.
+            # TODO: make this a bit less hard-coded?
             if element not in ['Ang', 'Bohr']:
                 elements.append(element)
 
