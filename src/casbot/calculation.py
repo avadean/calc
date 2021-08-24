@@ -103,7 +103,7 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
 
             # Loop through the specific tuple that contains many cells or params or both.
             for setting in listOfSettings:
-                if type(setting) is Setting:
+                if isinstance(setting, Setting):
                     specificSettings.append(setting)
 
                 else:
@@ -213,7 +213,7 @@ class Calculation:
 
         if settings is not None:
             assert type(settings) is list
-            assert all(type(setting) is Setting for setting in settings)
+            assert all(isinstance(setting, Setting) for setting in settings)
             assertCount([setting.key for setting in settings])
 
         if name is not None:

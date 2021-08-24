@@ -1681,7 +1681,7 @@ def getSetting(key=None, **kwargs):
 
     key = key.strip().lower()
 
-    settingObject = settingTypes.get(key=key, default=None)
+    settingObject = settingTypes.get(key, None)
 
     assert settingObject is not None, f'Key {key} does not correspond to setting'
 
@@ -1833,7 +1833,7 @@ def createSettings(*settings):
     settingsFromShortcuts = shortcutsToSettings(*shortcuts)
 
     for setting in settingsFromShortcuts:
-        if type(setting) is Setting:
+        if isinstance(setting, Setting):
             settings.append(setting)
         else:
             raise TypeError(f'{type(setting)} type not recognised in shortcut')
@@ -1882,10 +1882,10 @@ def createVariableSettings(*variableSettings):
 
             # User defined.
             elif type_ in [list, tuple]:
-                assert all(type(setting) is Setting for setting in strListSetting), 'Settings should only be cells or params'
+                assert all(isinstance(setting, Setting) for setting in strListSetting), 'Settings should only be cells or params'
                 lst.append(list(strListSetting))
 
-            elif type_ is Setting:
+            elif isinstance(strListSetting, Setting):
                 lst.append([strListSetting])
 
             else:
@@ -1908,7 +1908,7 @@ def shortcutsToSettings(*shortcuts):
 
         settingOrList = stringToSettings.get(shortcut.lower(), None)
 
-        newSettings = [settingOrList] if type(settingOrList) is Setting else settingOrList
+        newSettings = [settingOrList] if isinstance(settingOrList, Setting) else settingOrList
 
         assert newSettings is not None, f'Shortcut string {shortcut} not recognised'
 
@@ -1940,7 +1940,7 @@ def getCellsParams(settings=None):
         return None
 
     assert type(settings) is list
-    assert all(type(setting) is Setting for setting in settings)
+    assert all(isinstance(setting, Setting) for setting in settings)
 
     cells = []
     params = []
@@ -1973,7 +1973,7 @@ def parseArgs(*stringsAndSettings):
         if t is str:
             strings.append(arg)
 
-        elif t is Setting:
+        elif isinstance(arg, Setting):
             settings.append(arg)
 
         elif t is tuple:
@@ -1983,7 +1983,7 @@ def parseArgs(*stringsAndSettings):
                 if t2 is str:
                     strings.append(arg2)
 
-                elif t2 is Setting:
+                elif isinstance(t2, Setting):
                     settings.append(arg2)
 
                 else:
@@ -1996,7 +1996,7 @@ def parseArgs(*stringsAndSettings):
                 if t2 is str:
                     strings.append(arg2)
 
-                elif t2 is Setting:
+                elif isinstance(t2, Setting):
                     settings.append(arg2)
 
                 else:
