@@ -1,7 +1,7 @@
 from casbot.data import assertCount, createDirectories,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
     PrintColors
-from casbot.settings import Setting, createSettings, createVariableSettings, readSettings
+from casbot.settings import Setting, Keyword, Block, createSettings, createVariableSettings, readSettings
 from casbot.results import getResult
 
 from collections import Counter
@@ -324,6 +324,22 @@ class Calculation:
         print(string)
 
     def create(self, force=False, passive=False):
+
+        def getSettingLines(setting=None, maxSettingLength=0):
+            assert isinstance(setting, Keyword) or isinstance(setting, Block), f'Setting {setting} not a class of Keyword or Block'
+            assert type(maxSettingLength) is int
+
+            if isinstance(setting, Keyword):
+                spaces = max(len(setting.key), maxSettingLength)
+                unit = '' if setting.unit is None else f' {setting.unit}'
+                return [f'{setting.key:<{spaces}s} : {setting.value}{unit}']
+
+            elif isinstance(setting, Block):
+                return [f'%block {setting.key}'] + setting.getLines() + [f'%endblock {setting.key}']
+
+            else:
+                raise TypeError(f'Setting {setting} not a class of Keyword or Block')
+
         assert type(force) is bool
         assert type(passive) is bool
 
@@ -365,8 +381,9 @@ class Calculation:
 
             with open(cellFile, 'w') as f:
                 for cell in cells:
-                    for line in cell.getLines():
-                        f.write(line)
+
+                    for line in getSettingLines(setting=cell, maxSettingLength=0):
+                        f.write(f'{line}\n')
 
                     f.write('\n')
 
@@ -385,8 +402,10 @@ class Calculation:
                         f.write('\n')
                         currentPriorityLevel = floor(param.priority)
 
-                    for line in param.getLines(longestParam):
-                        f.write(line)
+                    for line in getSettingLines(setting=param, maxSettingLength=longestParam):
+                        f.write(f'{line}\n')
+
+                    f.write('\n')
 
         print(f'Created calculation for {self.name} in {directory}')
 

@@ -73,9 +73,7 @@ class VectorInt:
 
         self.type_ = len(self.values)
 
-    def __str__(self):
-        intSetting = '{:>3d}'
-
+    def __str__(self, intSetting='{:>3d}'):
         return '  '.join(intSetting for _ in range(self.type_)).format(*self.values)
         #return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
 
@@ -113,9 +111,7 @@ class VectorFloat:
 
         self.type_ = len(self.values)
 
-    def __str__(self):
-        floatSetting = '{:>12.4f}'
-
+    def __str__(self, floatSetting='{:>12.4f}'):
         return '  '.join(floatSetting for _ in range(self.type_)).format(*self.values)
         #return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
 
