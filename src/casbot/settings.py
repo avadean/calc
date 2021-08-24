@@ -235,6 +235,9 @@ class Block(Setting):
 
                     self.lines.append(line)
 
+    def __str__(self):
+        return '; '.join(self.lines)
+
     def getLines(self):
         return self.lines
 
@@ -274,7 +277,7 @@ class ElementThreeVectorFloatBlock(Block):
                 self.values[element] = value
 
     def getLines(self):
-        return [f'{element:<3s}  {vector.__str__(floatSetting="{:>12.4f}")}' for element, vector in self.values.items()]
+        return [f'{element:<3s}  {vector.__str__(floatSetting="{:>15.12f}")}' for element, vector in self.values.items()]
 
 
 class ThreeVectorFloatBlock(Block):
@@ -306,7 +309,7 @@ class ThreeVectorFloatBlock(Block):
                 self.values.append(value)
 
     def getLines(self):
-        return [f'{vector.__str__(floatSetting="{:>12.4f}")}' for vector in self.values]
+        return [f'{vector.__str__(floatSetting="{:>15.12f}")}' for vector in self.values]
 
 
 class ThreeVectorFloatWeightedBlock(Block):
@@ -331,7 +334,7 @@ class ThreeVectorFloatWeightedBlock(Block):
             self.values.append((value, w))
 
     def getLines(self):
-        return [f'{vector.__str__(floatSetting=":>4.2f")}  {weight:>4.2f}' for vector, weight in self.values]
+        return [f'{vector.__str__(floatSetting="{:>4.2f}")}  {weight:>4.2f}' for vector, weight in self.values]
 
 
 class ThreeVectorIntBlock(Block):

@@ -405,8 +405,6 @@ class Calculation:
                     for line in getSettingLines(setting=param, maxSettingLength=longestParam):
                         f.write(f'{line}\n')
 
-                    f.write('\n')
-
         print(f'Created calculation for {self.name} in {directory}')
 
     def getCompletedTime(self):
