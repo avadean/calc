@@ -189,6 +189,27 @@ def getVariableDirectories(string=None):
     return variableDirectories
 
 
+def unitConvert(fromUnit=None, toUnit=None):
+    assert type(fromUnit) is str
+    assert type(toUnit) is str
+
+    fromUnit = fromUnit.strip().lower()
+    toUnit = toUnit.strip().lower()
+
+    conversions = unitConversions.get(fromUnit, None)
+
+    if conversions is None:
+        raise ValueError(f'Do not know unit {fromUnit} to convert from')
+
+    conversion = conversions.get(toUnit, None)
+
+    if conversion is None:
+        raise ValueError(f'Do not know unit {toUnit} to convert to')
+
+    return conversion
+
+
+
 class PrintColors:
     default = '\033[39m'
     black = '\033[30m'
@@ -253,6 +274,10 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
 
                    'inverseLength' : ['1/ang']
                    }
+
+unitConversions = { 'ang':  { 'ang': 1.0         , 'bohr': 1.889726133},
+                    'bohr': { 'ang': 0.5291772086, 'bohr': 1.0}
+                    }
 
 stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_HI'],
 

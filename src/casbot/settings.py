@@ -290,15 +290,28 @@ class ElementThreeVectorFloatBlock(Block):
 
     def rotate(self, rotationMatrix=None):
         assert type(rotationMatrix) is ndarray
+        assert rotationMatrix.shape == (3, 3)
 
-        values = self.values.copy()
+        self.values = {element: dot(rotationMatrix, vector) for element, vector in self.values.items()}
 
-        self.values = {}
+    # TODO: consider fractional coordinates
+    '''
+    def translate(self, translationVector=None, fromUnit='ang'):
+        assert type(translationVector) is ndarray
+        assert translationVector.shape == (3,)
 
-        for element, vector in values.items():
-            newVector = dot(rotationMatrix, vector)
+        assert type(fromUnit) is str
 
-            self.values[element] = newVector
+        fromUnit = fromUnit.strip().lower()
+
+        assert fromUnit in getAllowedUnits(unitType='length', strict=True)
+
+        toUnit = self.unit if self.unit is not None else 'ang'  # Default in castep is ang
+
+        translationVector = unitConvert(fromUnit=fromUnit, toUnit=toUnit)
+
+        self.values = {element: vector + translationVector for element, vector in self.values.items()}
+    '''
 
 
 class ThreeVectorFloatBlock(Block):

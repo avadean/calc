@@ -647,6 +647,36 @@ class Calculation:
 
         elementPositionSetting.rotate(rotationMatrix=rotationMatrix)
 
+    # TODO: consider fractional coordinates
+    '''
+    def translate(self, vector=None, unit='ang'):
+        try:
+            vector = asarray(vector, dtype=float)
+        except ValueError:
+            raise ValueError('Supply vector to translate by as array-like e.g. [1, 2, 3]')
+
+        assert type(unit) is str
+
+        unit = unit.strip().lower()
+
+        # Extra unit checks and unit conversion done in setting object
+
+        for setting in self.settings:
+            if setting.key in ['positions_frac', 'positions_abs']:
+                elementPositionSetting = setting
+                break
+        else:
+            raise ValueError('Could not find a setting for element positions')
+
+        if elementPositionSetting.key == 'positions_frac':
+            for setting in self.settings:
+                if setting.key in ['lattice_abc', 'lattice_cart']:
+                    # TODO: consider fractional coordinates
+                    pass
+
+        elementPositionSetting.translate(translationVector=vector, unit=unit)
+    '''
+
     def run(self, test=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         if self.directory is None:
             raise ValueError('Cannot run calculation when there is no directory specified')
