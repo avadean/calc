@@ -253,7 +253,7 @@ class ElementThreeVectorFloatBlock(Block):
         super().__init__(key=key, lines=lines)
 
         self.values = []
-        self.unit = 'Ang'  # Default in castep is ang
+        self.unit = 'Ang'    # TODO: add a default unit feature
 
         if self.lines:
             linesToRead = self.lines
@@ -319,7 +319,7 @@ class ThreeVectorFloatBlock(Block):
         super().__init__(key=key, lines=lines)
 
         self.values = []
-        self.unit = None
+        self.unit = 'Ang' if self.key == 'lattice_cart' else 'Tesla' if self.key == 'external_bfield' else None  # TODO: add a default unit feature
 
         if self.lines:
             linesToRead = self.lines
@@ -342,7 +342,8 @@ class ThreeVectorFloatBlock(Block):
                 self.values.append(value)
 
     def getLines(self):
-        return ['  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
+        unitPart = [self.unit] if self.unit is not None else []
+        return unitPart + ['  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
 
 
 class ThreeVectorFloatWeightedBlock(Block):
