@@ -483,6 +483,13 @@ class Calculation:
 
         for line in subLines:
             line = line.strip()
+
+            # Names with numbers in seem to break the date-time parser (TODO: consider using a different parser for date-time is this one is rubbish)
+            if self.name is None:
+                return None
+            else:
+                line = line[len(self.name):].strip()
+
             line = line[:-1] if line[-1] == '.' else line  # Get rid of annoying full stop which will cause chaos
 
             '''
