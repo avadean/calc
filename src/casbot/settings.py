@@ -252,8 +252,8 @@ class ElementThreeVectorFloatBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
 
-        self.values = {}
-        self.unit = None
+        self.values = []
+        self.unit = 'Ang'  # Default in castep is ang
 
         if self.lines:
             linesToRead = self.lines
@@ -283,16 +283,16 @@ class ElementThreeVectorFloatBlock(Block):
 
                 assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
-                self.values[element] = value
+                self.values.append((element, value))
 
     def getLines(self):
-        return [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for element, vector in self.values.items()]
+        return [f'{self.unit}'] + [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for (element, vector) in self.values]
 
     def rotate(self, rotationMatrix=None):
         assert type(rotationMatrix) is ndarray
         assert rotationMatrix.shape == (3, 3)
 
-        self.values = {element: dot(rotationMatrix, vector) for element, vector in self.values.items()}
+        self.values = [(element, dot(rotationMatrix, vector)) for element, vector in self.values]
 
     # TODO: consider fractional coordinates
     '''
