@@ -159,6 +159,9 @@ class Model:
             for calculation in self.calculations:
                 calculation.rotate(**kwargs)
 
+        elif parameter in ['translate', 'translation']:
+            raise NotImplementedError('Translation editing not yet implemented')
+
         else:
             raise ValueError(f'Parameter {parameter} not known')
 
