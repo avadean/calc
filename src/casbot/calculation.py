@@ -166,10 +166,11 @@ def processCalculations(*directories):
 
         if len(paramFiles) == 1:
             paramPrefix = paramFiles[0][:-6]  # Removes '.param'
-
             params = readSettings(file_=f'{directory}{paramFiles[0]}')
+
         elif len(paramFiles) > 1:
             raise NameError(f'Too many param files to read in directory {directory}')
+
         else:
             print(f'*** Caution: no param file found in {directory}')
 
@@ -177,6 +178,7 @@ def processCalculations(*directories):
         if cellPrefix is not None and paramPrefix is not None:
             assert paramPrefix == cellPrefix, \
                 f'Different prefixes for cell and param files: {cellPrefix}.cell, {paramPrefix}.param'
+            prefix = cellPrefix
 
         elif cellPrefix is not None:
             prefix = cellPrefix

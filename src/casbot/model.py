@@ -2,7 +2,7 @@ from casbot.calculation import Calculation
 
 from collections import Counter
 from pathlib import Path
-from pickle import dump, load
+from pickle import dump as pickleDump, load as pickleLoad
 from random import sample
 from tqdm import tqdm
 
@@ -14,17 +14,14 @@ class Model:
 
         self.name = name
 
-        if calculations is None:
-            self.calculations = []
-        else:
+        self.calculations = []
+
+        if calculations is not None:
             assert type(calculations) is list
-            assert all(type(calculation) == Calculation for calculation in calculations)
+            assert all(type(calculation) is Calculation for calculation in calculations)
             self.calculations = calculations
 
-        self.species = Counter()
-        self.setSpecies(strict=False)
-
-        #print(self.getDirString())
+        self.species = self.getSpecies(calculations=self.calculations, strict=False)
 
     def __str__(self):
         string = ''
@@ -63,7 +60,7 @@ class Model:
 
     def check(self):
         # TODO: add in summary option and maybe default to only showing running and the next 3(?) submitted calculations - could also print the expected finish time of the fine calculation, too
-        self.setSpecies(strict=True)
+        self.species = self.getSpecies(calculations=self.calculations, strict=True)
 
         totalTimeCompleted = {species: 0.0 for species in self.species.keys()}
 
@@ -106,7 +103,7 @@ class Model:
 
             # If we can run n calculations at once, we don't need to work in serial, so we create a parallel set of finish times where n = number running at that moment.
             numRunning = max(sum(numRunning.values()), 1)
-            finishTimes = [0.0 for _ in range(numRunning)]  # Number of seconds away from now a calculation is expected to finish.
+            finishTimes = [0.0] * numRunning  # Number of seconds away from now a calculation is expected to finish.
 
             for c in calculations:
 
@@ -125,8 +122,8 @@ class Model:
 
                 c.expectedSecToFinish = finishTimes[index]
 
-        maxNameLen = max([len(calc.name) for calc in self.calculations if calc.name is not None], default=0)
-        maxDirLen = max([len(calc.directory) for calc in self.calculations if calc.directory is not None], default=0)
+        maxNameLen = max(map(lambda calc: len(calc.name or ''), self.calculations), default=0)
+        maxDirLen = max(map(lambda calc: len(calc.directory or ''), self.calculations), default=0)
 
         for c in self.calculations:
             c.check(nameOutputLen=maxNameLen, dirOutputLen=maxDirLen)
@@ -153,29 +150,16 @@ class Model:
         for calculation in self.calculations:
             calculation.create(force=force, passive=passive)
 
-    def getDirString(self):
-        if len(self.calculations) == 0:
-            return ''
-
-        string = ''
-
-        for calculation in self.calculations:
-            string += f'{calculation.directory}\n'
-
-        string = string[:-1]  # Remove last line break.
-
-        return string
-
-    def setSpecies(self, strict=False):
+    @staticmethod
+    def getSpecies(calculations=None, strict=False):
         assert type(strict) is bool
+        assert type(calculations) is list
+        assert all(type(calculation) is Calculation for calculation in calculations)
 
-        if len(self.species) > 0 and all(self.species.keys()):
-            return
-
-        for calculation in self.calculations:
+        for calculation in calculations:
             calculation.setName(strict=strict)
 
-        self.species = Counter(calculation.name for calculation in self.calculations)
+        return Counter(calculation.name for calculation in calculations)
 
     def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
         assert type(all_) is bool
@@ -272,7 +256,7 @@ class Model:
 
         assert not Path(file).is_file() or overwrite, f'File {file} exists - use overwrite=True to overwrite'
 
-        dump(self, open(file, 'wb'))
+        pickleDump(self, open(file, 'wb'))
 
         print(f'Model with {len(self.calculations)} calculations saved to {file} successfully')
 
@@ -281,7 +265,7 @@ class Model:
         assert type(file) is str
         assert Path(file).is_file(), f'Cannot find file {file}'
 
-        model = load(open(file, 'rb'))
+        model = pickleLoad(open(file, 'rb'))
 
         print(f'Model with {len(model.calculations)} calculations loaded successfully')
 
