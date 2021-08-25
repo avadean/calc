@@ -515,35 +515,34 @@ class Calculation:
         if self.directory is None:
             return 'no directory specified'
 
+        if not Path(self.directory).is_dir():
+            return 'not yet created'
+
         if any((self.name in file_ and '.err' in file_) for file_ in listdir(self.directory)):
             return 'errored'
 
-        elif Path(self.directory).is_dir():
-            self.setName(strict=True)
+        self.setName(strict=True)
 
-            subFile = f'{self.directory}{self.name}.sub'
-            castepFile = f'{self.directory}{self.name}.castep'
+        subFile = f'{self.directory}{self.name}.sub'
+        castepFile = f'{self.directory}{self.name}.castep'
 
-            if Path(castepFile).is_file():
-                with open(castepFile) as f:
-                    castepLines = f.read().splitlines()
+        if Path(castepFile).is_file():
+            with open(castepFile) as f:
+                castepLines = f.read().splitlines()
 
-                castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
+            castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
 
-                for line in castepLines:
-                    if line.strip().lower().startswith('total time'):
-                        return 'completed'
+            for line in castepLines:
+                if line.strip().lower().startswith('total time'):
+                    return 'completed'
 
-                return 'running'
+            return 'running'
 
-            elif Path(subFile).is_file():
-                return 'submitted'
-
-            else:
-                return 'created'
+        elif Path(subFile).is_file():
+            return 'submitted'
 
         else:
-            return 'not yet created'
+            return 'created'
 
     @staticmethod
     def getSettingLines(setting=None, maxSettingLength=0):
