@@ -253,7 +253,7 @@ class ElementThreeVectorFloatBlock(Block):
         super().__init__(key=key, lines=lines)
 
         self.values = []
-        self.unit = 'Ang'    # TODO: add a default unit feature
+        self.unit = 'Ang' if self.key == 'positions_abs' else None  # TODO: add a default unit feature
 
         if self.lines:
             linesToRead = self.lines
@@ -286,7 +286,8 @@ class ElementThreeVectorFloatBlock(Block):
                 self.values.append((element, value))
 
     def getLines(self):
-        return [f'{self.unit}'] + [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for (element, vector) in self.values]
+        unitPart = [self.unit] if self.unit is not None else []
+        return unitPart + [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for (element, vector) in self.values]
 
     def rotate(self, rotationMatrix=None):
         assert type(rotationMatrix) is ndarray
