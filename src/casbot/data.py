@@ -40,86 +40,6 @@ def createDirectories(*directoryNames):
     return directoryNames
 
 
-
-class VectorInt:
-    def __init__(self, *values, vector=None):
-        if vector is None:
-            for val in values:
-                if type(val) is str:
-                    assert isInt(val)
-                else:
-                    assert type(val) is int
-
-            self.values = [int(float(val)) for val in values]
-
-        else:
-            if type(vector) is VectorInt:
-                self.values = vector.values
-
-            elif type(vector) is VectorFloat:
-                assert all(val.is_integer() for val in vector.values)
-
-                self.values = [int(val) for val in vector.values]
-
-            elif type(vector) is str:
-                values = [val.strip() for val in vector.split()]
-
-                assert isInt(*values)
-
-                self.values = [int(float(val)) for val in values]
-
-            else:
-                raise TypeError('Vector input to VectorInt must be a 3 str-int-vector, VectorInt or int-VectorFloat')
-
-        self.type_ = len(self.values)
-
-    def __str__(self, intSetting='{:>3d}'):
-        return '   '.join(intSetting for _ in range(self.type_)).format(*self.values)
-        #return '{:>3d}  {:>3d}  {:>3d}'.format(self.x, self.y, self.z)
-
-    def getMagnitude(self):
-        return sum(val ** 2.0 for val in self.values) ** 0.5
-
-
-class VectorFloat:
-    def __init__(self, *values, vector=None):
-        if vector is None:
-            for val in values:
-                if type(val) is str:
-                    assert isFloat(val)
-                else:
-                    assert type(val) is float
-
-            self.values = [float(val) for val in values]
-
-        else:
-            if type(vector) is VectorInt:
-                self.values = [float(val) for val in vector.values]
-
-            elif type(vector) is VectorFloat:
-                self.values = vector.values
-
-            elif type(vector) is str:
-                values = [val.strip() for val in vector.split()]
-
-                assert isInt(*values) or isFloat(*values)
-
-                self.values = [float(val) for val in values]
-
-            else:
-                raise TypeError('Vector input to VectorFloat must be a vector as a str, VectorInt or VectorFloat')
-
-        self.type_ = len(self.values)
-
-    def __str__(self, floatSetting='{:>12.4f}'):
-        return '   '.join(floatSetting for _ in range(self.type_)).format(*self.values)
-        #return '{:>12.4f}  {:>12.4f}  {:>12.4f}'.format(self.x, self.y, self.z)
-
-    def getMagnitude(self):
-        return sum(val ** 2.0 for val in self.values) ** 0.5
-
-
-
 def strListToArray(lst=None):
     assert type(lst) is list
     assert all(type(line) is str for line in lst)
@@ -140,6 +60,8 @@ def strListToArray(lst=None):
 def stringToValue(value):
     assert type(value) is str
 
+    value = value.strip()
+
     if value.lower() in ['t', 'true']:
         return True
 
@@ -153,10 +75,10 @@ def stringToValue(value):
         return float(value)
 
     elif isVectorInt(value):
-        return VectorInt(vector=value)
+        return array(value.split(), dtype=int)
 
     elif isVectorFloat(value):
-        return VectorFloat(vector=value)
+        return array(value.split(), dtype=float)
 
     else:
         return value
@@ -267,7 +189,6 @@ def getVariableDirectories(string=None):
     return variableDirectories
 
 
-
 class PrintColors:
     default = '\033[39m'
     black = '\033[30m'
@@ -300,7 +221,6 @@ class PrintColors:
     submitted = yellow
     running = blue
     completed = green
-
 
 
 unitToNiceUnit = { 'ev' : 'eV',

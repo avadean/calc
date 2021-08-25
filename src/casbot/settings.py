@@ -1,8 +1,9 @@
 from casbot.data import assertBetween, assertCount,\
-    elements, isFloat, isInt,\
+    elements,\
     getAllowedUnits, getNiceUnit, getFromDict,\
-    VectorInt, VectorFloat, stringToValue
+    stringToValue
 
+from numpy import array
 from pathlib import Path
 
 
@@ -153,14 +154,14 @@ class VectorFloatKeyword(Keyword):
     def __init__(self, key=None, value=None, unit=None):
         super().__init__(key=key)
 
-        if type(value) in [str, VectorInt]:
-            value = VectorFloat(vector=value)
-
-        assert type(value) is VectorFloat, f'Value of {value} not accepted for {self.key}, should be a VectorFloat'
+        try:
+            value = array(value, dtype=float)
+        except ValueError:
+            raise ValueError(f'Value of {value} not accepted for {self.key}, should be a float array')
 
         minimum = min(settingValues.get(self.key))
         maximum = max(settingValues.get(self.key))
-        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
+        assertBetween(*value, minimum=minimum, maximum=maximum, key=self.key)
 
         self.value = value
 
@@ -185,11 +186,14 @@ class VectorIntKeyword(Keyword):
     def __init__(self, key=None, value=None, unit=None):
         super().__init__(key=key)
 
-        assert type(value) is VectorInt, f'Value of {value} not accepted for {self.key}, should be a VectorInt'
+        try:
+            value = array(value, dtype=int)
+        except ValueError:
+            raise ValueError(f'Value of {value} not accepted for {self.key}, should be an int array')
 
         minimum = min(settingValues.get(self.key))
         maximum = max(settingValues.get(self.key))
-        assertBetween(*value.values, minimum=minimum, maximum=maximum, key=self.key)
+        assertBetween(*value, minimum=minimum, maximum=maximum, key=self.key)
 
         self.value = value
 
@@ -262,22 +266,25 @@ class ElementThreeVectorFloatBlock(Block):
             for line in linesToRead:
                 parts = line.split()
 
-                assert len(parts) == 4, f'Error in {key} on line {line}'
+                assert len(parts) > 0, f'Error in {key} on line {line}'
 
-                element, x, y, z = parts
-
-                element = element.strip().lower()
+                element = parts[0].strip().lower()
 
                 assert element in elements, f'Element {element} not known'
 
                 element = element[0].upper() + element[1:].lower()
 
-                value = VectorFloat(x, y, z)
+                try:
+                    value = array(parts[1:], dtype=float)
+                except ValueError:
+                    raise ValueError(f'Error in {key} on line {line}')
+
+                assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
                 self.values[element] = value
 
     def getLines(self):
-        return [f'{element:<3s}  {vector.__str__(floatSetting="{:>15.12f}")}' for element, vector in self.values.items()]
+        return [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for element, vector in self.values.items()]
 
 
 class ThreeVectorFloatBlock(Block):
@@ -298,18 +305,17 @@ class ThreeVectorFloatBlock(Block):
                 linesToRead = linesToRead[1:]
 
             for line in linesToRead:
-                parts = line.split()
+                try:
+                    value = array(line.split(), dtype=float)
+                except ValueError:
+                    raise ValueError(f'Error in {key} on line {line}')
 
-                assert len(parts) == 3, f'Error in {key} on line {line}'
-
-                x, y, z = parts
-
-                value = VectorFloat(x, y, z)
+                assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
                 self.values.append(value)
 
     def getLines(self):
-        return [f'{vector.__str__(floatSetting="{:>15.12f}")}' for vector in self.values]
+        return ['  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
 
 
 class ThreeVectorFloatWeightedBlock(Block):
@@ -319,22 +325,17 @@ class ThreeVectorFloatWeightedBlock(Block):
         self.values = []
 
         for line in self.lines:
-            parts = line.split()
+            try:
+                value = array(line.split(), dtype=float)
+            except ValueError:
+                raise ValueError(f'Error in {key} on line {line}')
 
-            assert len(parts) == 4, f'Error in {key} on line {line}'
+            assert value.shape == (4,), f'Shape error in {key} on line {line}'
 
-            x, y, z, w = parts
-
-            assert isFloat(w), f'Weight in {key} on line {line} should be a float'
-
-            value = VectorFloat(x, y, z)
-
-            w = float(w)
-
-            self.values.append((value, w))
+            self.values.append(value)
 
     def getLines(self):
-        return [f'{vector.__str__(floatSetting="{:>4.2f}")}  {weight:>4.2f}' for vector, weight in self.values]
+        return ['   '.join('{:>4.2f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
 
 
 class ThreeVectorIntBlock(Block):
@@ -344,18 +345,17 @@ class ThreeVectorIntBlock(Block):
         self.values = []
 
         for line in self.lines:
-            parts = line.split()
+            try:
+                value = array(line.split(), dtype=int)
+            except ValueError:
+                raise ValueError(f'Error in {key} on line {line}')
 
-            assert len(parts) == 3, f'Error in {key} on line {line}'
-
-            x, y, z = parts
-
-            value = VectorInt(x, y, z)
+            assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
             self.values.append(value)
 
     def getLines(self):
-        return [f'{vector.__str__(intSetting="{:>3d}")}' for vector in self.values]
+        return ['  ' + '   '.join('{:>3d}' for _ in range(len(vector))).format(*vector) for vector in self.values]
 
 
 class StrBlock(Block):
@@ -535,10 +535,10 @@ cellTypes = {
     # Keywords.
     'kpoint_mp_spacing': FloatKeyword,
     'kpoints_mp_spacing': FloatKeyword,
-    'kpoint_mp_grid': VectorInt,
-    'kpoints_mp_grid': VectorInt,
-    'kpoint_mp_offset': VectorFloat,
-    'kpoints_mp_offset': VectorFloat,
+    'kpoint_mp_grid': VectorIntKeyword,
+    'kpoints_mp_grid': VectorIntKeyword,
+    'kpoint_mp_offset': VectorFloatKeyword,
+    'kpoints_mp_offset': VectorFloatKeyword,
     'fix_all_cell': BoolKeyword,
     'fix_com': BoolKeyword,
     'symmetry_tol': FloatKeyword,
