@@ -150,6 +150,18 @@ class Model:
         for calculation in self.calculations:
             calculation.create(force=force, passive=passive)
 
+    def edit(self, parameter=None, **kwargs):  # def edit(self, parameter=None, *names, **kwargs):
+        assert type(parameter) is str
+
+        parameter = parameter.strip().lower()
+
+        if parameter in ['rotate', 'rotation']:
+            for calculation in self.calculations:
+                calculation.rotate(**kwargs)
+
+        else:
+            raise ValueError(f'Parameter {parameter} not known')
+
     @staticmethod
     def getSpecies(calculations=None, strict=False):
         assert type(strict) is bool

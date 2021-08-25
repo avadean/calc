@@ -3,8 +3,10 @@ from casbot.data import assertBetween, assertCount,\
     getAllowedUnits, getNiceUnit, getFromDict,\
     stringToValue
 
-from numpy import array
+from numpy import array, ndarray, dot, set_printoptions
 from pathlib import Path
+
+set_printoptions(precision=15)
 
 
 def checkForUnit(lines=None, unitLine=0):
@@ -285,6 +287,18 @@ class ElementThreeVectorFloatBlock(Block):
 
     def getLines(self):
         return [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for element, vector in self.values.items()]
+
+    def rotate(self, rotationMatrix=None):
+        assert type(rotationMatrix) is ndarray
+
+        values = self.values.copy()
+
+        self.values = {}
+
+        for element, vector in values.items():
+            newVector = dot(rotationMatrix, vector)
+
+            self.values[element] = newVector
 
 
 class ThreeVectorFloatBlock(Block):

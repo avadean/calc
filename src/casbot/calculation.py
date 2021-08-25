@@ -9,7 +9,8 @@ from datetime import datetime
 from dateutil import parser
 from fnmatch import filter
 from itertools import product
-from math import floor
+from math import floor, pi, sin, cos, sqrt
+from numpy import array, asarray, dot
 from os import chdir, getcwd, listdir
 from pathlib import Path
 #from re import search
@@ -609,6 +610,42 @@ class Calculation:
         string = string[:-1]  # Remove last line break.
 
         print(string)
+
+    def rotate(self, axis=None, angle=None, degrees=True):
+        try:
+            axis = asarray(axis, dtype=float)
+        except ValueError:
+            ValueError('Supply axis to rotate around as array-like e.g. [1, 1, 1]')
+
+        assert type(angle) in [float, int]
+        assert type(degrees) is bool
+
+        angle = float(angle)
+
+        # Convert angle to radians if needed.
+        angle = pi * angle / 180.0 if degrees else angle
+
+        # Normalise the axis to rotate around.
+        axis = axis / sqrt(dot(axis, axis))
+
+        # Ugly rotation matrix generation.
+        a = cos(angle / 2.0)
+        b, c, d = -axis * sin(angle / 2.0)
+        aa, bb, cc, dd = a * a, b * b, c * c, d * d
+        bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
+
+        rotationMatrix = array([[aa + bb - cc - dd,  2.0 * (bc + ad)  ,  2.0 * (bd - ac)  ],
+                                [2.0 * (bc - ad)  ,  aa + cc - bb - dd,  2.0 * (cd + ab)  ],
+                                [2.0 * (bd + ac)  ,  2.0 * (cd - ab)  ,  aa + dd - bb - cc]])
+
+        for setting in self.settings:
+            if setting.key in ['positions_frac', 'positions_abs']:
+                elementPositionSetting = setting
+                break
+        else:
+            raise ValueError('Could not find a setting for element positions')
+
+        elementPositionSetting.rotate(rotationMatrix=rotationMatrix)
 
     def run(self, test=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         if self.directory is None:
