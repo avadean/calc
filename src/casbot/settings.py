@@ -117,6 +117,8 @@ class FloatKeyword(Keyword):
 
         self.unit = unit
 
+        # self.format TODO: add a format variable
+
     def __str__(self):
         unit = f' {self.unit}' if self.unit is not None else ''
 
@@ -147,6 +149,8 @@ class IntKeyword(Keyword):
             unit = getNiceUnit(unit)
 
         self.unit = unit
+
+        # self.format TODO: add a format variable
 
     def __str__(self):
         return f'{self.value:<3d}'
@@ -180,6 +184,8 @@ class VectorFloatKeyword(Keyword):
 
         self.unit = unit
 
+        # self.format TODO: add a format variable
+
     def __str__(self):
         return str(self.value)
 
@@ -211,6 +217,8 @@ class VectorIntKeyword(Keyword):
             unit = getNiceUnit(unit)
 
         self.unit = unit
+
+        # self.format TODO: add a format variable
 
     def __str__(self):
         return str(self.value)

@@ -487,10 +487,10 @@ class Calculation:
             # Names with numbers in seem to break the date-time parser (TODO: consider using a different parser for date-time is this one is rubbish)
             if self.name is None:
                 return None
-            else:
+            elif line.startswith(self.name):
                 line = line[len(self.name):].strip()
 
-            line = line[:-1] if line[-1] == '.' else line  # Get rid of annoying full stop which will cause chaos
+            line = line[:-1].strip() if line.endswith('.') else line  # Get rid of annoying full stop which will cause chaos
 
             '''
             subTime = search(r'\d{4}[/-]\d{2}[/-]\d{2} \d{2}:\d{2}:\d{2}.\d{6}', line)
