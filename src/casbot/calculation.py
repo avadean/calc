@@ -4,7 +4,6 @@ from casbot.data import assertCount, createDirectories,\
 from casbot.settings import Setting, Keyword, Block, createSettings, createVariableSettings, readSettings
 from casbot.results import getResult
 
-from collections import Counter
 from datetime import datetime
 from dateutil import parser
 from fnmatch import filter
@@ -783,43 +782,14 @@ class Calculation:
         if self.name is not None:
             return
 
+        self.name = None
+
         for setting in self.settings:
             if setting.key in ['positions_frac', 'positions_abs']:
-                positionSetting = setting
-                break
-        else:
-            if strict:
-                raise ValueError('Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)')
-            else:
-                return
+                self.name = setting.findName()
 
-        elements = []
-
-        for line in positionSetting.lines:
-            try:
-                element = line.split(' ')[0]
-            except IndexError:
-                raise ValueError(f'Cannot find element in atomic positions line {line} to help set name')
-
-            element = element.strip()
-
-            element = element[0].upper() + element[1:].lower()
-
-            # Manually get rid of lines that are just units.
-            # TODO: make this a bit less hard-coded?
-            if element not in ['Ang', 'Bohr']:
-                elements.append(element)
-
-        if len(elements) == 0:
-            raise ValueError(f'Could not find any elements in {positionSetting.key} block to help set name')
-
-        elements = Counter(elements)
-
-        self.name = ''
-
-        for element, num in elements.items():
-            n = '' if num == 1 else num
-            self.name += f'{element}{n}'
+        if self.name is None and strict:
+            raise ValueError('Cannot find positions_frac/abs in cell, therefore cannot deduce CASTEP prefix (this will not run anyway)')
 
     def sortSettings(self):
         self.settings = sorted(self.settings, key=lambda setting: (setting.file, setting.priority))

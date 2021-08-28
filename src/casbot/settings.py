@@ -3,6 +3,7 @@ from casbot.data import assertBetween, assertCount,\
     getAllowedUnits, getNiceUnit, getFromDict,\
     stringToValue
 
+from collections import Counter
 from numpy import array, ndarray, dot, set_printoptions
 from pathlib import Path
 
@@ -296,6 +297,12 @@ class ElementThreeVectorFloatBlock(Block):
     def getLines(self):
         unitPart = [self.unit] if self.unit is not None else []
         return unitPart + [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for (element, vector) in self.values]
+
+    def findName(self):
+        if not self.values:
+            return None
+
+        return sum([f'{element}{"" if num == 1 else num}' for element, num in Counter(list(zip(*self.values))[0]).items()])
 
     def rotate(self, rotationMatrix=None):
         assert type(rotationMatrix) is ndarray
