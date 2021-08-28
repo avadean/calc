@@ -302,7 +302,7 @@ class ElementThreeVectorFloatBlock(Block):
         if not self.values:
             return None
 
-        return sum([f'{element}{"" if num == 1 else num}' for element, num in Counter(list(zip(*self.values))[0]).items()])
+        return ''.join([f'{element}{"" if num == 1 else num}' for element, num in Counter(list(zip(*self.values))[0]).items()])
 
     def rotate(self, rotationMatrix=None):
         assert type(rotationMatrix) is ndarray
