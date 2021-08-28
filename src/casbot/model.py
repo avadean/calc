@@ -124,9 +124,10 @@ class Model:
 
         maxNameLen = max(map(lambda calc: len(calc.name or ''), self.calculations), default=0)
         maxDirLen = max(map(lambda calc: len(calc.directory or ''), self.calculations), default=0)
+        latestFinishTime = max(map(lambda calc: calc.expectedSecToFinish or 0.0, self.calculations), default=0.0)
 
         for c in self.calculations:
-            c.check(nameOutputLen=maxNameLen, dirOutputLen=maxDirLen)
+            c.check(nameOutputLen=maxNameLen, dirOutputLen=maxDirLen, latestFinishTime=latestFinishTime)
 
         for c in self.calculations:
             c.expectedSecToFinish = None

@@ -318,14 +318,27 @@ class Calculation:
         assert statusColor is not None, f'Status {status} not recognised'
 
         if status in ['running', 'submitted'] and self.expectedSecToFinish is not None:
-            finishDateTimeInSec = datetime.now().timestamp() + self.expectedSecToFinish
+            nowTimeStamp = datetime.now().timestamp()
+
+            finishDateTimeInSec = nowTimeStamp + self.expectedSecToFinish
             finishDateTime = datetime.fromtimestamp(finishDateTimeInSec)
             finishDateTime = finishDateTime.strftime('%Y-%m-%d %H:%M:%S')
 
-            timeColor = {range( 0, 32, 1): PrintColors.green,
-                         range(33, 65, 1): PrintColors.yellow,
-                         range(66, 99, 1): PrintColors.orange,
-                         100: PrintColors.red}.get(floor(finishDateTimeInSec / latestFinishTime))
+            timeColor = ''
+
+            if latestFinishTime:
+                latestFinishTime += nowTimeStamp
+
+                perCent = int(100.0 * finishDateTimeInSec / latestFinishTime)
+
+                if 0 <= perCent < 33:
+                    timeColor = PrintColors.green,
+                elif 33 <= perCent < 65:
+                    timeColor = PrintColors.yellow
+                elif 66 <= perCent < 99:
+                    timeColor = PrintColors.orange
+                elif perCent >= 99:
+                    timeColor = PrintColors.red
 
             extraMessage = f'  {timeColor}expected finish time {finishDateTime}{PrintColors.reset}'
         else:
