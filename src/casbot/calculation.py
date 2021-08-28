@@ -329,7 +329,7 @@ class Calculation:
 
                 if 0 <= perCent < 33:
                     timeColor = PrintColors.green
-                elif 33 <= perCent < 65:
+                elif 33 <= perCent < 66:
                     timeColor = PrintColors.yellow
                 elif 66 <= perCent < 99:
                     timeColor = PrintColors.orange
