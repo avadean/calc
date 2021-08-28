@@ -282,9 +282,12 @@ class Calculation:
         else:
             raise ValueError(f'Do not know how to put result {type_} into calculation (yet)')
 
-    def check(self, nameOutputLen=0, dirOutputLen=0):
+    def check(self, nameOutputLen=0, dirOutputLen=0, latestFinishTime=0.0):
         assert type(nameOutputLen) is int
         assert type(dirOutputLen) is int
+        assert type(latestFinishTime) in [int, float]
+
+        latestFinishTime = float(latestFinishTime)
 
         self.setName(strict=False)
 
@@ -304,7 +307,7 @@ class Calculation:
 
         status = self.getStatus()
 
-        color = {  # 'no directory specified': PrintColors.black,
+        statusColor = {  # 'no directory specified': PrintColors.black,
             'errored': PrintColors.errored,
             'completed': PrintColors.completed,
             'running': PrintColors.running,
@@ -312,16 +315,23 @@ class Calculation:
             'created': PrintColors.created,
             'not yet created': PrintColors.notYetCreated}.get(status, None)
 
-        assert color is not None, f'Status {status} not recognised'
+        assert statusColor is not None, f'Status {status} not recognised'
 
         if status in ['running', 'submitted'] and self.expectedSecToFinish is not None:
             finishDateTimeInSec = datetime.now().timestamp() + self.expectedSecToFinish
-            finishDateTime = datetime.fromtimestamp(finishDateTimeInSec).strftime('%Y-%m-%d %H:%M:%S')
-            extraMessage = f' expected finish time {finishDateTime}'
+            finishDateTime = datetime.fromtimestamp(finishDateTimeInSec)
+            finishDateTime = finishDateTime.strftime('%Y-%m-%d %H:%M:%S')
+
+            timeColor = {range( 0, 32, 1): PrintColors.green,
+                         range(33, 65, 1): PrintColors.yellow,
+                         range(66, 99, 1): PrintColors.orange,
+                         100: PrintColors.red}.get(floor(finishDateTimeInSec / latestFinishTime))
+
+            extraMessage = f'  {timeColor}expected finish time {finishDateTime}{PrintColors.reset}'
         else:
             extraMessage = ''
 
-        string += f'  *** {color}{status:^15}{PrintColors.reset} ***{extraMessage}'
+        string += f'  *** {statusColor}{status:^15}{PrintColors.reset} ***{extraMessage}'
 
         print(string)
 
