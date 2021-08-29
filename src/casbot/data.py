@@ -246,6 +246,7 @@ class PrintColors:
     lightBlue = '\033[94m'
     lightMagenta = '\033[95m'
     lightCyan = '\033[96m'
+    lightOrange = '\033[38;5;202m'
 
     reset = '\033[0m'
     bold = '\033[1m'

@@ -327,16 +327,43 @@ class Calculation:
             if latestFinishTime:
                 perCent = int(100.0 * self.expectedSecToFinish / latestFinishTime)
 
-                if 0 <= perCent < 33:
-                    timeColor = PrintColors.green
-                elif 33 <= perCent < 66:
-                    timeColor = PrintColors.yellow
-                elif 66 <= perCent < 99:
-                    timeColor = PrintColors.orange
-                elif perCent >= 99:
-                    timeColor = PrintColors.red
+                #if 0 <= perCent < 10:
+                #    timeColor = PrintColors.lightCyan
+                #elif 10 <= perCent < 20:
+                #    timeColor = PrintColors.cyan
+                #elif 20 <= perCent < 30:
+                #    timeColor = PrintColors.lightBlue
+                #elif 30 <= perCent < 40:
+                #    timeColor = PrintColors.blue
+                #elif 40 <= perCent < 50:
+                #    timeColor = PrintColors.lightGreen
+                #elif 50 <= perCent < 60:
+                #    timeColor = PrintColors.green
+                #elif 60 <= perCent < 70:
+                #    timeColor = PrintColors.lightYellow
+                #elif 70 <= perCent < 80:
+                #    timeColor = PrintColors.yellow
+                #elif 80 <= perCent < 90:
+                #    timeColor = PrintColors.orange
+                #elif 90 <= perCent < 100:
+                #    timeColor = PrintColors.lightRed
+                #elif perCent == 100:
+                #    timeColor = PrintColors.red
 
-            extraMessage = f'  {timeColor}expected finish time {finishDateTime}{PrintColors.reset}'
+                #timeColor = f'\033[38;5;{int(perCent * 255 / 100.0)}m'
+
+                if 0 <= perCent < 25:
+                    timeColor = PrintColors.lightCyan
+                elif 25 <= perCent < 50:
+                    timeColor = PrintColors.lightGreen
+                elif 50 <= perCent < 75:
+                    timeColor = PrintColors.lightYellow
+                elif 75 <= perCent < 100:
+                    timeColor = PrintColors.lightOrange
+                elif perCent == 100:
+                    timeColor = PrintColors.underline + PrintColors.lightRed
+
+            extraMessage = f'  expected finish time {timeColor}{finishDateTime}{PrintColors.reset}'
         else:
             extraMessage = ''
 
