@@ -285,10 +285,10 @@ unitToUnitType = { 'ev' : 'energy',
                    'ang' : 'length',
                    'bohr' : 'length',
 
-                   '1/ang' : 'inverseLength',
+                   '1/ang' : 'inverselength',
 
-                   'tesla' : 'bField',
-                   'gauss' : 'bField'
+                   'tesla' : 'bfield',
+                   'gauss' : 'bfield'
                    }
 
 unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],

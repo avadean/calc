@@ -564,10 +564,10 @@ cellUnits = {
     'positions_abs': 'length',
     'positions_frac': 'length',
 
-    'external_bfield': 'bField',
+    'external_bfield': 'bfield',
 
-    'kpoint_mp_spacing': 'inverseLength',
-    'kpoints_mp_spacing': 'inverseLength',
+    'kpoint_mp_spacing': 'inverselength',
+    'kpoints_mp_spacing': 'inverselength',
 
     'symmetry_tol': 'length'
 }
