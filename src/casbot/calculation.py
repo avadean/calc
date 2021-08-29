@@ -639,7 +639,7 @@ class Calculation:
         try:
             axis = asarray(axis, dtype=float)
         except ValueError:
-            ValueError('Supply axis to rotate around as array-like e.g. [1, 1, 1]')
+            raise ValueError('Supply axis to rotate around as array-like e.g. [1, 1, 1]')
 
         assert type(angle) in [float, int]
         assert type(degrees) is bool
@@ -664,12 +664,10 @@ class Calculation:
 
         for setting in self.settings:
             if setting.key in ['positions_frac', 'positions_abs']:
-                elementPositionSetting = setting
+                setting.rotate(rotationMatrix=rotationMatrix)
                 break
         else:
             raise ValueError('Could not find a setting for element positions')
-
-        elementPositionSetting.rotate(rotationMatrix=rotationMatrix)
 
     # TODO: consider fractional coordinates
     '''
