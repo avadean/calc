@@ -270,7 +270,10 @@ unitToNiceUnit = { 'ev' : 'eV',
                    'ang' : 'Ang',
                    'bohr' : 'Bohr',
 
-                   '1/ang' : '1/Ang'
+                   '1/ang' : '1/Ang',
+
+                   'tesla' : 'Tesla',
+                   'gauss' : 'Gauss'
                    }
 
 unitToUnitType = { 'ev' : 'energy',
@@ -282,14 +285,19 @@ unitToUnitType = { 'ev' : 'energy',
                    'ang' : 'length',
                    'bohr' : 'length',
 
-                   '1/ang' : 'inverseLength'
+                   '1/ang' : 'inverseLength',
+
+                   'tesla' : 'bField',
+                   'gauss' : 'bField'
                    }
 
 unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
 
                    'length' : ['ang', 'bohr'],
 
-                   'inverseLength' : ['1/ang']
+                   'inverseLength' : ['1/ang'],
+
+                   'bField' : ['tesla', 'gauss']
                    }
 
 unitConversions = { 'ang':  { 'ang': 1.0         , 'bohr': 1.889726133},

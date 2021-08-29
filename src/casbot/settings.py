@@ -558,8 +558,17 @@ cellValues = {
 }
 
 cellUnits = {
+    'lattice_abc': 'length',
+    'lattice_cart': 'length',
+
+    'positions_abs': 'length',
+    'positions_frac': 'length',
+
+    'external_bfield': 'bField',
+
     'kpoint_mp_spacing': 'inverseLength',
     'kpoints_mp_spacing': 'inverseLength',
+
     'symmetry_tol': 'length'
 }
 
