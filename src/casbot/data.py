@@ -295,9 +295,9 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
 
                    'length' : ['ang', 'bohr'],
 
-                   'inverseLength' : ['1/ang'],
+                   'inverselength' : ['1/ang'],
 
-                   'bField' : ['tesla', 'gauss']
+                   'bfield' : ['tesla', 'gauss']
                    }
 
 unitConversions = { 'ang':  { 'ang': 1.0         , 'bohr': 1.889726133},
