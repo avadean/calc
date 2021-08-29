@@ -1,5 +1,5 @@
 from casbot.data import elements,\
-    getAllowedUnits, getNiceUnit, getFromDict,\
+    getUnit, getFromDict,\
     PrintColors,\
     strListToArray
 
@@ -75,21 +75,6 @@ def getResult(resultToGet=None, lines=None):
         raise ValueError(f'Do not know how to get result {resultToGet}')
 
 
-def getUnit(key=None, unit=None):
-    assert type(key) is str
-    assert type(unit) is str
-
-    unitType = getFromDict(key=key, dct=resultUnits, strict=True)
-
-    unit = unit.strip().lower()
-
-    assert unit in getAllowedUnits(unitType)
-
-    unit = getNiceUnit(unit)
-
-    return unit
-
-
 class Result:
     def __init__(self, key=None):
         assert type(key) is str
@@ -109,7 +94,7 @@ class Tensor(Result):
         assert type(value) is ndarray, f'Value {value} not acceptable for {self.key}, should be {ndarray}'
 
         self.value = value
-        self.unit = unit if unit is None else getUnit(key=key, unit=unit)
+        self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=resultUnits, strict=True)
 
         assert type(shape) is tuple
 

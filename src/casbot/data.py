@@ -167,6 +167,23 @@ def getFromDict(key=None, dct=None, strict=True, default=None):
     return value
 
 
+def getUnit(key=None, unit=None, unitTypes=None, strict=True):
+    assert type(key) is str
+    assert type(unit) is str
+    assert type(unitTypes) is dict
+    assert type(strict) is bool
+
+    unitType = getFromDict(key=key, dct=unitTypes, strict=strict)
+
+    unit = unit.strip().lower()
+
+    assert unit in getAllowedUnits(unitType)
+
+    unit = getNiceUnit(unit)
+
+    return unit
+
+
 def getNiceUnit(unit=None, strict=True):
     return getFromDict(key=unit, dct=unitToNiceUnit, strict=strict, default=unit)
 

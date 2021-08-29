@@ -1,6 +1,6 @@
 from casbot.data import assertBetween, assertCount,\
     elements,\
-    getAllowedUnits, getNiceUnit, getFromDict,\
+    getUnit, getFromDict,\
     stringToValue
 
 from collections import Counter
@@ -30,8 +30,6 @@ def checkForUnit(lines=None, unitLine=0):
         return None
 
     unit = parts[0]
-
-    unit = getNiceUnit(unit=unit, strict=False)
 
     return unit
 
@@ -105,18 +103,7 @@ class FloatKeyword(Keyword):
 
         self.value = value
 
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
+        self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=settingUnits, strict=True)
 
         # self.format TODO: add a format variable
 
@@ -138,18 +125,7 @@ class IntKeyword(Keyword):
 
         self.value = value
 
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
+        self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=settingUnits, strict=True)
 
         # self.format TODO: add a format variable
 
@@ -172,18 +148,7 @@ class VectorFloatKeyword(Keyword):
 
         self.value = value
 
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
+        self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=settingUnits, strict=True)
 
         # self.format TODO: add a format variable
 
@@ -206,18 +171,7 @@ class VectorIntKeyword(Keyword):
 
         self.value = value
 
-        if unit is not None:
-            self.unitType = getFromDict(key=key, dct=settingUnits, strict=False, default=None)
-
-            assert type(unit) is str
-
-            unit = unit.strip().lower()
-
-            assert unit in getAllowedUnits(unitType=self.unitType, strict=True)
-
-            unit = getNiceUnit(unit)
-
-        self.unit = unit
+        self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=settingUnits, strict=True)
 
         # self.format TODO: add a format variable
 
@@ -269,6 +223,8 @@ class ElementThreeVectorFloatBlock(Block):
 
             # Check for unit line
             potentialUnit = checkForUnit(lines=self.lines, unitLine=0)
+            potentialUnit = potentialUnit if potentialUnit is None else getUnit(key=key, unit=potentialUnit,
+                                                                                unitTypes=settingUnits, strict=True)
 
             if potentialUnit is not None:
                 self.unit = potentialUnit
@@ -342,6 +298,8 @@ class ThreeVectorFloatBlock(Block):
 
             # Check for unit line
             potentialUnit = checkForUnit(lines=self.lines, unitLine=0)
+            potentialUnit = potentialUnit if potentialUnit is None else getUnit(key=key, unit=potentialUnit,
+                                                                                unitTypes=settingUnits, strict=True)
 
             if potentialUnit is not None:
                 self.unit = potentialUnit
