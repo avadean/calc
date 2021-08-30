@@ -114,6 +114,9 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
         # Combine the general cells/params we want with the variable cells/params.
         settings = globalSettings + specificSettings
 
+        # Calculation should have their own copy of settings.
+        settings = settings.copy()
+
         # Create the calculation.
         calculations.append(Calculation(name=name,
                                         directory=directory,
