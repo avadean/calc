@@ -4,6 +4,7 @@ from casbot.data import assertCount, createDirectories,\
 from casbot.settings import Setting, Keyword, Block, createSettings, createVariableSettings, readSettings
 from casbot.results import getResult
 
+from copy import deepcopy
 from datetime import datetime
 from dateutil import parser
 from fnmatch import filter
@@ -115,7 +116,7 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
         settings = globalSettings + specificSettings
 
         # Calculation should have their own copy of settings.
-        settings = settings.copy()
+        settings = deepcopy(settings)
 
         # Create the calculation.
         calculations.append(Calculation(name=name,
