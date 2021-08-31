@@ -356,14 +356,25 @@ class Calculation:
 
                 #timeColor = f'\033[38;5;{int(perCent * 255 / 100.0)}m'
 
-                if 0 <= perCent < 25:
-                    timeColor = PrintColors.lightCyan
-                elif 25 <= perCent < 50:
+                #if 0 <= perCent < 25:
+                #    timeColor = PrintColors.lightCyan
+                #elif 25 <= perCent < 50:
+                #    timeColor = PrintColors.lightGreen
+                #elif 50 <= perCent < 75:
+                #    timeColor = PrintColors.lightYellow
+                #elif 75 <= perCent < 100:
+                #    timeColor = PrintColors.lightOrange
+                #elif perCent == 100:
+                #    timeColor = PrintColors.underline + PrintColors.lightRed
+
+                if 0 <= perCent < 33:
                     timeColor = PrintColors.lightGreen
-                elif 50 <= perCent < 75:
+                elif 33 <= perCent < 66:
                     timeColor = PrintColors.lightYellow
-                elif 75 <= perCent < 100:
+                elif 66 <= perCent < 99:
                     timeColor = PrintColors.lightOrange
+                elif 99 <= perCent < 100:
+                    timeColor = PrintColors.lightRed
                 elif perCent == 100:
                     timeColor = PrintColors.underline + PrintColors.lightRed
 
