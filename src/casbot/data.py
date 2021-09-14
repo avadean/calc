@@ -162,6 +162,7 @@ def getFromDict(key=None, dct=None, strict=True, default=None):
     value = dct.get(key, default)
 
     if value == default and strict:
+        print(value, default, dct)
         raise ValueError(f'Key {key} does not have a value')
 
     return value
@@ -184,8 +185,8 @@ def getUnit(key=None, unit=None, unitTypes=None, strict=True):
     return unit
 
 
-def getNiceUnit(unit=None, strict=True):
-    return getFromDict(key=unit, dct=unitToNiceUnit, strict=strict, default=unit)
+def getNiceUnit(unit=None):
+    return getFromDict(key=unit, dct=unitToNiceUnit, strict=False, default=unit)
 
 
 def getAllowedUnits(unitType=None, strict=True):
@@ -274,7 +275,9 @@ unitToNiceUnit = { 'ev' : 'eV',
                    '1/ang' : '1/Ang',
 
                    'tesla' : 'Tesla',
-                   'gauss' : 'Gauss'
+                   'gauss' : 'Gauss',
+
+                   'hbar/2' : 'hbar/2'
                    }
 
 unitToUnitType = { 'ev' : 'energy',
@@ -289,7 +292,9 @@ unitToUnitType = { 'ev' : 'energy',
                    '1/ang' : 'inverselength',
 
                    'tesla' : 'bfield',
-                   'gauss' : 'bfield'
+                   'gauss' : 'bfield',
+
+                   'hbar/2' : 'spin'
                    }
 
 unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
@@ -298,7 +303,9 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
 
                    'inverselength' : ['1/ang'],
 
-                   'bfield' : ['tesla', 'gauss']
+                   'bfield' : ['tesla', 'gauss'],
+
+                   'spin' : ['hbar/2']
                    }
 
 unitConversions = { 'ang':  { 'ang': 1.0         , 'bohr': 1.889726133},
