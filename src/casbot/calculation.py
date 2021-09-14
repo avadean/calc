@@ -260,12 +260,12 @@ class Calculation:
 
         return string
 
-    def analyse(self, type_=None):
+    def analyse(self, *toAnalyse):
         assert self.getStatus() == 'completed', 'Calculation not completed therefore cannot analyse'
 
-        assert type(type_) is str
+        assert all(type(type_) is str for type_ in toAnalyse)
 
-        type_ = type_.strip().lower()
+        toAnalyse = [type_.strip().lower() for type_ in toAnalyse]
 
         self.setName(strict=True)
 
@@ -277,19 +277,20 @@ class Calculation:
         with open(castepFile) as f:
             castepLines = f.read().splitlines()
 
-        if type_ == 'hyperfine':
-            self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
-            self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
-            self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
-            self.hyperfineDipolarTensors = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
-            self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
-            self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
+        for type_ in toAnalyse:
+            if type_ == 'hyperfine':
+                self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
+                self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
+                self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
+                self.hyperfineDipolarTensors = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
+                self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
+                self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
-        elif type_ in ['spin density', 'spindensity']:
-            self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
+            elif type_ in ['spin density', 'spindensity']:
+                self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
 
-        else:
-            raise ValueError(f'Do not know how to put result {type_} into calculation (yet)')
+            else:
+                print(f'Skipping result {type_} as do not know how to analyse (yet)')
 
     def check(self, nameOutputLen=0, dirOutputLen=0, latestFinishTime=0.0):
         assert type(nameOutputLen) is int

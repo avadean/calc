@@ -33,8 +33,8 @@ class Model:
 
         return string
 
-    def analyse(self, type_=None, passive=False):
-        assert type(type_) is str
+    def analyse(self, *toAnalyse, passive=False):
+        assert all(type(type_) is str for type_ in toAnalyse)
         assert type(passive) is bool
 
         assert len(self.calculations) > 0, 'No calculations to analyse'
@@ -52,11 +52,11 @@ class Model:
         else:
             print(f'{len(completedCalculations)} calculations have completed out of {len(self.calculations)}. Analysing completed calculations...')
 
-        type_ = type_.strip().lower()
+        toAnalyse = [type_.strip().lower() for type_ in toAnalyse]
 
         # tqdm is for loading bar
         for calculation in tqdm(iterable=completedCalculations, ncols=100, unit='calculation'):
-            calculation.analyse(type_=type_)
+            calculation.analyse(*toAnalyse)
 
     def check(self):
         # TODO: add in summary option and maybe default to only showing running and the next 3(?) submitted calculations - could also print the expected finish time of the fine calculation, too
