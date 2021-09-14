@@ -213,6 +213,8 @@ class Calculation:
     hyperfineFermiTensors = []
     hyperfineTotalTensors = []
 
+    spinDensity = None
+
     def __init__(self, directory=None, settings=None, name=None):
         if directory is not None:
             assert type(directory) is str
@@ -282,6 +284,9 @@ class Calculation:
             self.hyperfineDipolarTensors = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
             self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
             self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
+
+        elif type_ in ['spin density', 'spindensity']:
+            self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
 
         else:
             raise ValueError(f'Do not know how to put result {type_} into calculation (yet)')

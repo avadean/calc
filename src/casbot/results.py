@@ -7,21 +7,27 @@ from numpy import ndarray
 
 
 resultKnown = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
-               'hyperfine_fermi', 'hyperfine_total']
+               'hyperfine_fermi', 'hyperfine_total',
+
+               'spin_density']
 
 resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
                'hyperfine_dipolaraug': 'DIPOLAR AUG',
                'hyperfine_dipolaraug2': 'DIPOLAR AUG2',
                'hyperfine_dipolar': 'DIPOLAR',
                'hyperfine_fermi': 'FERMI',
-               'hyperfine_total': 'TOTAL'}
+               'hyperfine_total': 'TOTAL',
+
+               'spin_density': 'SPIN DENSITY'}
 
 resultUnits = {'hyperfine_dipolarbare': 'energy',
                'hyperfine_dipolaraug': 'energy',
                'hyperfine_dipolaraug2': 'energy',
                'hyperfine_dipolar': 'energy',
                'hyperfine_fermi': 'energy',
-               'hyperfine_total': 'energy'}
+               'hyperfine_total': 'energy',
+
+               'spin_density': 'spin'}
 
 
 
@@ -55,7 +61,7 @@ def getResult(resultToGet=None, lines=None):
                     element = parts[0][0].upper() + parts[0][1:].lower()
                     ion = parts[1]
 
-                    assert ion.isdigit(), f'Error in element ion on line {num} of results file'
+                    assert ion.isdigit(), f'Error in element ion on line {num+1} of results file'
 
                     arrLines = lines[num+2:num+5]
 
@@ -69,6 +75,33 @@ def getResult(resultToGet=None, lines=None):
             raise ValueError(f'Could not find any {resultToGet} tensors in results file')
 
         return tensors
+
+
+    elif resultToGet  == 'spin_density':
+        hits = []
+
+        for num, line in enumerate(lines):
+            line = line.strip().lower()
+
+            if 'integrated spin density' in line:
+                parts = line.split('=')
+
+                assert len(parts) == 2, f'Error in spin density on line {num+1} of results file'
+
+                parts = parts[1].strip().split()
+
+                assert len(parts) in [2, 4], f'Could not determine scalar or vector spin density on line {num+1} of results file'
+
+                arr = strListToArray(parts[:-1])
+
+                density = SpinDensity(key=resultToGet, value=arr, unit='hbar/2', shape=(len(parts)-1, 1))
+
+                hits.append(density)
+
+        if len(hits) == 0:
+            raise ValueError(f'Could not find any spin density values/vectors in result file')
+
+        return hits[-1]
 
 
     else:
@@ -109,6 +142,28 @@ class Tensor(Result):
         return '  '.join('{:>12.5E}' for _ in range(self.size)).format(*self.value.flatten())
 
 
+class Vector(Result):
+    def __init__(self, key=None, value=None, unit=None, shape=None):
+        super().__init__(key=key)
+
+        assert type(value) is ndarray, f'Value {value} not acceptable for {self.key}, should be {ndarray}'
+
+        self.value = value
+        self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=resultUnits, strict=True)
+
+        assert type(shape) is tuple
+
+        assert self.value.shape == shape, f'Array should be dimension {shape} not {self.value.shape}'
+
+        self.shape = self.value.shape
+        self.size = self.value.size
+
+        self.norm = sum(v ** 2.0 for v in self.value) ** 0.5
+
+    def __str__(self):
+        return '  '.join('{:>12.5E}' for _ in range(self.size)).format(*self.value.flatten())
+
+
 class NMR(Tensor):
     def __init__(self, key=None, value=None, unit=None, element=None, ion=None):
         super().__init__(key=key, value=value, unit=unit, shape=(3, 3))
@@ -140,3 +195,8 @@ class NMR(Tensor):
             string += rows.format(*self.value.flatten())
 
         return string
+
+
+class SpinDensity(Vector):
+    def __init__(self, key=None, value=None, unit=None, shape=None):
+        super().__init__(key=key, value=value, unit=unit, shape=shape)
