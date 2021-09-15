@@ -981,6 +981,18 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
+                   'gao': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  12.0   0.0   0.0',
+                                                                            '   0.0  12.0   0.0',
+                                                                            '   0.0   0.0  12.0']),
+
+                           ElementThreeVectorFloatBlock(key='positions_abs',
+                                                        lines=['Ang',
+                                                               ' Ga  0.000  0.000  0.000',
+                                                               '  O  0.000  0.000  1.744']),
+
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
                    'hf': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                            '  10.0   0.0   0.0',
                                                                            '   0.0  10.0   0.0',
@@ -1225,6 +1237,10 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                             'density': [StrBlock(key='devel_code', lines=['density_in_x=true']),
                                         StrBlock(key='devel_code', lines=['density_in_y=true']),
                                         StrBlock(key='devel_code', lines=['density_in_z=true'])],
+
+                            'bfielddensity': [(StrBlock(key='devel_code', lines=['density_in_x=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
+                                              (StrBlock(key='devel_code', lines=['density_in_y=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
+                                              (StrBlock(key='devel_code', lines=['density_in_z=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0']))],
 
                             'socdensity': [(StrKeyword(key='spin_treatment', value='scalar'), BoolKeyword(key='spin_orbit_coupling', value=False)),
 
