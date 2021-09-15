@@ -1187,7 +1187,8 @@ shortcutToParams = {'singlepoint': StrKeyword(key='task', value='singlepoint'),
 
                     'soc': [BoolKeyword(key='spin_polarised', value=True),
                             StrKeyword(key='spin_treatment', value='vector'),
-                            BoolKeyword(key='spin_orbit_coupling', value=True)],
+                            BoolKeyword(key='spin_orbit_coupling', value=True),
+                            StrBlock(key='species_pot', lines=['SOC19'])],
 
                     'writecell': BoolKeyword(key='write_cell_structure', value=True),
 
