@@ -277,6 +277,8 @@ class Calculation:
         with open(castepFile) as f:
             castepLines = f.read().splitlines()
 
+        castepLines = self.getFinalRunLines(lines=castepLines)
+
         for type_ in toAnalyse:
             if type_ == 'hyperfine':
                 self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
@@ -328,9 +330,7 @@ class Calculation:
         assert statusColor is not None, f'Status {status} not recognised'
 
         if status in ['running', 'submitted'] and self.expectedSecToFinish is not None:
-            finishDateTimeInSec = datetime.now().timestamp() + self.expectedSecToFinish
-            finishDateTime = datetime.fromtimestamp(finishDateTimeInSec)
-            finishDateTime = finishDateTime.strftime('%Y-%m-%d %H:%M:%S')
+            finishDateTime = datetime.fromtimestamp(datetime.now().timestamp() + self.expectedSecToFinish).strftime('%Y-%m-%d %H:%M:%S')
 
             timeColor = ''
 
@@ -472,7 +472,9 @@ class Calculation:
         with open(castepFile) as f:
             castepLines = f.read().splitlines()
 
-        castepLines.reverse()
+        castepLines = self.getFinalRunLines(lines=castepLines)
+
+        castepLines.reverse()  # Total time at the end so quicker to reverse lines and go backwards.
 
         for line in castepLines:
             line = line.strip().lower()
@@ -514,7 +516,7 @@ class Calculation:
         with open(castepFile) as f:
             castepLines = f.read().splitlines()
 
-        castepLines.reverse()  # If multiple 'run started:' lines then the most recent will be last
+        castepLines = self.getFinalRunLines(lines=castepLines)
 
         for line in castepLines:
             line = line.strip()
@@ -596,6 +598,8 @@ class Calculation:
             with open(castepFile) as f:
                 castepLines = f.read().splitlines()
 
+            castepLines = self.getFinalRunLines(lines=castepLines)
+
             castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
 
             for line in castepLines:
@@ -626,6 +630,28 @@ class Calculation:
 
         else:
             raise TypeError(f'Setting {setting} not a class of Keyword or Block')
+
+    @staticmethod
+    def getFinalRunLines(lines=None):
+        assert type(lines) is list
+        assert all(type(line) is str for line in lines)
+
+        # Reverse lines in case there were multiple continuations in CASTEP file.
+        lines.reverse()
+
+        for num, line in enumerate(lines):
+            line = line.strip().lower()
+
+            if line.startswith('run started:'):
+                lines = lines[:num]  # :num and not num: due to .reverse() above.
+                break
+        else:
+            raise ValueError('Cannot find any run started line in lines')
+
+        # And reverse back to normal.
+        lines.reverse()
+
+        return lines
 
     def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
         assert type(all_) is bool
