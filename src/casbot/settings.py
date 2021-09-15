@@ -80,7 +80,7 @@ class StrKeyword(Keyword):
 
         value = value.strip().lower()
 
-        assert value in settingValues.get(self.key), f'Value of {value} not accepted for {self.key}, should be a float'
+        assert value in settingValues.get(self.key, []), f'Value of {value} not accepted for {self.key}'
 
         self.value = getFromDict(key=value, dct=stringToNiceValue, strict=False, default=value)
 
@@ -887,6 +887,7 @@ paramValues = {
 
     # extra
     'iprint': [1, 2, 3],
+    'continuation': ['default'],
     'rand_seed': [-float('inf'), float('inf')],
 }
 
@@ -1193,6 +1194,8 @@ shortcutToParams = {'singlepoint': StrKeyword(key='task', value='singlepoint'),
                     'writecell': BoolKeyword(key='write_cell_structure', value=True),
 
                     'iprint': IntKeyword(key='iprint', value=3),
+
+                    'continuation': StrKeyword(key='continuation', value='default'),
 
                     'xdensity': StrBlock('devel_code', lines=['density_in_x=true']),
                     'ydensity': StrBlock('devel_code', lines=['density_in_y=true']),
