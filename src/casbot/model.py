@@ -248,10 +248,13 @@ class Model:
         assert type(passive) is bool
         assert type(shuffle) is bool
 
-        calculations = [c for c in self.calculations if c.getStatus() not in ['completed', 'running', 'submitted']]
+        if not force:
+            calculations = [c for c in self.calculations if c.getStatus() not in ['completed', 'running', 'submitted']]
 
-        if len(calculations) != len(self.calculations) and not passive:
-            raise ValueError('Some calculations are complete, running or already submitted - use passive=True to skip them')
+            if len(calculations) != len(self.calculations) and not passive:
+                raise ValueError('Some calculations are complete, running or already submitted - use passive=True to skip them or force=True to re-run them')
+        else:
+            calculations = self.calculations
 
         if queueFile is not None:
             assert type(queueFile) is str
