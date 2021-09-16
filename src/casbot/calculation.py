@@ -643,7 +643,7 @@ class Calculation:
             line = line.strip().lower()
 
             if line.startswith('run started:'):
-                lines = lines[:num]  # :num and not num: due to .reverse() above.
+                lines = lines[:num+1]  # :num and not num: due to .reverse() above.
                 break
         else:
             raise ValueError('Cannot find any run started line in lines')
