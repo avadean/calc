@@ -328,6 +328,15 @@ stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_
                                               '003_spinor_soc_true_y',
                                               '003_spinor_soc_true_z'],
 
+                               'vectordensity': ['000_orig',
+                                                 '001_scalar_soc_false',
+                                                 '002_spinor_soc_false_x',
+                                                 '002_spinor_soc_false_y',
+                                                 '002_spinor_soc_false_z',
+                                                 '003_spinor_soc_true_x',
+                                                 '003_spinor_soc_true_y',
+                                                 '003_spinor_soc_true_z'],
+
                                'hyperfinebfield': ['00T/density_in_x', '00T/density_in_y', '00T/density_in_z',
                                                    '01T/density_in_x', '01T/density_in_y', '01T/density_in_z',
                                                    '02T/density_in_x', '02T/density_in_y', '02T/density_in_z',

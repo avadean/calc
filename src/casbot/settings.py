@@ -964,7 +964,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                            ElementThreeVectorFloatBlock(key='positions_abs',
                                                         lines=['Ang',
                                                                ' Cd  0.000  0.000  0.000',
-                                                               '  h  0.000  0.000  1.781']),
+                                                               '  H  0.000  0.000  1.781']),
 
                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
@@ -1065,6 +1065,28 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                                                               '  I   0.000000000000000   0.000000000000000   1.6318694744176200']),
 
                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   #'hicrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   #                                                               '  3.48800   0.00000   0.00000',
+                   #                                                               '  0.00000   3.48800   0.00000',
+                   #                                                               '  0.00000   0.00000   2.82300']),
+
+                   #              ElementThreeVectorFloatBlock(key='positions_abs',
+                   #                                           lines=['  H   0.500000	0.500000	0.500000',
+                   #                                                  '  I   0.500000	0.000000	0.745000']),
+
+                   #              ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'hicrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                                  '  3.48800   0.00000   0.00000',
+                                                                                  '  0.00000   3.48800   0.00000',
+                                                                                  '  0.00000   0.00000   2.82300']),
+
+                                 ElementThreeVectorFloatBlock(key='positions_abs',
+                                                              lines=['  H   0.174741725059294       0.411872630697091      -0.023316905460425',
+                                                                     '  I   0.111955522647128      -0.268524006843880       0.464337096746291']),
+
+                                 ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'hfrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                               '  10.0   0.0   0.0',
@@ -1270,6 +1292,53 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
 
                                            (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=True),
                                             StrBlock(key='devel_code', lines=['density_in_z=true']))],
+
+                            'vectordensity': [(StrKeyword(key='spin_treatment', value='scalar'), BoolKeyword(key='spin_orbit_coupling', value=False)),
+
+                                              (StrKeyword(key='spin_treatment', value='scalar'), BoolKeyword(key='spin_orbit_coupling', value=False)),
+
+                                              (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=False),
+                                               StrBlock(key='devel_code', lines=['density_in_x=true'])),
+
+                                              (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=False),
+                                               StrBlock(key='devel_code', lines=['density_in_y=true'])),
+
+                                              (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=False),
+                                               StrBlock(key='devel_code', lines=['density_in_z=true'])),
+
+                                              (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=True),
+                                               StrBlock(key='devel_code', lines=['density_in_x=true'])),
+
+                                              (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=True),
+                                               StrBlock(key='devel_code', lines=['density_in_y=true'])),
+
+                                              (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=True),
+                                               StrBlock(key='devel_code', lines=['density_in_z=true']))],
+
+                            'vectordensitybfield': [(StrKeyword(key='spin_treatment', value='scalar'), BoolKeyword(key='spin_orbit_coupling', value=False)),
+
+                                                    (StrKeyword(key='spin_treatment', value='scalar'), BoolKeyword(key='spin_orbit_coupling', value=False)),
+
+                                                    (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=False),
+                                                     StrBlock(key='devel_code', lines=['density_in_x=true'])),
+
+                                                    (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=False),
+                                                     StrBlock(key='devel_code', lines=['density_in_y=true'])),
+
+                                                    (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=False),
+                                                     StrBlock(key='devel_code', lines=['density_in_z=true'])),
+
+                                                    (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=True),
+                                                     StrBlock(key='devel_code', lines=['density_in_x=true']),
+                                                     ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
+
+                                                    (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=True),
+                                                     StrBlock(key='devel_code', lines=['density_in_y=true']),
+                                                     ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
+
+                                                    (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=True),
+                                                     StrBlock(key='devel_code', lines=['density_in_z=true']),
+                                                     ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0']))],
 
                             'hyperfinebfield': [(StrBlock(key='devel_code', lines=['density_in_x=true']),
                                                  ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 0.0'])),
