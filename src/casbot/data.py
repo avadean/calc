@@ -134,7 +134,12 @@ def assertCount(lst=None, count=1):
 
 
 def assertBetween(*values, minimum=None, maximum=None, key=None):
-    assert all(type(value) in [int, float] for value in values)
+    for value in values:
+        try:
+            float(value)
+        except ValueError:
+            raise ValueError('Non-int or float type present')
+    #assert all(type(value) in [int, float] for value in values)
     assert type(minimum) in [int, float]
     assert type(maximum) in [int, float]
 
