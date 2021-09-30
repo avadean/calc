@@ -113,7 +113,8 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
             directory += '/'
 
         # Combine the general cells/params we want with the variable cells/params.
-        settings = globalSettings + specificSettings
+        # Specific settings override the global settings.
+        settings = specificSettings + [setting for setting in globalSettings if setting.key not in [setting2.key for setting2 in specificSettings]]
 
         # Calculation should have their own copy of settings.
         settings = deepcopy(settings)
