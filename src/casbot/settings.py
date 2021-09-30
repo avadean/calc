@@ -108,9 +108,8 @@ class FloatKeyword(Keyword):
         # self.format TODO: add a format variable
 
     def __str__(self):
-        unit = f' {self.unit}' if self.unit is not None else ''
-
-        return f'{self.value:<12.4f}{unit}'
+        unit = '' if self.unit is None else self.unit
+        return f'{self.value:<12.4f}  {unit}'
 
 
 class IntKeyword(Keyword):
@@ -130,7 +129,8 @@ class IntKeyword(Keyword):
         # self.format TODO: add a format variable
 
     def __str__(self):
-        return f'{self.value:<3d}'
+        unit = '' if self.unit is None else self.unit
+        return f'{self.value:<3d}  {unit}'
 
 
 class VectorFloatKeyword(Keyword):
@@ -153,7 +153,8 @@ class VectorFloatKeyword(Keyword):
         # self.format TODO: add a format variable
 
     def __str__(self):
-        return str(self.value)
+        unit = '' if self.unit is None else self.unit
+        return '  '.join('{:>15.12f}' for _ in range(len(self.value))).format(*self.value) + f'  {unit}'
 
 
 class VectorIntKeyword(Keyword):
@@ -176,7 +177,8 @@ class VectorIntKeyword(Keyword):
         # self.format TODO: add a format variable
 
     def __str__(self):
-        return str(self.value)
+        unit = '' if self.unit is None else self.unit
+        return '  '.join('{:>3d}' for _ in range(len(self.value))).format(*self.value) + f'  {unit}'
 
 
 class Block(Setting):
@@ -1069,10 +1071,10 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                                  ElementThreeVectorFloatBlock(key='positions_frac',
                                                               lines=['  H   -0.006524933425476       0.026822316644399      -0.081086005113157',
-                                                                     '  Br   0.106858226464315      -0.005926742706879       0.174857051791451'])],
+                                                                     '  Br   0.106858226464315      -0.005926742706879       0.174857051791451']),
 
-                                 #ThreeVectorIntBlock(key='kpoint_mp_grid', lines=['3   3   4'])],
-                                 #ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                                 VectorIntKeyword(key='kpoint_mp_grid', value=(2, 2, 2))],
+
 
                    'hi': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                            '  12.0   0.0   0.0',
@@ -1107,10 +1109,9 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                                  ElementThreeVectorFloatBlock(key='positions_frac',
                                                               lines=['  H   0.143340111893670       0.296936395737313       0.105734023958144',
-                                                                     '  I   0.143357135812752      -0.153587771884101       0.335286167327722'])],
+                                                                     '  I   0.143357135812752      -0.153587771884101       0.335286167327722']),
 
-                                 #ThreeVectorIntBlock(key='kpoint_mp_grid', lines=['3   3   4'])],
-                                 #ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+                                 VectorIntKeyword(key='kpoint_mp_grid', value=(3, 3, 4))],
 
                    'hfrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                               '  10.0   0.0   0.0',

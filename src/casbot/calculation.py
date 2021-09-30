@@ -622,8 +622,7 @@ class Calculation:
 
         if isinstance(setting, Keyword):
             spaces = max(len(setting.key), maxSettingLength)
-            unit = '' if setting.unit is None else f' {setting.unit}'
-            return [f'{setting.key:<{spaces}s} : {setting.value}{unit}']
+            return [f'{setting.key:<{spaces}s} : {setting}']
 
         elif isinstance(setting, Block):
             return [f'%block {setting.key}'] + setting.getLines() + [f'%endblock {setting.key}']
