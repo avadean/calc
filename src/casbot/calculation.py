@@ -653,6 +653,17 @@ class Calculation:
 
         return lines
 
+    def getSettingValue(self, key=None):
+        assert type(key) is str
+
+        key = key.strip().lower()
+
+        for s in self.settings:
+            if key == s.key:
+                return s.value
+
+        raise ValueError(f'Setting {key} is not set in calculation')
+
     def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
         assert type(all_) is bool
         assert type(dipolar) is bool
