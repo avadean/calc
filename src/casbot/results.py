@@ -196,6 +196,37 @@ class NMR(Tensor):
 
         return string
 
+    def __add__(self, other):
+        assert self.key == other.key, 'Cannot add different NMR tensors'
+        assert self.unit == other.unit, 'Cannot add tensors of different units'
+        assert self.element == other.element, 'Cannot add tensors relating to different elements'
+        assert self.ion == other.ion, 'Cannot add tensors relating to different ions'
+
+        newValue = self.value + other.value
+
+        return NMR(key=self.key,
+                   value=newValue,
+                   unit=self.unit,
+                   element=self.element,
+                   ion=self.ion)
+
+    def __sub__(self, other):
+        assert self.key == other.key, 'Cannot add different NMR tensors'
+        assert self.unit == other.unit, 'Cannot add tensors of different units'
+        assert self.element == other.element, 'Cannot add tensors relating to different elements'
+        assert self.ion == other.ion, 'Cannot add tensors relating to different ions'
+
+        newValue = self.value - other.value
+
+        return NMR(key=self.key,
+                   value=newValue,
+                   unit=self.unit,
+                   element=self.element,
+                   ion=self.ion)
+
+    def __eq__(self, other):
+        return (self.value == other.value).all()
+
 
 class SpinDensity(Vector):
     def __init__(self, key=None, value=None, unit=None, shape=None):
