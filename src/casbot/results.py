@@ -211,10 +211,10 @@ class NMR(Tensor):
                    ion=self.ion)
 
     def __sub__(self, other):
-        assert self.key == other.key, 'Cannot add different NMR tensors'
-        assert self.unit == other.unit, 'Cannot add tensors of different units'
-        assert self.element == other.element, 'Cannot add tensors relating to different elements'
-        assert self.ion == other.ion, 'Cannot add tensors relating to different ions'
+        assert self.key == other.key, 'Cannot sub different NMR tensors'
+        assert self.unit == other.unit, 'Cannot sub tensors of different units'
+        assert self.element == other.element, 'Cannot sub tensors relating to different elements'
+        assert self.ion == other.ion, 'Cannot sub tensors relating to different ions'
 
         newValue = self.value - other.value
 
