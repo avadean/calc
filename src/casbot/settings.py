@@ -1947,7 +1947,7 @@ stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams |
 
 
 
-def getSetting(key=None, **kwargs):
+def setting(key=None, **kwargs):
     assert type(key) is str
 
     key = key.strip().lower()
@@ -2007,7 +2007,7 @@ def readSettings(file_=None):
 
                     arguments = {'lines': blockLines}
 
-                    newSetting = getSetting(key=settingKey, **arguments)
+                    newSetting = setting(key=settingKey, **arguments)
 
                     settings.append(newSetting)
 
@@ -2081,7 +2081,7 @@ def readSettings(file_=None):
                 else:
                     raise ValueError(f'Error in keyword {line} of file {file_}')
 
-                newSetting = getSetting(key=key, **arguments)
+                newSetting = setting(key=key, **arguments)
 
                 settings.append(newSetting)
 
@@ -2103,14 +2103,14 @@ def createSettings(*settings):
     # E.g. 'soc' is spin_treatment=vector and spin_orbit_coupling=true.
     settingsFromShortcuts = shortcutsToSettings(*shortcuts)
 
-    for setting in settingsFromShortcuts:
-        if isinstance(setting, Setting):
-            settings.append(setting)
+    for sttng in settingsFromShortcuts:
+        if isinstance(sttng, Setting):
+            settings.append(sttng)
         else:
-            raise TypeError(f'{type(setting)} type not recognised in shortcut')
+            raise TypeError(f'{type(sttng)} type not recognised in shortcut')
 
     # Check that none of the shortcuts themselves have now duplicated any cells/params.
-    assertCount([setting.key for setting in settings])
+    assertCount([sttng.key for sttng in settings])
 
     return settings
 
@@ -2153,7 +2153,7 @@ def createVariableSettings(*variableSettings):
 
             # User defined.
             elif type_ in [list, tuple]:
-                assert all(isinstance(setting, Setting) for setting in strListSetting), 'Settings should only be cells or params'
+                assert all(isinstance(sttng, Setting) for sttng in strListSetting), 'Settings should only be cells or params'
                 lst.append(list(strListSetting))
 
             elif isinstance(strListSetting, Setting):
@@ -2211,18 +2211,18 @@ def getCellsParams(settings=None):
         return None
 
     assert type(settings) is list
-    assert all(isinstance(setting, Setting) for setting in settings)
+    assert all(isinstance(sttng, Setting) for sttng in settings)
 
     cells = []
     params = []
 
-    for setting in settings:
-        if setting.file == 'cell':
-            cells.append(setting)
-        elif setting.file == 'param':
-            params.append(setting)
+    for sttng in settings:
+        if sttng.file == 'cell':
+            cells.append(sttng)
+        elif sttng.file == 'param':
+            params.append(sttng)
         else:
-            raise ValueError(f'File {setting.file} not recognised')
+            raise ValueError(f'File {sttng.file} not recognised')
 
     cells = sorted(cells, key=lambda cell: cell.priority)
     params = sorted(params, key=lambda param: param.priority)
