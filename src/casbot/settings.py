@@ -635,6 +635,7 @@ paramKnown = [  # task
     # extra
     'continuation',
     'iprint',
+    'opt_strategy_bias',
     'rand_seed',
     'comment',
 
@@ -702,8 +703,9 @@ paramPriorities = {  # task
     # extra
     'continuation': 11.1,
     'iprint': 11.2,
-    'rand_seed': 11.3,
-    'comment': 11.4,
+    'opt_strategy_bias': 11.3,
+    'rand_seed': 11.4,
+    'comment': 11.5,
 
     # blocks
     'devel_code': 12.1
@@ -771,6 +773,7 @@ paramDefaults = {
     # extra
     'continuation': 'null',
     'iprint': '1',
+    'opt_strategy_bias': 0,
     'rand_seed': 0,
     'comment': '(empty)'
 }
@@ -837,6 +840,7 @@ paramTypes = {
     # extra
     'continuation': StrKeyword,
     'iprint': IntKeyword,
+    'opt_strategy_bias': IntKeyword,
     'rand_seed': IntKeyword,
     'comment': StrKeyword,
 
@@ -889,6 +893,7 @@ paramValues = {
 
     # extra
     'iprint': [1, 2, 3],
+    'opt_strategy_bias': [-3, -2, -1, 0, 1, 2, 3],
     'continuation': ['default'],
     'rand_seed': [-float('inf'), float('inf')],
 }
