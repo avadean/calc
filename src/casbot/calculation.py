@@ -261,7 +261,9 @@ class Calculation:
 
         return string
 
-    def analyse(self, *toAnalyse):
+    def analyse(self, *toAnalyse, reset=True):
+        assert type(reset) is bool
+
         assert self.getStatus() == 'completed', 'Calculation not completed therefore cannot analyse'
 
         assert all(type(type_) is str for type_ in toAnalyse)
@@ -282,6 +284,14 @@ class Calculation:
 
         for type_ in toAnalyse:
             if type_ == 'hyperfine':
+                if not reset and all([self.hyperfineDipolarBareTensors,
+                                      self.hyperfineDipolarAugTensors,
+                                      self.hyperfineDipolarAug2Tensors,
+                                      self.hyperfineDipolarTensors,
+                                      self.hyperfineFermiTensors,
+                                      self.hyperfineTotalTensors]):
+                    continue
+
                 self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
                 self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
                 self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
@@ -290,6 +300,9 @@ class Calculation:
                 self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
             elif type_ in ['spin density', 'spindensity']:
+                if not reset and self.spinDensity:
+                    continue
+
                 self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
 
             else:
