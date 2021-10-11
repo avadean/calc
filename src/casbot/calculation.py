@@ -268,7 +268,23 @@ class Calculation:
 
         assert all(type(type_) is str for type_ in toAnalyse)
 
-        toAnalyse = [type_.strip().lower() for type_ in toAnalyse]
+        toAnalyse = set(type_.strip().lower() for type_ in toAnalyse)
+
+        # Check if there is actually any work to do.
+        if not reset:
+            if toAnalyse.intersection({'hyperfine'}) and all([self.hyperfineDipolarBareTensors,
+                                                              self.hyperfineDipolarAugTensors,
+                                                              self.hyperfineDipolarAug2Tensors,
+                                                              self.hyperfineDipolarTensors,
+                                                              self.hyperfineFermiTensors,
+                                                              self.hyperfineTotalTensors]):
+                    toAnalyse -= {'hyperfine'}
+
+            if toAnalyse.intersection({'spin density', 'spin_density', 'spindensity'}) and self.spinDensity:
+                    toAnalyse -= {'spin density', 'spin_density', 'spindensity'}
+
+        if len(toAnalyse) == 0:
+            return
 
         self.setName(strict=True)
 
@@ -284,14 +300,6 @@ class Calculation:
 
         for type_ in toAnalyse:
             if type_ == 'hyperfine':
-                if not reset and all([self.hyperfineDipolarBareTensors,
-                                      self.hyperfineDipolarAugTensors,
-                                      self.hyperfineDipolarAug2Tensors,
-                                      self.hyperfineDipolarTensors,
-                                      self.hyperfineFermiTensors,
-                                      self.hyperfineTotalTensors]):
-                    continue
-
                 self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
                 self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
                 self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
@@ -299,10 +307,7 @@ class Calculation:
                 self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
                 self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
-            elif type_ in ['spin density', 'spindensity']:
-                if not reset and self.spinDensity:
-                    continue
-
+            elif type_ in ['spin density', 'spin_density', 'spindensity']:
                 self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
 
             else:
@@ -673,7 +678,12 @@ class Calculation:
 
         for s in self.settings:
             if key == s.key:
-                return s.value
+                if isinstance(s, Keyword):
+                    return s.value
+                elif isinstance(s, Block):
+                    return s.values
+                else:
+                    raise ValueError(f'Cannot determine type of setting {s}')
 
         raise ValueError(f'Setting {key} is not set in calculation')
 
