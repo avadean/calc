@@ -687,27 +687,20 @@ class Calculation:
 
         raise ValueError(f'Setting {key} is not set in calculation')
 
-    def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
-        assert type(all_) is bool
-        assert type(dipolar) is bool
-        assert type(fermi) is bool
-        assert type(showTensors) is bool
+    def printHyperfine(self, **kwargs):
+        element = kwargs.get('element', None)
+
+        all_ = kwargs.get('all', False)
+        dipolar = kwargs.get('dipolar', False)
+        fermi = kwargs.get('fermi', False)
+
+        showTensors = kwargs.get('tensors', False)
 
         if element is not None:
             assert type(element) is str
 
             element = element.strip()
             element = None if element == '' else element[0].upper() + element[1:].lower()
-
-        string = 'Calculation ->'
-
-        if self.name is not None:
-            string += f' {self.name}'
-
-        if self.directory is not None:
-            string += f' ({self.directory})'
-
-        string += '\n'
 
         if all_:
             tensorsList = [(self.hyperfineDipolarBareTensors, PrintColors.blue),
@@ -734,6 +727,8 @@ class Calculation:
             if fermi:
                 tensorsList += [(self.hyperfineFermiTensors, PrintColors.green)]
 
+        string = ''
+
         for tensors, color in tensorsList:
             for tensor in tensors:
                 if element is None or (element is not None and tensor.element == element):
@@ -742,6 +737,11 @@ class Calculation:
         string = string[:-1]  # Remove last line break.
 
         print(string)
+
+    def printSpinDensity(self, **kwargs):
+        if self.spinDensity is not None:
+            print('        Sx             Sy             Sz')
+            print(f'   {self.spinDensity.__str__()}')
 
     def rotate(self, axis=None, angle=None, degrees=True):
         try:

@@ -180,21 +180,29 @@ class Model:
 
         return Counter(calculation.name for calculation in calculations)
 
-    def printHyperfine(self, all_=False, dipolar=False, fermi=False, showTensors=False, element=None):
-        assert type(all_) is bool
-        assert type(dipolar) is bool
-        assert type(fermi) is bool
-        assert type(showTensors) is bool
+    def print(self, *args, **kwargs):
+        assert all(type(arg) is str for arg in args)
 
-        if element is not None:
-            assert type(element) is str
-
-            element = element.strip()
-            element = None if element == '' else element[0].upper() + element[1:].lower()
+        args = set([arg.strip().lower() for arg in args])
 
         for calculation in self.calculations:
-            calculation.printHyperfine(all_=all_, dipolar=dipolar, fermi=fermi, showTensors=showTensors, element=element)
-            print('')
+            string = 'Calculation ->'
+
+            if calculation.name is not None:
+                string += f' {calculation.name}'
+
+            if calculation.directory is not None:
+                string += f' ({calculation.directory})'
+
+            print(string)
+
+            if {'spindensity', 'spin density', 'spin_density'}.intersection(args):
+                calculation.printSpinDensity(**kwargs)
+                print('')
+
+            if {'hyperfine'}.intersection(args):
+                calculation.printHyperfine(**kwargs)
+                print('')
 
     def run(self, test=False, force=False, passive=False, shuffle=False, serial=None, bashAliasesFile=None, notificationAlias=None):
         assert type(test) is bool

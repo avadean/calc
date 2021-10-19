@@ -161,7 +161,7 @@ class Vector(Result):
         self.norm = sum(v ** 2.0 for v in self.value) ** 0.5
 
     def __str__(self):
-        return '  '.join('{:>12.5E}' for _ in range(self.size)).format(*self.value.flatten())
+        return '   '.join('{:>12.5E}' for _ in range(self.size)).format(*self.value.flatten())
 
 
 class NMR(Tensor):
