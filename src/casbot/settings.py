@@ -109,7 +109,7 @@ class FloatKeyword(Keyword):
 
     def __str__(self):
         unit = '' if self.unit is None else self.unit
-        return f'{self.value:<12.4f}  {unit}'
+        return f'{self.value:<12.4f}  {unit}' if self.value >= 0.0001 else f'{self.value:<12.4E}  {unit}'
 
 
 class IntKeyword(Keyword):
