@@ -274,6 +274,8 @@ unitToNiceUnit = { 'ev' : 'eV',
                    'ry' : 'Ry',
                    'mhz' : 'MHz',
 
+                   'ev/ang' : 'eV/Ang',
+
                    'ang' : 'Ang',
                    'bohr' : 'Bohr',
 
@@ -291,6 +293,8 @@ unitToUnitType = { 'ev' : 'energy',
                    'ry' : 'energy',
                    'mhz' : 'energy',
 
+                   'ev/ang': 'force',
+
                    'ang' : 'length',
                    'bohr' : 'length',
 
@@ -303,6 +307,8 @@ unitToUnitType = { 'ev' : 'energy',
                    }
 
 unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
+
+                   'force' : ['ev/ang'],
 
                    'length' : ['ang', 'bohr'],
 
