@@ -181,9 +181,75 @@ class Model:
         return Counter(calculation.name for calculation in calculations)
 
     def print(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
         assert all(type(arg) is str for arg in args)
 
         args = set([arg.strip().lower() for arg in args])
+
+        # Hyperfine calculations are a bit odd so we treat them separately for now as a hack.
+        # If we are doing a density_in_x, density_in_y, density_in_z calculation, then temporarily make the calculations in groups of 3.
+        # Only do this if hyperfine is the only thing we're asking for.
+        if len(args) == 1\
+                and {'hyperfine'}.intersection(args)\
+                and len(self.calculations) % 3 == 0\
+                and all([c.directory[:-2].endswith('density_in_') for c in self.calculations]):  # 2 characters for '/' and, 'x' or 'y' or 'z'
+            # calculations = sorted(self.calculations, key=lambda c: c.directory)
+
+            calculations = self.calculations.copy()
+
+            for cX, cY, cZ in [calculations[n:n+3] for n in range(0, len(calculations), 3)]:
+                string = 'Calculation ->'
+
+                if cX.name is not None and cY.name is not None and cZ.name is not None:
+                    if cX.name == cY.name == cZ.name:
+                        string += f' {cZ.name}'
+                    else:
+                        string += f' x:{cX.name} y:{cY.name} z:{cZ.name}'
+                else:
+                    if cX.name is not None:
+                        string += f' x:{cX.name}'
+
+                    if cY.name is not None:
+                        string += f' y:{cY.name}'
+
+                    if cZ.name is not None:
+                        string += f' z:{cZ.name}'
+
+                string += f' ({cZ.directory[:-2]}xyz/)'
+
+                print(string)
+
+                hyperfineDipolarBareTensors = [tensorX + tensorY + tensorZ
+                                               for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarBareTensors, cY.hyperfineDipolarBareTensors, cZ.hyperfineDipolarBareTensors)]
+
+                hyperfineDipolarAugTensors = [tensorX + tensorY + tensorZ
+                                              for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarAugTensors, cY.hyperfineDipolarAugTensors, cZ.hyperfineDipolarAugTensors)]
+
+                hyperfineDipolarAug2Tensors = [tensorX + tensorY + tensorZ
+                                               for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarAug2Tensors, cY.hyperfineDipolarAug2Tensors, cZ.hyperfineDipolarAug2Tensors)]
+
+                hyperfineDipolarTensors = [tensorX + tensorY + tensorZ
+                                           for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarTensors, cY.hyperfineDipolarTensors, cZ.hyperfineDipolarTensors)]
+
+                hyperfineFermiTensors = [tensorX + tensorY + tensorZ
+                                         for tensorX, tensorY, tensorZ in zip(cX.hyperfineFermiTensors, cY.hyperfineFermiTensors, cZ.hyperfineFermiTensors)]
+
+                hyperfineTotalTensors = [tensorX + tensorY + tensorZ
+                                         for tensorX, tensorY, tensorZ in zip(cX.hyperfineTotalTensors, cY.hyperfineTotalTensors, cZ.hyperfineTotalTensors)]
+
+                cZ.hyperfineDipolarBareTensors = hyperfineDipolarBareTensors
+                cZ.hyperfineDipolarAugTensors = hyperfineDipolarAugTensors
+                cZ.hyperfineDipolarAug2Tensors = hyperfineDipolarAug2Tensors
+                cZ.hyperfineDipolarTensors = hyperfineDipolarTensors
+                cZ.hyperfineFermiTensors = hyperfineFermiTensors
+                cZ.hyperfineTotalTensors = hyperfineTotalTensors
+
+                cZ.printHyperfine(**kwargs)
+                print('')
+
+            return
 
         for calculation in self.calculations:
             string = 'Calculation ->'
