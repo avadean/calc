@@ -210,6 +210,9 @@ class NMR(Tensor):
                    element=self.element,
                    ion=self.ion)
 
+    def __iadd__(self, other):
+        self.__add__(other=other)
+
     def __sub__(self, other):
         assert self.key == other.key, 'Cannot sub different NMR tensors'
         assert self.unit == other.unit, 'Cannot sub tensors of different units'
@@ -223,6 +226,9 @@ class NMR(Tensor):
                    unit=self.unit,
                    element=self.element,
                    ion=self.ion)
+
+    def __isub__(self, other):
+        self.__sub__(other=other)
 
     def __eq__(self, other):
         return (self.value == other.value).all()
