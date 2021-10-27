@@ -278,10 +278,10 @@ class Calculation:
                                                               self.hyperfineDipolarTensors,
                                                               self.hyperfineFermiTensors,
                                                               self.hyperfineTotalTensors]):
-                    toAnalyse -= {'hyperfine'}
+                toAnalyse -= {'hyperfine'}
 
             if toAnalyse.intersection({'spin density', 'spin_density', 'spindensity'}) and self.spinDensity:
-                    toAnalyse -= {'spin density', 'spin_density', 'spindensity'}
+                toAnalyse -= {'spin density', 'spin_density', 'spindensity'}
 
         if len(toAnalyse) == 0:
             return
