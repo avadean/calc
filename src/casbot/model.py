@@ -1,6 +1,7 @@
 from casbot.calculation import Calculation
 
 from collections import Counter
+from copy import deepcopy
 from pathlib import Path
 from pickle import dump as pickleDump, load as pickleLoad
 from random import sample
@@ -197,7 +198,7 @@ class Model:
                 and all([c.directory[:-2].endswith('density_in_') for c in self.calculations]):  # 2 characters for '/' and, 'x' or 'y' or 'z'
             # calculations = sorted(self.calculations, key=lambda c: c.directory)
 
-            calculations = self.calculations.copy()
+            calculations = deepcopy(self.calculations)
 
             for cX, cY, cZ in [calculations[n:n+3] for n in range(0, len(calculations), 3)]:
                 string = 'Calculation ->'
