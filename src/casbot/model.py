@@ -200,7 +200,8 @@ class Model:
                 #and len(self.calculations) % 3 == 0\
                 #and all([c.directory[:-2].endswith('density_in_') for c in self.calculations]):  # 2 characters for '/' and, 'x' or 'y' or 'z'
 
-                # calculations = sorted(self.calculations, key=lambda c: c.directory)
+                #calculations = sorted(self.calculations, key=lambda c: c.directory)
+                #calculations = deepcopy(calculations)
 
                 calculations = deepcopy(self.calculations)
 
@@ -283,7 +284,7 @@ class Model:
 
                     cX.name = cX.name.strip()
 
-                    cX.directory = f' ({cX.directory[:-2]}xyz/)'
+                    cX.directory = f'{cX.directory[:-2]}xyz/'
 
                     hyperfineDipolarBareTensors = [tensorX + tensorY + tensorZ
                                                    for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarBareTensors,
