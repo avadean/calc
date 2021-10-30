@@ -77,7 +77,7 @@ def getResult(resultToGet=None, lines=None):
         return tensors
 
 
-    elif resultToGet  == 'spin_density':
+    elif resultToGet == 'spin_density':
         hits = []
 
         for num, line in enumerate(lines):
