@@ -189,70 +189,144 @@ class Model:
 
         args = set([arg.strip().lower() for arg in args])
 
+        calculations = self.calculations
+
         # Hyperfine calculations are a bit odd so we treat them separately for now as a hack.
         # If we are doing a density_in_x, density_in_y, density_in_z calculation, then temporarily make the calculations in groups of 3.
         # Only do this if hyperfine is the only thing we're asking for.
-        if len(args) == 1\
-                and {'hyperfine'}.intersection(args)\
-                and len(self.calculations) % 3 == 0\
-                and all([c.directory[:-2].endswith('density_in_') for c in self.calculations]):  # 2 characters for '/' and, 'x' or 'y' or 'z'
-            # calculations = sorted(self.calculations, key=lambda c: c.directory)
+        if len(args) == 1 and {'hyperfine'}.intersection(args):
 
-            calculations = deepcopy(self.calculations)
+            while True:
+                #and len(self.calculations) % 3 == 0\
+                #and all([c.directory[:-2].endswith('density_in_') for c in self.calculations]):  # 2 characters for '/' and, 'x' or 'y' or 'z'
 
-            for cX, cY, cZ in [calculations[n:n+3] for n in range(0, len(calculations), 3)]:
-                string = 'Calculation ->'
+                # calculations = sorted(self.calculations, key=lambda c: c.directory)
 
-                if cX.name is not None and cY.name is not None and cZ.name is not None:
+                calculations = deepcopy(self.calculations)
+
+                # We need to group together any xyz density-type calculations so they can be combined.
+                # Let's set up the groups and a temp variable to hold each group.
+                groups = []
+                group = []
+
+                # We are going to begin by searching for x, then y, then z.
+                currentlyLookingFor = 'x'
+
+                for c in calculations:
+                    if c.directory:
+
+                        # If we find this is an x type calculation.
+                        if c.directory[-2] == 'x' == currentlyLookingFor:
+                            currentlyLookingFor = 'y'  # Set the next search to be a y type calculation.
+
+                            if group:  # If the current group is not empty.
+                                for g in group:
+                                    groups.append([g])  # Then just add those calculations as separate groups.
+
+                            group = [c]  # Make this x type calculation the start of a new group.
+
+                        # If we find this is a y type calculation.
+                        elif c.directory[-2] == 'y' == currentlyLookingFor:
+                            currentlyLookingFor = 'z'  # Set the next search to be a z type calculation.
+                            group.append(c)  # And add this one to the group.
+
+                        # If we find this is a z type calculation.
+                        elif c.directory[-2] == 'z' == currentlyLookingFor:
+                            currentlyLookingFor = 'x'  # Set the next search to be an x type calculation again.
+                            group.append(c)  # And add this one to the group.
+                            groups.append(group)  # And add that groups to the list of groups.
+                            group = []  # And start a new group again.
+
+                        # If we don't find this calculation to be of any specific type.
+                        else:
+                            # Add any current group calculations as separate groups.
+                            if group:
+                                for g in group:
+                                    groups.append([g])
+
+                            groups.append([c])  # And then just add this calculation as a separate group too.
+
+                    else:  # If there is no directory name then just put this calculation in as a group on its own.
+                        groups.append([c])
+                        group = []
+
+                if any([len(group) not in [1, 3] for group in groups]):
+                    break
+
+                calculations = []
+
+                #for cX, cY, cZ in [calculations[n:n+3] for n in range(0, len(calculations), 3)]:
+                for group in groups:
+
+                    # If we just have the one calculation then add that as normal.
+                    if len(group) == 1:
+                        calculations.append(group[0])
+                        continue
+
+                    # Otherwise, let's combine the three density calculations into one.
+                    # We will combine y and z into x.
+
+                    cX, cY, cZ = group
+
                     if cX.name == cY.name == cZ.name:
-                        string += f' {cZ.name}'
+                        pass
                     else:
-                        string += f' x:{cX.name} y:{cY.name} z:{cZ.name}'
-                else:
-                    if cX.name is not None:
-                        string += f' x:{cX.name}'
+                        if cX.name is not None:
+                            cX.name = f'x:{cX.name} '
 
-                    if cY.name is not None:
-                        string += f' y:{cY.name}'
+                        if cY.name is not None:
+                            cX.name += f'y:{cY.name} '
 
-                    if cZ.name is not None:
-                        string += f' z:{cZ.name}'
+                        if cZ.name is not None:
+                            cX.name += f'z:{cZ.name} '
 
-                string += f' ({cZ.directory[:-2]}xyz/)'
 
-                print(string)
+                    cX.name = cX.name.strip()
 
-                hyperfineDipolarBareTensors = [tensorX + tensorY + tensorZ
-                                               for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarBareTensors, cY.hyperfineDipolarBareTensors, cZ.hyperfineDipolarBareTensors)]
+                    cX.directory = f' ({cX.directory[:-2]}xyz/)'
 
-                hyperfineDipolarAugTensors = [tensorX + tensorY + tensorZ
-                                              for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarAugTensors, cY.hyperfineDipolarAugTensors, cZ.hyperfineDipolarAugTensors)]
+                    hyperfineDipolarBareTensors = [tensorX + tensorY + tensorZ
+                                                   for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarBareTensors,
+                                                                                        cY.hyperfineDipolarBareTensors,
+                                                                                        cZ.hyperfineDipolarBareTensors)]
 
-                hyperfineDipolarAug2Tensors = [tensorX + tensorY + tensorZ
-                                               for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarAug2Tensors, cY.hyperfineDipolarAug2Tensors, cZ.hyperfineDipolarAug2Tensors)]
+                    hyperfineDipolarAugTensors = [tensorX + tensorY + tensorZ
+                                                  for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarAugTensors,
+                                                                                       cY.hyperfineDipolarAugTensors,
+                                                                                       cZ.hyperfineDipolarAugTensors)]
 
-                hyperfineDipolarTensors = [tensorX + tensorY + tensorZ
-                                           for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarTensors, cY.hyperfineDipolarTensors, cZ.hyperfineDipolarTensors)]
+                    hyperfineDipolarAug2Tensors = [tensorX + tensorY + tensorZ
+                                                   for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarAug2Tensors,
+                                                                                        cY.hyperfineDipolarAug2Tensors,
+                                                                                        cZ.hyperfineDipolarAug2Tensors)]
 
-                hyperfineFermiTensors = [tensorX + tensorY + tensorZ
-                                         for tensorX, tensorY, tensorZ in zip(cX.hyperfineFermiTensors, cY.hyperfineFermiTensors, cZ.hyperfineFermiTensors)]
+                    hyperfineDipolarTensors = [tensorX + tensorY + tensorZ
+                                               for tensorX, tensorY, tensorZ in zip(cX.hyperfineDipolarTensors,
+                                                                                    cY.hyperfineDipolarTensors,
+                                                                                    cZ.hyperfineDipolarTensors)]
 
-                hyperfineTotalTensors = [tensorX + tensorY + tensorZ
-                                         for tensorX, tensorY, tensorZ in zip(cX.hyperfineTotalTensors, cY.hyperfineTotalTensors, cZ.hyperfineTotalTensors)]
+                    hyperfineFermiTensors = [tensorX + tensorY + tensorZ
+                                             for tensorX, tensorY, tensorZ in zip(cX.hyperfineFermiTensors,
+                                                                                  cY.hyperfineFermiTensors,
+                                                                                  cZ.hyperfineFermiTensors)]
 
-                cZ.hyperfineDipolarBareTensors = hyperfineDipolarBareTensors
-                cZ.hyperfineDipolarAugTensors = hyperfineDipolarAugTensors
-                cZ.hyperfineDipolarAug2Tensors = hyperfineDipolarAug2Tensors
-                cZ.hyperfineDipolarTensors = hyperfineDipolarTensors
-                cZ.hyperfineFermiTensors = hyperfineFermiTensors
-                cZ.hyperfineTotalTensors = hyperfineTotalTensors
+                    hyperfineTotalTensors = [tensorX + tensorY + tensorZ
+                                             for tensorX, tensorY, tensorZ in zip(cX.hyperfineTotalTensors,
+                                                                                  cY.hyperfineTotalTensors,
+                                                                                  cZ.hyperfineTotalTensors)]
 
-                cZ.printHyperfine(**kwargs)
-                print('')
+                    cX.hyperfineDipolarBareTensors = hyperfineDipolarBareTensors
+                    cX.hyperfineDipolarAugTensors = hyperfineDipolarAugTensors
+                    cX.hyperfineDipolarAug2Tensors = hyperfineDipolarAug2Tensors
+                    cX.hyperfineDipolarTensors = hyperfineDipolarTensors
+                    cX.hyperfineFermiTensors = hyperfineFermiTensors
+                    cX.hyperfineTotalTensors = hyperfineTotalTensors
 
-            return
+                    calculations.append(cX)
 
-        for calculation in self.calculations:
+                break
+
+        for calculation in calculations:
             string = 'Calculation ->'
 
             if calculation.name is not None:
