@@ -154,6 +154,8 @@ def processCalculations(*directories):
 
         # Get settings from cell file.
         cellFiles = filter(listdir(directory), '*.cell')
+        cellFiles = [f for f in cellFiles if f[-9:] != '-out.cell']
+
         cells = []
 
         if len(cellFiles) == 1:
