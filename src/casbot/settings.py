@@ -1976,6 +1976,8 @@ def readSettings(file_=None):
 
     lines = [line.strip() for line in lines if line.strip()]
 
+    lines = [line for line in lines if not line.startswith('#') and not line.startswith('!')]
+
     settingKey = ''
     inBlock = False
     blockLines = []
