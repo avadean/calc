@@ -71,8 +71,8 @@ def getResult(resultToGet=None, lines=None):
 
                     tensors.append(tensor)
 
-        if len(tensors) == 0:
-            raise ValueError(f'Could not find any {resultToGet} tensors in results file')
+        #if len(tensors) == 0:
+        #    raise ValueError(f'Could not find any {resultToGet} tensors in results file')
 
         return tensors
 
@@ -98,10 +98,10 @@ def getResult(resultToGet=None, lines=None):
 
                 hits.append(density)
 
-        if len(hits) == 0:
-            raise ValueError(f'Could not find any spin density values/vectors in result file')
+        #if len(hits) == 0:
+        #    raise ValueError(f'Could not find any spin density values/vectors in result file')
 
-        return hits[-1]
+        return None if len(hits) == 0 else hits[-1]
 
 
     else:
