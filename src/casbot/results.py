@@ -9,7 +9,9 @@ from numpy import ndarray
 resultKnown = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
                'hyperfine_fermi', 'hyperfine_total',
 
-               'spin_density']
+               'spin_density',
+
+               'forces']
 
 resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
                'hyperfine_dipolaraug': 'DIPOLAR AUG',
@@ -18,7 +20,9 @@ resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
                'hyperfine_fermi': 'FERMI',
                'hyperfine_total': 'TOTAL',
 
-               'spin_density': 'SPIN DENSITY'}
+               'spin_density': 'SPIN DENSITY',
+
+               'forces': 'FORCES'}
 
 resultUnits = {'hyperfine_dipolarbare': 'energy',
                'hyperfine_dipolaraug': 'energy',
@@ -27,7 +31,9 @@ resultUnits = {'hyperfine_dipolarbare': 'energy',
                'hyperfine_fermi': 'energy',
                'hyperfine_total': 'energy',
 
-               'spin_density': 'spin'}
+               'spin_density': 'spin',
+
+               'forces': 'force'}
 
 
 
@@ -100,6 +106,41 @@ def getResult(resultToGet=None, lines=None):
 
         #if len(hits) == 0:
         #    raise ValueError(f'Could not find any spin density values/vectors in result file')
+
+        return None if len(hits) == 0 else hits[-1]
+
+
+    elif resultToGet == 'forces':
+        hits = []
+
+        for num, line in enumerate(lines):
+            line = line.strip().lower()
+
+            if 'Forces' in line and line.startswith('*') and line.endswith('*'):
+
+                for numInBlock, lineInBlock in enumerate(lines[num:]):
+                    if all(char == '*' for char in lineInBlock):
+                        break
+                    else:
+                        parts = line.split()
+
+                        if len(parts) == 5:
+                            element, ion, x, y, z = parts
+
+                            element = element[0].upper() + element[1:].lower()
+
+                            assert ion.isdigit(), f'Error in element ion on line {numInBlock + 1} of results file'
+
+                            vector = strListToArray([x, y, z])
+
+                            force = Force(key=resultToGet, value=vector, unit='eV/Ang', element=element, ion=ion)
+
+                            hits.append(force)
+                else:
+                    raise ValueError('Cannot find end of forces block in results file')
+
+        #if len(hits) == 0:
+        #   raise ValueError(f'Could not find any force vectors in result file')
 
         return None if len(hits) == 0 else hits[-1]
 
@@ -237,3 +278,22 @@ class NMR(Tensor):
 class SpinDensity(Vector):
     def __init__(self, key=None, value=None, unit=None, shape=None):
         super().__init__(key=key, value=value, unit=unit, shape=shape)
+
+
+class Force(Vector):
+    def __init__(self, key=None, value=None, unit=None, element=None, ion=None):
+        super().__init__(key=key, value=value, unit=unit, shape=(3, 1))
+
+        assert type(element) is str
+
+        element = element.strip().lower()
+
+        assert len(element) > 0
+        assert element in elements
+
+        self.element = element[0].upper() + element[1:].lower()
+
+        assert type(ion) is str
+        assert ion.isdigit()
+
+        self.ion = str(int(float(ion)))
