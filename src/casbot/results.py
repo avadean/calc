@@ -119,7 +119,7 @@ def getResult(resultToGet=None, lines=None):
         for num, line in enumerate(lines):
             line = line.strip().lower()
 
-            if 'Forces' in line and line.startswith('*') and line.endswith('*'):
+            if 'forces' in line and line.startswith('*') and line.endswith('*'):
 
                 for numInBlock, lineInBlock in enumerate(lines[num:]):
                     if all(char == '*' for char in lineInBlock):
@@ -149,7 +149,7 @@ def getResult(resultToGet=None, lines=None):
         #if len(hits) == 0:
         #   raise ValueError(f'Could not find any force vectors in result file')
 
-        return None if len(groups) == 0 else groups[-1]
+        return groups
 
 
     else:
