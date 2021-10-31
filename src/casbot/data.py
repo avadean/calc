@@ -296,6 +296,8 @@ unitToNiceUnit = { 'ev' : 'eV',
                    'tesla' : 'Tesla',
                    'gauss' : 'Gauss',
 
+                   'radsectesla' : 'RadSecTesla',
+
                    'hbar/2' : 'hbar/2'
                    }
 
@@ -315,6 +317,8 @@ unitToUnitType = { 'ev' : 'energy',
                    'tesla' : 'bfield',
                    'gauss' : 'bfield',
 
+                   'radsectesla' : 'gyromagnetic',
+
                    'hbar/2' : 'spin'
                    }
 
@@ -327,6 +331,8 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
                    'inverselength' : ['1/ang'],
 
                    'bfield' : ['tesla', 'gauss'],
+
+                   'gyromagnetic' : ['radsectesla'],
 
                    'spin' : ['hbar/2']
                    }
