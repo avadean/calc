@@ -278,6 +278,8 @@ class Calculation:
 
         HYPERFINE = {'hyperfine'}
 
+        FORCES = {'forces'}
+
         SPINDENSITY = {'spin density', 'spin_density', 'spindensity'}
 
         POSFRACS = {'pos frac', 'pos fracs', 'position frac', 'position fracs', 'positions frac', 'positions fracs',
@@ -297,6 +299,12 @@ class Calculation:
             if toAnalyse.intersection(SPINDENSITY) and self.spinDensity:
                 toAnalyse -= SPINDENSITY
 
+            if toAnalyse.intersection(POSFRACS) and self.positionsFrac:
+                toAnalyse -= POSFRACS
+
+            if toAnalyse.intersection(FORCES) and self.forces:
+                toAnalyse -= FORCES
+
         # If there is no work to do then return.
         if len(toAnalyse) == 0:
             return
@@ -312,7 +320,7 @@ class Calculation:
 
         outSettings = None  # -out.cell file.
 
-        if toAnalyse.intersection(HYPERFINE) or toAnalyse.intersection(SPINDENSITY):
+        if toAnalyse.intersection(HYPERFINE) or toAnalyse.intersection(SPINDENSITY) or toAnalyse.intersection(FORCES):
             castepLines = getFileLines(file_=f'{self.directory}{self.name}.castep')
             castepLines = self.getFinalRunLines(lines=castepLines)
 
@@ -334,6 +342,11 @@ class Calculation:
             self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
 
             toAnalyse -= SPINDENSITY
+
+        if toAnalyse.intersection(FORCES):
+            self.forces = getResult(resultToGet='forces', lines=castepLines)
+
+            toAnalyse -= FORCES
 
         if toAnalyse.intersection(POSFRACS):
             self.positionsFrac = self.getSetting(key='positions_frac', settings=outSettings)
