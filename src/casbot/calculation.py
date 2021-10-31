@@ -208,7 +208,6 @@ def processCalculations(*directories):
     return calculations
 
 
-
 class Calculation:
     hyperfineDipolarBareTensors = []
     hyperfineDipolarAugTensors = []
@@ -275,18 +274,26 @@ class Calculation:
 
         toAnalyse = set(type_.strip().lower() for type_ in toAnalyse)
 
+        HYPERFINE = {'hyperfine'}
+
+        SPINDENSITY = {'spin density', 'spin_density', 'spindensity'}
+
+        POSFRACS = {'pos frac', 'pos fracs', 'position frac', 'position fracs', 'positions frac', 'positions fracs',
+                    'pos_frac', 'pos_fracs', 'position_frac', 'position_fracs', 'positions_frac', 'positions_fracs',
+                    'posfrac', 'posfracs', 'positionfrac', 'positionfracs', 'positionsfrac', 'positionsfracs'}
+
         # Check if there is actually any work to do.
         if not reset:
-            if toAnalyse.intersection({'hyperfine'}) and all([self.hyperfineDipolarBareTensors,
-                                                              self.hyperfineDipolarAugTensors,
-                                                              self.hyperfineDipolarAug2Tensors,
-                                                              self.hyperfineDipolarTensors,
-                                                              self.hyperfineFermiTensors,
-                                                              self.hyperfineTotalTensors]):
-                toAnalyse -= {'hyperfine'}
+            if toAnalyse.intersection(HYPERFINE) and all([self.hyperfineDipolarBareTensors,
+                                                          self.hyperfineDipolarAugTensors,
+                                                          self.hyperfineDipolarAug2Tensors,
+                                                          self.hyperfineDipolarTensors,
+                                                          self.hyperfineFermiTensors,
+                                                          self.hyperfineTotalTensors]):
+                toAnalyse -= HYPERFINE
 
-            if toAnalyse.intersection({'spin density', 'spin_density', 'spindensity'}) and self.spinDensity:
-                toAnalyse -= {'spin density', 'spin_density', 'spindensity'}
+            if toAnalyse.intersection(SPINDENSITY) and self.spinDensity:
+                toAnalyse -= SPINDENSITY
 
         # If there is no work to do then return.
         if len(toAnalyse) == 0:
@@ -303,15 +310,15 @@ class Calculation:
 
         outSettings = None  # -out.cell file.
 
-        if toAnalyse.intersection({'hyperfine', 'spin density', 'spin_density', 'spindensity'}):
+        if toAnalyse.intersection(HYPERFINE) or toAnalyse.intersection(SPINDENSITY):
             castepLines = getFileLines(file_=f'{self.directory}{self.name}.castep')
             castepLines = self.getFinalRunLines(lines=castepLines)
 
-        if toAnalyse.intersection({'positions_frac'}):
+        if toAnalyse.intersection(POSFRACS):
             outSettings = readSettings(file_=f'{self.directory}{self.name}-out.cell')
 
         # Now get the results.
-        if toAnalyse.intersection({'hyperfine'}):
+        if toAnalyse.intersection(HYPERFINE):
             self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
             self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
             self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
@@ -319,15 +326,17 @@ class Calculation:
             self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
             self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
-            toAnalyse -= {'hyperfine'}
+            toAnalyse -= HYPERFINE
 
-        if toAnalyse.intersection({'spin density', 'spin_density', 'spindensity'}):
+        if toAnalyse.intersection(SPINDENSITY):
             self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
 
-            toAnalyse -= {'spin density', 'spin_density', 'spindensity'}
+            toAnalyse -= SPINDENSITY
 
-        if toAnalyse.intersection({'positions_frac'}):
+        if toAnalyse.intersection(POSFRACS):
             self.positionsFrac = self.getSettingValue(key='positions_frac', settings=outSettings)
+
+            toAnalyse -= POSFRACS
 
         print(f'Skipping result{"" if len(toAnalyse) == 1 else "s"} {", ".join(toAnalyse)} as do not know how to analyse (yet)')
 
