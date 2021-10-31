@@ -111,21 +111,21 @@ def getResult(resultToGet=None, lines=None):
 
 
     elif resultToGet == 'forces':
-        # Groups are groups of forces: one for each ion.
-        # Hits are each individual force on each ion.
+        # Groups are groups of forces: one group for each SCF cycle.
+        # In each group, there will be n hits where n is the number of ions.
         groups = []
-        hits = []
 
         for num, line in enumerate(lines):
             line = line.strip().lower()
 
-            if 'forces' in line and line.startswith('*') and line.endswith('*'):
+            if '* forces *' in line and line.startswith('*') and line.endswith('*'):
+                hits = []
 
                 for numInBlock, lineInBlock in enumerate(lines[num:]):
                     if all(char == '*' for char in lineInBlock):
                         break
                     else:
-                        parts = line.split()
+                        parts = lineInBlock.split()
 
                         if len(parts) == 7:
                             element, ion, x, y, z = parts[1:-1]
@@ -144,12 +144,10 @@ def getResult(resultToGet=None, lines=None):
 
                 groups.append(hits)
 
-                hits = []
-
         #if len(hits) == 0:
         #   raise ValueError(f'Could not find any force vectors in result file')
 
-        return groups
+        return [] if len(groups) == 0 else groups[-1]
 
 
     else:
@@ -236,10 +234,10 @@ class NMR(Tensor):
         assert type(nameColor) is str
         assert type(showTensor) is bool
 
-        string = f'    |->   {self.element+self.ion:<3s} {nameColor}{self.name:^16}{PrintColors.reset} {self.iso:>11.5f}   <-|'
+        string = f'       |->   {self.element+self.ion:<3s} {nameColor}{self.name:^16}{PrintColors.reset} {self.iso:>11.5f}   <-|'
 
         if showTensor:
-            rows = 3 * '\n     {:>12.5E}   {:>12.5E}   {:>12.5E}'
+            rows = 3 * '\n        {:>12.5E}   {:>12.5E}   {:>12.5E}'
             string += rows.format(*self.value.flatten())
 
         return string
@@ -306,6 +304,6 @@ class Force(Vector):
         self.ion = str(int(float(ion)))
 
     def __str__(self):
-        Fx, Fy, Fz = self.value
+        Fx, Fy, Fz = self.value.flatten()
 
         return f'{self.element + self.ion:<3s}  {Fx:>12.5E}   {Fy:>12.5E}   {Fz:>12.5E}'
