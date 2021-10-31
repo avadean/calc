@@ -111,6 +111,9 @@ def getResult(resultToGet=None, lines=None):
 
 
     elif resultToGet == 'forces':
+        # Groups are groups of forces: one for each ion.
+        # Hits are each individual force on each ion.
+        groups = []
         hits = []
 
         for num, line in enumerate(lines):
@@ -139,10 +142,14 @@ def getResult(resultToGet=None, lines=None):
                 else:
                     raise ValueError('Cannot find end of forces block in results file')
 
+                groups.append(hits)
+
+                hits = []
+
         #if len(hits) == 0:
         #   raise ValueError(f'Could not find any force vectors in result file')
 
-        return None if len(hits) == 0 else hits[-1]
+        return None if len(groups) == 0 else groups[-1]
 
 
     else:
@@ -229,10 +236,10 @@ class NMR(Tensor):
         assert type(nameColor) is str
         assert type(showTensor) is bool
 
-        string = f'  |->   {self.element+self.ion:<3s} {nameColor}{self.name:^16}{PrintColors.reset} {self.iso:>11.5f}   <-|'
+        string = f'    |->   {self.element+self.ion:<3s} {nameColor}{self.name:^16}{PrintColors.reset} {self.iso:>11.5f}   <-|'
 
         if showTensor:
-            rows = 3 * '\n   {:>12.5E}   {:>12.5E}   {:>12.5E}'
+            rows = 3 * '\n     {:>12.5E}   {:>12.5E}   {:>12.5E}'
             string += rows.format(*self.value.flatten())
 
         return string
@@ -297,3 +304,8 @@ class Force(Vector):
         assert ion.isdigit()
 
         self.ion = str(int(float(ion)))
+
+    def __str__(self):
+        Fx, Fy, Fz = self.value
+
+        return f'{self.element + self.ion:<3s}  {Fx:>12.5E}   {Fy:>12.5E}   {Fz:>12.5E}'

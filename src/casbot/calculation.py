@@ -216,6 +216,8 @@ class Calculation:
     hyperfineFermiTensors = []
     hyperfineTotalTensors = []
 
+    forces = []
+
     spinDensity = None
 
     positionsFrac = None
@@ -789,10 +791,15 @@ class Calculation:
 
         print(string)
 
+    def printForces(self, **kwargs):
+        print('          Fx             Fy             Fz')
+        for force in self.forces:
+            print(f'   {force.__str__()}')
+
     def printSpinDensity(self, **kwargs):
         if self.spinDensity is not None:
-            print('        Sx             Sy             Sz')
-            print(f'   {self.spinDensity.__str__()}')
+            print('          Sx             Sy             Sz')
+            print(f'     {self.spinDensity.__str__()}')
 
     def rotate(self, axis=None, angle=None, degrees=True):
         try:

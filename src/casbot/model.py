@@ -338,6 +338,10 @@ class Model:
 
             print(string)
 
+            if {'forces'}.intersection(args):
+                calculation.printForces(**kwargs)
+                print('')
+
             if {'spindensity', 'spin density', 'spin_density'}.intersection(args):
                 calculation.printSpinDensity(**kwargs)
                 print('')
