@@ -1,4 +1,5 @@
 from casbot.data import assertCount, createDirectories,\
+    getFileLines,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
     PrintColors
 from casbot.settings import Setting, Keyword, Block, createSettings, createVariableSettings, readSettings
@@ -216,6 +217,8 @@ class Calculation:
 
     spinDensity = None
 
+    positionsFrac = None
+
     def __init__(self, directory=None, settings=None, name=None):
         if directory is not None:
             assert type(directory) is str
@@ -283,35 +286,48 @@ class Calculation:
             if toAnalyse.intersection({'spin density', 'spin_density', 'spindensity'}) and self.spinDensity:
                 toAnalyse -= {'spin density', 'spin_density', 'spindensity'}
 
+        # If there is no work to do then return.
         if len(toAnalyse) == 0:
             return
 
+        # We definitely need the name of the calculation so we can find files correctly.
         self.setName(strict=True)
 
-        # TODO: allow for looking in different files (e.g .magres) not just .castep
-        castepFile = f'{self.directory}{self.name}.castep'
+        # Get the files.
+        castepLines = None  # .castep file.
+        magresLines = None  # .magres file.
+        bandsLines = None  # .bands file.
+        geomLines = None  # .geom file.
 
-        assert Path(castepFile).is_file(), f'Cannot find castep file {castepFile}'
+        outSettings = None  # -out.cell file.
 
-        with open(castepFile) as f:
-            castepLines = f.read().splitlines()
+        if toAnalyse.intersection({'hyperfine', 'spin density', 'spin_density', 'spindensity'}):
+            castepLines = getFileLines(file_=f'{self.directory}{self.name}.castep')
+            castepLines = self.getFinalRunLines(lines=castepLines)
 
-        castepLines = self.getFinalRunLines(lines=castepLines)
+        if toAnalyse.intersection({'positions_frac'}):
+            outSettings = readSettings(file_=f'{self.directory}{self.name}-out.cell')
 
-        for type_ in toAnalyse:
-            if type_ == 'hyperfine':
-                self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
-                self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
-                self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
-                self.hyperfineDipolarTensors = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
-                self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
-                self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
+        # Now get the results.
+        if toAnalyse.intersection({'hyperfine'}):
+            self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
+            self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
+            self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
+            self.hyperfineDipolarTensors = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
+            self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
+            self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
-            elif type_ in ['spin density', 'spin_density', 'spindensity']:
-                self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
+            toAnalyse -= {'hyperfine'}
 
-            else:
-                print(f'Skipping result {type_} as do not know how to analyse (yet)')
+        if toAnalyse.intersection({'spin density', 'spin_density', 'spindensity'}):
+            self.spinDensity = getResult(resultToGet='spin_density', lines=castepLines)
+
+            toAnalyse -= {'spin density', 'spin_density', 'spindensity'}
+
+        if toAnalyse.intersection({'positions_frac'}):
+            self.positionsFrac = self.getSettingValue(key='positions_frac', settings=outSettings)
+
+        print(f'Skipping result{"" if len(toAnalyse) == 1 else "s"} {", ".join(toAnalyse)} as do not know how to analyse (yet)')
 
     def check(self, nameOutputLen=0, dirOutputLen=0, latestFinishTime=0.0):
         assert type(nameOutputLen) is int
@@ -671,12 +687,18 @@ class Calculation:
 
         return lines
 
-    def getSettingValue(self, key=None):
+    def getSettingValue(self, key=None, settings=None):
         assert type(key) is str
+
+        if settings is not None:
+            assert type(settings) is list
+            assert all(isinstance(s, Setting) for s in settings)
+        else:
+            settings = self.settings
 
         key = key.strip().lower()
 
-        for s in self.settings:
+        for s in settings:
             if key == s.key:
                 if isinstance(s, Keyword):
                     return s.value
