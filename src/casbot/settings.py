@@ -678,6 +678,7 @@ paramKnown = [  # task
     'elec_energy_tol',
     'bs_eigenvalue_tol',
     'elec_force_tol',
+    'geom_force_tol',
 
     # extra
     'continuation',
@@ -747,6 +748,7 @@ paramPriorities = {  # task
     'elec_energy_tol': 10.3,
     'bs_eigenvalue_tol': 10.4,
     'elec_force_tol': 10.5,
+    'geom_force_tol': 10.6,
 
     # extra
     'continuation': 11.1,
@@ -818,6 +820,7 @@ paramDefaults = {
     'elec_energy_tol': '10^-5 eV for most tasks',
     'bs_eigenvalue_tol': '10^-6 eV/eig (10^-9 eV/eig if task=magres or phonon)',
     'elec_force_tol': 'set by elec_energy_tol',
+    'geom_force_tol': '0.05 eV/Ang'
 
     # extra
     'continuation': 'null',
@@ -886,6 +889,7 @@ paramTypes = {
     'elec_energy_tol': FloatKeyword,
     'bs_eigenvalue_tol': FloatKeyword,
     'elec_force_tol': FloatKeyword,
+    'geom_force_tol': FloatKeyword,
 
     # extra
     'continuation': StrKeyword,
@@ -941,6 +945,7 @@ paramValues = {
     'elec_energy_tol': [0.0, float('inf')],
     'bs_eigenvalue_tol': [0.0, float('inf')],
     'elec_force_tol': [0.0, float('inf')],
+    'geom_force_tol': [0.0, float('inf')],
 
     # extra
     'iprint': [1, 2, 3],
@@ -959,7 +964,8 @@ paramUnits = {
     # miscellaneous.
     'elec_energy_tol': 'energy',
     'bs_eigenvalue_tol': 'energy',
-    'elec_force_tol': 'force'
+    'elec_force_tol': 'force',
+    'geom_force_tol': 'force'
 }
 
 
