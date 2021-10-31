@@ -1,5 +1,6 @@
 from collections import Counter
 from numpy import array, empty
+from pathlib import Path
 
 
 # Variables for running calculations.
@@ -210,6 +211,17 @@ def getVariableDirectories(string=None):
     assert variableDirectories is not None, f'Shortcut to variable directories {string} not recognised'
 
     return variableDirectories
+
+
+def getFileLines(file_=None):
+    assert type(file_) is str
+
+    assert Path(file_).is_file(), f'Cannot find file {file_}'
+
+    with open(file_) as f:
+        lines = f.read().splitlines()
+
+    return lines
 
 
 def unitConvert(fromUnit=None, toUnit=None):
