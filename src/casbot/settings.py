@@ -191,26 +191,67 @@ class Block(Setting):
             assert type(lines) is list, 'Lines for block should be a list'
             assert all(type(line) is str for line in lines), 'Each line for the block should be a string'
 
+            lines = [line.strip() for line in lines if line.strip() and not line.strip().startswith('#') and not line.strip().startswith('!')]
+
             self.lines = []
 
             for line in lines:
-                line = line.strip()
+                # Check for comment.
+                comment = line.find('!')
 
-                if line:
-                    # Check for comment.
-                    comment = line.find('!')
+                # Remove it if need be.
+                if comment != -1:
+                    line = line[:comment].strip()
 
-                    # Remove it if need be.
-                    if comment != -1:
-                        line = line[:comment].strip()
-
-                    self.lines.append(line)
+                self.lines.append(line)
 
     def __str__(self):
         return '; '.join(self.lines)
 
     def getLines(self):
         return self.lines
+
+
+class ElementFloatBlock(Block):
+    def __init__(self, key=None, lines=None):
+        super().__init__(key=key, lines=lines)
+
+        self.values = []
+        self.unit = 'RadSecTesla'
+
+        if self.lines:
+            linesToRead = self.lines
+
+            # Check for unit line
+            potentialUnit = checkForUnit(lines=self.lines, unitLine=0)
+            potentialUnit = potentialUnit if potentialUnit is None else getUnit(key=key, unit=potentialUnit,
+                                                                                unitTypes=settingUnits, strict=True)
+
+            if potentialUnit is not None:
+                self.unit = potentialUnit
+                linesToRead = linesToRead[1:]
+
+            for line in linesToRead:
+                parts = line.split()
+
+                assert len(parts) > 0, f'Error in {key} on line {line}'
+
+                element = parts[0].strip().lower()
+
+                assert element in elements, f'Element {element} not known'
+
+                element = element[0].upper() + element[1:].lower()
+
+                try:
+                    value = float(parts[1])
+                except ValueError:
+                    raise ValueError(f'Error in {key} on line {line}')
+
+                self.values.append((element, value))
+
+    def getLines(self):
+        unitPart = [self.unit] if self.unit is not None else []
+        return unitPart + [f'{element:<3s}  {value:>15.12f}' for element, value in self.values]
 
 
 class ElementThreeVectorFloatBlock(Block):
@@ -409,7 +450,8 @@ cellKnown = [
     # Constraints.
     'cell_constraints',
 
-    # Pseudopotentials.
+    # Atomic data.
+    'species_gamma',
     'species_pot',
 
     # Symmetry.
@@ -459,30 +501,31 @@ cellPriorities = {
     # Constraints.
     'cell_constraints': 25.0,
 
-    # Pseudopotentials.
-    'species_pot': 30.0,
+    # Atomic data.
+    'species_gamma': 30.0,
+    'species_pot': 35.0,
 
     # Symmetry.
-    'symmetry_ops': 35.0,
+    'symmetry_ops': 40.0,
 
     # Fields.
-    'external_bfield': 40.0,
+    'external_bfield': 45.0,
 
     # Kpoints.
-    'kpoint_list': 45.0,
-    'kpoints_list': 45.0,
-    'bs_kpoint_list': 50.0,
-    'bs_kpoints_list': 50.0,
-    'phonon_kpoint_list': 55.0,
-    'phonon_kpoints_list': 55.0,
-    'phonon_fine_kpoint_list': 60.0,
-    'optics_kpoint_list': 65.0,
-    'optics_kpoints_list': 65.0,
-    'magres_kpoint_list': 70.0,
-    'supercell_kpoint_list': 75.0,
-    'supercell_kpoints_list': 75.0,
-    'spectral_kpoint_list': 80.0,
-    'spectral_kpoints_list': 80.0,
+    'kpoint_list': 50.0,
+    'kpoints_list': 50.0,
+    'bs_kpoint_list': 55.0,
+    'bs_kpoints_list': 55.0,
+    'phonon_kpoint_list': 60.0,
+    'phonon_kpoints_list': 60.0,
+    'phonon_fine_kpoint_list': 65.0,
+    'optics_kpoint_list': 70.0,
+    'optics_kpoints_list': 70.0,
+    'magres_kpoint_list': 75.0,
+    'supercell_kpoint_list': 80.0,
+    'supercell_kpoints_list': 80.0,
+    'spectral_kpoint_list': 85.0,
+    'spectral_kpoints_list': 85.0,
 
     # Keywords.
     'kpoint_mp_spacing': 100.1,
@@ -511,7 +554,8 @@ cellTypes = {
     # Constraints.
     'cell_constraints': ThreeVectorIntBlock,
 
-    # Pseudopotentials.
+    # Atomic data.
+    'species_gamma': ElementFloatBlock,
     'species_pot': StrBlock,
 
     # Symmetry.
@@ -565,6 +609,8 @@ cellUnits = {
 
     'positions_abs': 'length',
     'positions_frac': 'length',
+
+    'species_gamma': 'gyromagnetic',
 
     'external_bfield': 'bfield',
 
