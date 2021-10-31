@@ -334,11 +334,12 @@ class Calculation:
             toAnalyse -= SPINDENSITY
 
         if toAnalyse.intersection(POSFRACS):
-            self.positionsFrac = self.getSettingValue(key='positions_frac', settings=outSettings)
+            self.positionsFrac = self.getSetting(key='positions_frac', settings=outSettings)
 
             toAnalyse -= POSFRACS
 
-        print(f'Skipping result{"" if len(toAnalyse) == 1 else "s"} {", ".join(toAnalyse)} as do not know how to analyse (yet)')
+        if toAnalyse:
+            print(f'Skipping result{"" if len(toAnalyse) == 1 else "s"} {", ".join(toAnalyse)} as do not know how to analyse (yet)')
 
     def check(self, nameOutputLen=0, dirOutputLen=0, latestFinishTime=0.0):
         assert type(nameOutputLen) is int
@@ -698,6 +699,23 @@ class Calculation:
 
         return lines
 
+    def getSetting(self, key=None, settings=None):
+        assert type(key) is str
+
+        if settings is not None:
+            assert type(settings) is list
+            assert all(isinstance(s, Setting) for s in settings)
+        else:
+            settings = self.settings
+
+        key = key.strip().lower()
+
+        for s in settings:
+            if key == s.key:
+                return s
+        else:
+            raise ValueError(f'Setting {key} is not in settings list')
+
     def getSettingValue(self, key=None, settings=None):
         assert type(key) is str
 
@@ -718,7 +736,7 @@ class Calculation:
                 else:
                     raise ValueError(f'Cannot determine type of setting {s}')
 
-        raise ValueError(f'Setting {key} is not set in calculation')
+        raise ValueError(f'Setting {key} is not in settings list')
 
     def printHyperfine(self, **kwargs):
         element = kwargs.get('element', None)
