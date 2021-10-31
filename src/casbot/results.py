@@ -127,8 +127,8 @@ def getResult(resultToGet=None, lines=None):
                     else:
                         parts = line.split()
 
-                        if len(parts) == 5:
-                            element, ion, x, y, z = parts
+                        if len(parts) == 7:
+                            element, ion, x, y, z = parts[1:-1]
 
                             element = element[0].upper() + element[1:].lower()
 
