@@ -122,6 +122,8 @@ def getResult(resultToGet=None, lines=None):
                 hits = []
 
                 for numInBlock, lineInBlock in enumerate(lines[num:]):
+                    lineInBlock = lineInBlock.strip()
+
                     if all(char == '*' for char in lineInBlock):
                         break
                     else:
