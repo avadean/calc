@@ -802,16 +802,18 @@ class Calculation:
             print(string[:-1])  # Remove last line break.
 
     def printForces(self, **kwargs):
-        print('             Fx             Fy             Fz')
-        for force in self.forces:
-            print(f'   {force.__str__()}')
+        if self.forces:
+            print('             Fx             Fy             Fz')
+
+            for force in self.forces:
+                print(f'   {force}')
 
     def printSpinDensity(self, **kwargs):
         if self.spinDensity is not None:
             if self.spinDensity.shape == (3, 1):
-                print(f'             Sx             Sy             Sz\n        {self.spinDensity.__str__()}')
+                print(f'             Sx             Sy             Sz\n        {self.spinDensity}')
             else:
-                print(f'                             S\n                       {self.spinDensity.__str__()}')
+                print(f'                             S\n                       {self.spinDensity}')
 
     def rotate(self, axis=None, angle=None, degrees=True):
         try:
