@@ -185,6 +185,7 @@ class Block(Setting):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key)
 
+        self.values = []
         self.lines = lines
 
         if lines is not None:
@@ -216,7 +217,6 @@ class ElementFloatBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
 
-        self.values = []
         self.unit = 'RadSecTesla'
 
         if self.lines:
@@ -258,7 +258,6 @@ class ElementThreeVectorFloatBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
 
-        self.values = []
         self.unit = 'Ang' if self.key == 'positions_abs' else None  # TODO: add a default unit feature
 
         if self.lines:
@@ -333,7 +332,6 @@ class ThreeVectorFloatBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
 
-        self.values = []
         self.unit = 'Ang' if self.key == 'lattice_cart' else 'Tesla' if self.key == 'external_bfield' else None  # TODO: add a default unit feature
 
         if self.lines:
@@ -367,8 +365,6 @@ class ThreeVectorFloatWeightedBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
 
-        self.values = []
-
         for line in self.lines:
             try:
                 value = array(line.split(), dtype=float)
@@ -386,8 +382,6 @@ class ThreeVectorFloatWeightedBlock(Block):
 class ThreeVectorIntBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
-
-        self.values = []
 
         for line in self.lines:
             try:
