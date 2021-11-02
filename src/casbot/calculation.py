@@ -808,8 +808,10 @@ class Calculation:
 
     def printSpinDensity(self, **kwargs):
         if self.spinDensity is not None:
-            print('             Sx             Sy             Sz')
-            print(f'        {self.spinDensity.__str__()}')
+            if self.spinDensity.shape == (3, 1):
+                print(f'             Sx             Sy             Sz\n        {self.spinDensity.__str__()}')
+            else:
+                print(f'                             S\n                       {self.spinDensity.__str__()}')
 
     def rotate(self, axis=None, angle=None, degrees=True):
         try:
