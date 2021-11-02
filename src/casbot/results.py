@@ -36,6 +36,14 @@ resultUnits = {'hyperfine_dipolarbare': 'energy',
                'forces': 'force'}
 
 
+nmrColors = {'hyperfine_dipolarbare': PrintColors.blue,
+             'hyperfine_dipolaraug': PrintColors.blue,
+             'hyperfine_dipolaraug2': PrintColors.blue,
+             'hyperfine_dipolar': PrintColors.blue,
+             'hyperfine_fermi': PrintColors.green,
+             'hyperfine_total': PrintColors.orange}
+
+
 
 def getResult(resultToGet=None, lines=None):
     assert type(resultToGet) is str
@@ -232,17 +240,12 @@ class NMR(Tensor):
 
         self.iso = self.trace / 3.0
 
-    def __str__(self, nameColor='', showTensor=False):
-        assert type(nameColor) is str
-        assert type(showTensor) is bool
+        self.printColor = getFromDict(key=self.key, dct=nmrColors, default='', strict=False)
 
-        string = f'       |->   {self.element+self.ion:<3s} {nameColor}{self.name:^16}{PrintColors.reset} {self.iso:>11.5f}   <-|'
+    def __str__(self):
+        rows = 3 * '\n        {:>12.5E}   {:>12.5E}   {:>12.5E}'
 
-        if showTensor:
-            rows = 3 * '\n        {:>12.5E}   {:>12.5E}   {:>12.5E}'
-            string += rows.format(*self.value.flatten())
-
-        return string
+        return f'       |->   {self.element+self.ion:<3s} {self.printColor}{self.name:^16}{PrintColors.reset} {self.iso:>11.5f}   <-|{rows.format(*self.value.flatten())}'
 
     def __add__(self, other):
         assert self.key == other.key, 'Cannot add different NMR tensors'

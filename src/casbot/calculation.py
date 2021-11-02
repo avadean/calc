@@ -614,7 +614,7 @@ class Calculation:
         for line in subLines:
             line = line.strip()
 
-            # Names with numbers in seem to break the date-time parser (TODO: consider using a different parser for date-time is this one is rubbish)
+            # Names with numbers in seem to break the date-time parser (TODO: consider using a different parser for date-time as this one is rubbish)
             if self.name is None:
                 return None
             elif line.startswith(self.name):
@@ -756,53 +756,50 @@ class Calculation:
     def printHyperfine(self, **kwargs):
         element = kwargs.get('element', None)
 
-        all_ = kwargs.get('all', False)
-        dipolar = kwargs.get('dipolar', False)
-        fermi = kwargs.get('fermi', False)
-
-        showTensors = kwargs.get('tensors', False)
-
         if element is not None:
             assert type(element) is str
 
             element = element.strip()
             element = None if element == '' else element[0].upper() + element[1:].lower()
 
+        all_ = kwargs.get('all', False)
+        dipolar = kwargs.get('dipolar', False)
+        fermi = kwargs.get('fermi', False)
+
         if all_:
-            tensorsList = [(self.hyperfineDipolarBareTensors, PrintColors.blue),
-                           (self.hyperfineDipolarAugTensors, PrintColors.blue),
-                           (self.hyperfineDipolarAug2Tensors, PrintColors.blue),
-                           (self.hyperfineDipolarTensors, PrintColors.blue),
-                           (self.hyperfineFermiTensors, PrintColors.green),
-                           (self.hyperfineTotalTensors, PrintColors.orange)]
+            tensorsList = [self.hyperfineDipolarBareTensors,
+                           self.hyperfineDipolarAugTensors,
+                           self.hyperfineDipolarAug2Tensors,
+                           self.hyperfineDipolarTensors,
+                           self.hyperfineFermiTensors,
+                           self.hyperfineTotalTensors]
 
         elif not dipolar and not fermi:
-            tensorsList = [(self.hyperfineDipolarTensors, PrintColors.blue),
-                           (self.hyperfineFermiTensors, PrintColors.green),
-                           (self.hyperfineTotalTensors, PrintColors.orange)]
+            tensorsList = [self.hyperfineDipolarTensors,
+                           self.hyperfineFermiTensors,
+                           self.hyperfineTotalTensors]
 
         else:
             tensorsList = []
 
             if dipolar:
-                tensorsList += [(self.hyperfineDipolarBareTensors, PrintColors.blue),
-                                (self.hyperfineDipolarAugTensors, PrintColors.blue),
-                                (self.hyperfineDipolarAug2Tensors, PrintColors.blue),
-                                (self.hyperfineDipolarTensors, PrintColors.blue)]
+                tensorsList += [self.hyperfineDipolarBareTensors,
+                                self.hyperfineDipolarAugTensors,
+                                self.hyperfineDipolarAug2Tensors,
+                                self.hyperfineDipolarTensors]
 
             if fermi:
-                tensorsList += [(self.hyperfineFermiTensors, PrintColors.green)]
+                tensorsList += [self.hyperfineFermiTensors]
 
         string = ''
 
-        for tensors, color in tensorsList:
+        for tensors in tensorsList:
             for tensor in tensors:
                 if element is None or (element is not None and tensor.element == element):
-                    string += tensor.__str__(nameColor=color, showTensor=showTensors) + '\n'
+                    string += f'{tensor}\n'
 
-        string = string[:-1]  # Remove last line break.
-
-        print(string)
+        if string:
+            print(string[:-1])  # Remove last line break.
 
     def printForces(self, **kwargs):
         print('             Fx             Fy             Fz')
