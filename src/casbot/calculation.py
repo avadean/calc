@@ -803,10 +803,12 @@ class Calculation:
 
     def printForces(self, **kwargs):
         if self.forces:
-            print('             Fx             Fy             Fz')
+            string = '             Fx             Fy             Fz'
 
             for force in self.forces:
-                print(f'   {force}')
+                string += f'   {force}'
+
+            print(string)
 
     def printSpinDensity(self, **kwargs):
         if self.spinDensity is not None:
