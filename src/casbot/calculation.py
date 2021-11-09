@@ -651,7 +651,10 @@ class Calculation:
         if any((self.name in file_ and '.err' in file_) for file_ in listdir(self.directory)):
             return 'errored'
 
-        self.setName(strict=True)
+        self.setName(strict=False)
+
+        if self.name is None:
+            return 'unnameable'
 
         subFile = f'{self.directory}{self.name}.sub'
         castepFile = f'{self.directory}{self.name}.castep'
@@ -806,7 +809,7 @@ class Calculation:
             string = '             Fx             Fy             Fz'
 
             for force in self.forces:
-                string += f'   {force}'
+                string += f'\n   {force}'
 
             print(string)
 
