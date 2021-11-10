@@ -1,5 +1,5 @@
 from casbot.data import assertBetween, assertCount,\
-    elements,\
+    Any, elements,\
     getUnit, getFromDict,\
     stringToValue
 
@@ -948,8 +948,8 @@ paramValues = {
     # extra
     'iprint': [1, 2, 3],
     'opt_strategy_bias': [-3, -2, -1, 0, 1, 2, 3],
-    'continuation': ['default'],
-    'reuse': ['default'],
+    'continuation': [Any(type_=str)],
+    'reuse': [Any(type_=str)],
     'rand_seed': [-float('inf'), float('inf')],
 }
 
@@ -1120,7 +1120,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                    #                                                                '   0.0  5.7907   0.0',
                    #                                                                '   0.0   0.0  5.7907']),
 
-                   #               ElementThreeVectorFloatBlock(key='positions_abs',
+                   #               ElementThreeVectorFloatBlock(key='positions_frac',
                    #                                            lines=['  H   0.081000000000000   0.121000000000000  -0.2020000000000000',
                    #                                                   '  Br  0.000000000000000   0.000000000000000   0.0000000000000000'])],
 
@@ -1158,7 +1158,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                    #                                                               '  0.00000   3.48800   0.00000',
                    #                                                               '  0.00000   0.00000   2.82300']),
 
-                   #              ElementThreeVectorFloatBlock(key='positions_abs',
+                   #              ElementThreeVectorFloatBlock(key='positions_frac',
                    #                                           lines=['  H   0.500000	0.500000	0.500000',
                    #                                                  '  I   0.500000	0.000000	0.745000']),
 
