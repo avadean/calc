@@ -222,7 +222,7 @@ class Model:
 
         axis = axis.strip().lower()
 
-        knownPlots = ['bfield', 'fermiiso']
+        knownPlots = ['bfield', 'fermiiso', 'kpointspacing']
 
         assert axis in knownPlots, f'Do not know how to plot {axis}'
 
@@ -234,21 +234,17 @@ class Model:
 
         if axis == 'bfield':
             # Due to the groupDensityCalculations above, the bfield will only pick up the z component if density = True.
-            for c in calculations:
-                values.append(c.getSettingValue('external_bfield'))
-
-            values = [norm(value) for value in values]
+            values = [norm(c.getSettingValue('external_bfield')) for c in calculations]
 
         elif axis == 'fermiiso':
             ion = kwargs.get('ion', None)
 
-
             assert type(ion) is int, 'Enter ion to get Fermi tensor for as int'
 
-            for c in calculations:
-                values.append(c.hyperfineFermiTensors[ion])
+            values = [c.hyperfineFermiTensors[ion].iso for c in calculations]
 
-            values = [t.iso for t in values]
+        elif axis == 'kpointspacing':
+            values = [c.getSettingValue('kpoint_mp_spacing') for c in calculations]
 
         return values
 
