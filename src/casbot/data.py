@@ -244,6 +244,20 @@ def unitConvert(fromUnit=None, toUnit=None):
     return conversion
 
 
+# Dummy class to return True for any equals call.
+class Any:
+    def __init__(self, type_=None):
+        self.type_ = type_
+
+    def __eq__(self, other):
+        if self.type_ is None:
+            return True
+
+        if type(other) is not self.type_:
+            return False
+
+        return True
+
 
 class PrintColors:
     default = '\033[39m'
