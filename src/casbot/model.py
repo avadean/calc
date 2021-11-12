@@ -334,7 +334,8 @@ class Model:
                 if cZ.name is not None:
                     cX.name += f'z:{cZ.name} '
 
-            cX.name = cX.name.strip()
+            if cX.name is not None:
+                cX.name = cX.name.strip()
 
             cX.directory = f'{cX.directory[:-2]}xyz/'
 
