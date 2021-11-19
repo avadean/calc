@@ -1367,6 +1367,10 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                               (StrBlock(key='devel_code', lines=['density_in_y=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
                                               (StrBlock(key='devel_code', lines=['density_in_z=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0']))],
 
+                            'bfielddensityneg': [(StrBlock(key='devel_code', lines=['density_in_x=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '-500.0 0.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 -500.0 0.0'])),
+                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 -500.0']))],
+
                             'socdensity': [(StrKeyword(key='spin_treatment', value='scalar'), BoolKeyword(key='spin_orbit_coupling', value=False)),
 
                                            (StrKeyword(key='spin_treatment', value='vector'), BoolKeyword(key='spin_orbit_coupling', value=False)),
