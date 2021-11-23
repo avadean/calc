@@ -469,11 +469,12 @@ class Model:
         else:
             print(f'*** Ran {len(calculations)} calculations ***')
 
-    def sub(self, test=False, force=False, passive=False, shuffle=False, queueFile=None):
+    def sub(self, test=False, force=False, passive=False, shuffle=False, reverse=False, queueFile=None):
         assert type(test) is bool
         assert type(force) is bool
         assert type(passive) is bool
         assert type(shuffle) is bool
+        assert type(reverse) is bool
 
         if not force:
             calculations = [c for c in self.calculations if c.getStatus() not in ['completed', 'running', 'submitted']]
@@ -483,10 +484,16 @@ class Model:
         else:
             calculations = self.calculations
 
+        if shuffle:
+            assert not reverse
+
         if queueFile is not None:
             assert type(queueFile) is str
 
         calculations = sample(calculations, k=len(calculations)) if shuffle else calculations
+
+        if reverse:
+            calculations.reverse()
 
         for calculation in calculations:
             calculation.sub(test=test,
