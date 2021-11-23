@@ -357,6 +357,8 @@ unitConversions = { 'ang':  { 'ang': 1.0         , 'bohr': 1.889726133},
 
 stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_HI'],
 
+                               'chalcogenides': ['001_H2O', '002_H2S', '003_H2Se', '004_H2Te'],
+
                                'soc': ['001_scalar_soc_false',
                                        '002_spinor_soc_false',
                                        '003_spinor_soc_true'],
