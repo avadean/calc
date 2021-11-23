@@ -359,6 +359,8 @@ stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_
 
                                'chalcogenides': ['001_H2O', '002_H2S', '003_H2Se', '004_H2Te'],
 
+                               'methylhalides': ['001_CH3F', '002_CH3Cl', '003_CH3Br', '004_CH3I'],
+
                                'soc': ['001_scalar_soc_false',
                                        '002_spinor_soc_false',
                                        '003_spinor_soc_true'],
@@ -438,7 +440,9 @@ stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_
 
 stringToVariableDirectoriesAliases = {'xbfield': stringToVariableDirectories.get('bfield'),
                                       'ybfield': stringToVariableDirectories.get('bfield'),
-                                      'zbfield': stringToVariableDirectories.get('bfield')
+                                      'zbfield': stringToVariableDirectories.get('bfield'),
+
+                                      'hydrogenhalides': stringToVariableDirectories.get('halides')
                                       }
 
 stringToVariableDirectories = stringToVariableDirectories | stringToVariableDirectoriesAliases
