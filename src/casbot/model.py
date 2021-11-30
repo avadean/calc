@@ -511,7 +511,8 @@ class Model:
 
         assert not Path(file).is_file() or overwrite, f'File {file} exists - use overwrite=True to overwrite'
 
-        pickleDump(self, open(file, 'wb'))
+        with open(file, 'wb') as f:
+            pickleDump(self, f)
 
         print(f'Model with {len(self.calculations)} calculations saved to {file} successfully')
 
@@ -520,7 +521,8 @@ class Model:
         assert type(file) is str
         assert Path(file).is_file(), f'Cannot find file {file}'
 
-        model = pickleLoad(open(file, 'rb'))
+        with open(file, 'rb') as f:
+            model = pickleLoad(f)
 
         print(f'Model with {len(model.calculations)} calculations loaded successfully')
 
