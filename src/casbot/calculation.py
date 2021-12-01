@@ -41,16 +41,18 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
     # Some checks on the calculations and directories.
     if directoryNames:
         assert len(variableSettings) == len(directoryNames), 'Number of variable settings must match directory depth'
-        assert all(len(variableSettings[num]) == len(directoryNames[num]) for num in range(len(variableSettings))), \
+        assert all(len(varSetts) == len(dirNames) for varSetts, dirNames in zip(variableSettings, directoryNames)), \
             'Variable settings shape must match directories shape'
 
         # Add numbers to the start of each directory name.
         #directoryNames = [['{:03}_{}'.format(n, directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
-        directoryNames = [[f'{directoryNames[num][n-1]}' for n in range(1, len(var) + 1)]
-                          for num, var in enumerate(variableSettings)]
+        #directoryNames = [[f'{directoryNames[num][n-1]}' for n in range(1, len(var) + 1)]
+        #                  for num, var in enumerate(variableSettings)]
+        directoryNames = [[f'{dirNames[n-1]}' for n in range(1, len(varSetts) + 1)]
+                          for varSetts, dirNames in zip(variableSettings, directoryNames)]
     else:
         # If we don't have directory names then default to just numbers.
-        directoryNames = [[f'{n:03}' for n in range(1, len(var) + 1)] for var in variableSettings]
+        directoryNames = [[f'{n:03}' for n in range(1, len(varSetts) + 1)] for varSetts in variableSettings]
 
     #assert sum(any(type(a) is str for a in variable) for variable in varSettingsProcessed) == 1,\
     #    'Can only have one iterable argument that is not a cell or param'
@@ -91,7 +93,8 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
     calculations = []
 
     # Loop through the possible combinations.
-    for combNum, combination in enumerate(varSettingsProcessed):
+    #for combNum, combination in enumerate(varSettingsProcessed):
+    for varSetts, dirNames in zip(varSettingsProcessed, directoryNames):
         name = None
 
         directory = '' # '{}'.format(get current working directory)
@@ -100,11 +103,11 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
         specificSettings = []
 
         # Loop through the tuples of specific cells/params of this combination.
-        for listNum, listOfSettings in enumerate(combination):
-            directory += directoryNames[combNum][listNum]
+        for lstSetts, dirName in zip(varSetts, dirNames):
+            directory += dirName
 
             # Loop through the specific tuple that contains many cells or params or both.
-            for setting in listOfSettings:
+            for setting in lstSetts:
                 if isinstance(setting, Setting):
                     specificSettings.append(setting)
 
