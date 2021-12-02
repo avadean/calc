@@ -1,4 +1,5 @@
 from casbot.data import assertCount, createDirectories,\
+    pi,\
     getFileLines,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
     PrintColors
@@ -10,7 +11,7 @@ from datetime import datetime
 from dateutil import parser
 from fnmatch import filter
 from itertools import product
-from math import floor, pi, sin, cos, sqrt
+from math import floor, sin, cos, sqrt
 from numpy import array, asarray, dot
 from os import chdir, getcwd, listdir
 from pathlib import Path
@@ -251,6 +252,8 @@ class Calculation:
     def __str__(self):
         string = 'Calculation ->'
 
+        self.setName(strict=False)
+
         if self.name is not None:
             string += f' {self.name}'
 
@@ -352,7 +355,7 @@ class Calculation:
             toAnalyse -= FORCES
 
         if toAnalyse.intersection(POSFRACS):
-            self.positionsFrac = self.getSetting(key='positions_frac', settings=outSettings)
+            self.positionsFrac = self.getSetting('positions_frac', settings=outSettings)
 
             toAnalyse -= POSFRACS
 
@@ -720,8 +723,8 @@ class Calculation:
 
         return lines
 
-    def getSetting(self, key=None, settings=None):
-        assert type(key) is str
+    def getSetting(self, *keys, settings=None):
+        assert all(type(key) is str for key in keys)
 
         if settings is not None:
             assert type(settings) is list
@@ -729,13 +732,14 @@ class Calculation:
         else:
             settings = self.settings
 
-        key = key.strip().lower()
+        keys = [key.strip().lower() for key in keys]
 
-        for s in settings:
-            if key == s.key:
-                return s
+        for key in keys:
+            for s in settings:
+                if key == s.key:
+                    return s
         else:
-            raise ValueError(f'Setting {key} is not in settings list')
+            raise ValueError(f'Setting(s) {", ".join(keys)} not in settings list')
 
     def getSettingValue(self, key=None, settings=None):
         assert type(key) is str
@@ -771,6 +775,21 @@ class Calculation:
         all_ = kwargs.get('all', False)
         dipolar = kwargs.get('dipolar', False)
         fermi = kwargs.get('fermi', False)
+        tesla = kwargs.get('tesla', False)
+        ppm = kwargs.get('ppm', False)
+
+        if tesla and ppm:
+            raise ValueError('Cannot choose units of Tesla and ppm for hyperfine print')
+
+        bfield = None
+
+        if ppm:
+            # To convert to ppm we need to know the applied bfield.
+            bfield = self.getSettingValue(key='external_bfield')
+
+            # Now need to get norm of bfield.
+            # To get from MHz to bfield we need to know the gyromagnetic ratio of the element in question.
+
 
         if all_:
             tensorsList = [self.hyperfineDipolarBareTensors,
@@ -838,7 +857,11 @@ class Calculation:
         angle = pi * angle / 180.0 if degrees else angle
 
         # Normalise the axis to rotate around.
-        axis = axis / sqrt(dot(axis, axis))
+        length = sqrt(dot(axis, axis))
+
+        assert length != 0.0, 'Cannot rotate around the zero vector'
+
+        axis /= length
 
         # Ugly rotation matrix generation.
         a = cos(angle / 2.0)
@@ -850,12 +873,9 @@ class Calculation:
                                 [2.0 * (bc - ad)  ,  aa + cc - bb - dd,  2.0 * (cd + ab)  ],
                                 [2.0 * (bd + ac)  ,  2.0 * (cd - ab)  ,  aa + dd - bb - cc]])
 
-        for setting in self.settings:
-            if setting.key in ['positions_frac', 'positions_abs']:
-                setting.rotate(rotationMatrix=rotationMatrix)
-                break
-        else:
-            raise ValueError('Could not find a setting for element positions')
+        s = self.getSetting('positions_frac', 'positions_abs')
+
+        s.rotate(rotationMatrix=rotationMatrix)
 
     # TODO: consider fractional coordinates
     '''
