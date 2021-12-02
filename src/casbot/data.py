@@ -10,6 +10,177 @@ notificationAliasDefault = 'noti'
 queueFileDefault = '/home/dean/tools/files/castep_queue.txt'
 
 
+# Mathematical constants.
+pi = 3.141_592_653_589_793_238_462_643_383_279_502_884_197_169
+e  = 2.718_281_828_459_045_235_360_287_471_352_662_497_757_247
+
+# Fundamental constants. CODATA 2014.
+planckSI     = 6.626_070_040e-34                                              # Planck's constant SI.
+hbarSI       = planckSI / (2.0 * pi)                                          # Planck's reduced constant SI.
+speedLightSI = 299_792_458.0                                                  # Speed of light SI.
+mu0SI        = pi * 4.0e-7                                                    # Magnetic permeability SI.
+ep0SI        = 1.0 / (mu0SI * speedLightSI ** 2.0)                            # Electric permeability SI.
+eChargeSI    = 1.602_176_620_8e-19                                            # Electric charge SI.
+eMassSI      = 9.109_383_56e-31                                               # Electron mass SI.
+pMassSI      = 1.672_621_898e-27                                              # Proton mass SI.
+eGyroSI      = 1.760_859_644e+11                                              # Electron gyromagnetic ratio SI.
+avogadroSI   = 6.022_140_857e+23                                              # Avogadro's constant SI.
+molarGasSI   = 8.314_459_8                                                    # Molar gas constant SI.
+eSpinG       = -2.002_319_304_361_82                                          # Electron spin g-factor (unitless).
+fs           = eChargeSI ** 2.0 / (4.0 * pi * ep0SI * hbarSI * speedLightSI)  # Fine structure constant (unitless).
+boltzmannSI  = molarGasSI / avogadroSI                                        # Boltzmann's constant SI.
+amuSI        = 1.0e-3 / avogadroSI                                            # Atomic mass unit SI.
+
+
+# Dervied constants.
+# ! Lengths.
+bohr       = 1.0
+metre      = eMassSI * speedLightSI * fs / hbarSI
+centimetre = metre * 1.0e-2
+nanometre  = metre * 1.0e-9
+angstrom   = metre * 1.0e-10
+picometre  = metre * 1.0e-12
+
+# ! Masses.
+eMass = 1.0
+amu   = 1.0e-3 / avogadroSI / eMassSI
+kg    = 1.0 / eMassSI
+gram  = kg * 1.0e-3
+
+# ! Times.
+aut         = 1.0
+second      = speedLightSI ** 2.0 * fs ** 2.0 * eMassSI / hbarSI
+millisecond = 1.0e-3 * second
+microsecond = 1.0e-6 * second
+nanosecond  = 1.0e-9 * second
+picosecond  = 1.0e-12 * second
+femtosecond = 1.0e-15 * second
+
+# ! Charges.
+eCharge = 1.0
+coulomb  = 1.0 / eChargeSI
+
+# ! Electric dipole moments.
+debyeSI = 1.0e-21 / speedLightSI
+debye   = debyeSI * coulomb * metre
+
+# ! Spins.
+eSpin = 1.0
+hbar   = 2.0
+
+# ! Magnetic dipole moments.
+magnetonSI = eChargeSI * hbarSI / (2.0 * eMassSI)
+magneton   = hbar / eSpinG
+
+# ! Energies.
+hartree            = 1.0
+millihartree       = 1.0e-3
+electronvolt      = eChargeSI / (fs ** 2.0 * eMassSI * speedLightSI ** 2.0)
+millielectronvolt = electronvolt * 1.0e-3
+rydberg            = 0.5
+millirydberg       = rydberg * 1.0e-3
+joule              = 1.0 / (fs ** 2.0 * eMassSI * speedLightSI ** 2.0)
+erg                = joule * 1.0e-7
+kilojoulepermole   = joule / avogadroSI * 1.0e3
+kilocalpermole     = kilojoulepermole * 4.184  # 4.184 is specific heat of water.
+hertz              = planckSI * joule
+megahertz          = hertz * 1.0e6
+gigahertz          = hertz * 1.0e9
+terahertz          = hertz * 1.0e12
+wavenumber         = hertz * speedLightSI * 1.0e2
+kelvin             = boltzmannSI * joule
+
+# ! Entropy.
+joulebymolebykelvin   = 1.0 / molarGasSI
+caloriebymolebykelvin = 4.184 * joulebymolebykelvin
+
+# ! Forces.
+hartreebybohr = 1.0
+eVbyang       = electronvolt / angstrom
+newton        = joule / metre
+dyne          = newton * 1.0e-5
+
+# ! Velocities.
+auv            = 1.0
+angperps       = angstrom / picosecond
+angperfs       = angstrom / femtosecond
+bohrperps      = bohr / picosecond
+bohrperfs      = bohr / femtosecond
+metrepersecond = metre / second
+
+# ! Pressures.
+hartreebybohr3 = 1.0
+evbyang3       = electronvolt / angstrom ** 3.0
+pascal         = newton / metre ** 2.0
+megapascal     = pascal * 1.0e6
+gigapascal     = pascal * 1.0e9
+terapascal     = pascal * 1.0e12
+petapascal     = pascal * 1.0e15
+atmosphere     = pascal * 101325.027  # 101325.027 is conversion to atmospheres.
+bar            = pascal * 1.0e5
+megabar        = bar * 1.0e6
+
+# ! Reciprocal length.
+invbohr      = 1.0
+invmetre     = 1.0 / metre
+invnanometre = 1.0 / nanometre
+invangstrom  = 1.0 / angstrom
+invpicometre = 1.0 / picometre
+
+# ! Force constants.
+hartreebybohr2   = 1.0
+evbyang2         = electronvolt / angstrom ** 2.0
+newtonbymetre    = newton / metre
+dynebycentimetre = dyne / centimetre
+
+# ! Volumes.
+bohr3       = 1.0
+metre3      = metre ** 3.0
+centimetre3 = (metre * 1.0e-2) ** 3.0
+nanometre3  = (metre * 1.0e-9) ** 3.0
+angstrom3   = (metre * 1.0e-10) ** 3.0
+picometre3  = (metre * 1.0e-12) ** 3.0
+
+# ! Magnetic resonance.
+acu          = 1.0
+ampere       = (fs ** 2.0 * eMassSI * speedLightSI ** 2.0 * planckSI) / eChargeSI
+acd          = 1.0
+amperemetre2 = ampere / metre ** 2.0
+amfd         = 1.0
+tesla        = eChargeSI * invmetre ** 2.0 * 2.0 * pi / planckSI
+gauss        = 1.0e-4 * eChargeSI * invmetre ** 2.0 * 2.0 * pi / planckSI
+agr          = 1.0
+radsectesla  = eMassSI / eChargeSI
+mhztesla     = 2.0 * pi * radsectesla * 1.0e-6
+bohr2        = 1.0
+fm2          = metre ** 2.0 * 1.0e-30
+barn         = metre ** 2.0 * 1.0e-28
+
+# ! IR intensities.
+e2byamu     = 1.0 / amu
+d2byamuang2 = (debye / angstrom) ** 2.0 / amu
+kmbymol     = d2byamuang2 / 42.2561  # 42.2561 is strange unit favoured by spectroscopists from Gaussian03 docs.
+
+# ! Electric field.
+hartreebybohrbye = 1.0
+eVbyangbye       = electronvolt / angstrom
+newtonbycoulomb  = joule / metre / eChargeSI
+
+# ! NLO Susceptibility  (1 / Efield).
+bohrebyhartree = 1.0
+pmbyvolt       = picometre / electronvolt
+
+
+'''
+unitConversions = {'ang': {'ang': 1.0, 'bohr': bohr / angstrom},
+                   'bohr': {'ang': angstrom / bohr, 'bohr': 1.0},
+
+                   'amfd': {'amfd': 1.0, 'tesla': tesla / amfd},
+                   'tesla': {'amfd': amfd / tesla, 'tesla': 1.0}
+                   }
+'''
+
+
 # Periodic table of elements.
 elements = ['h' ,                                                                                                 'he',
             'li', 'be',                                                             'b' , 'c' , 'n' , 'o' , 'f' , 'ne',
@@ -224,13 +395,15 @@ def getFileLines(file_=None):
     return lines
 
 
-def unitConvert(fromUnit=None, toUnit=None):
+def unitConvert(value=None, fromUnit=None, toUnit=None):
+    assert type(value) in (int, float)
     assert type(fromUnit) is str
     assert type(toUnit) is str
 
     fromUnit = fromUnit.strip().lower()
     toUnit = toUnit.strip().lower()
 
+    '''
     conversions = unitConversions.get(fromUnit, None)
 
     if conversions is None:
@@ -240,8 +413,21 @@ def unitConvert(fromUnit=None, toUnit=None):
 
     if conversion is None:
         raise ValueError(f'Do not know unit {toUnit} to convert to')
+    '''
 
-    return conversion
+    try:
+        fromUnit = eval(fromUnit)
+    except NameError:
+        raise NameError(f'Do not know unit {fromUnit} to convert from')
+
+    try:
+        toUnit = eval(toUnit)
+    except NameError:
+        raise NameError(f'Do not know unit {toUnit} to convert to')
+
+    conversion = toUnit / fromUnit
+
+    return value / conversion
 
 
 # Dummy class to return True for any equals call.
@@ -351,9 +537,7 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
                    'spin' : ['hbar/2']
                    }
 
-unitConversions = { 'ang':  { 'ang': 1.0         , 'bohr': 1.889726133},
-                    'bohr': { 'ang': 0.5291772086, 'bohr': 1.0}
-                    }
+
 
 stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_HI'],
 
