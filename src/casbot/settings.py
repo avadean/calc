@@ -249,6 +249,9 @@ class ElementFloatBlock(Block):
 
                 self.values.append((element, value))
 
+    def __str__(self):
+        return '; '.join(self.getLines())
+
     def getLines(self):
         unitPart = [self.unit] if self.unit is not None else []
         return unitPart + [f'{element:<3s}  {value:>15.12f}' for element, value in self.values]
@@ -288,9 +291,12 @@ class ElementThreeVectorFloatBlock(Block):
                 except ValueError:
                     raise ValueError(f'Error in {key} on line {line}')
 
-                assert value.shape == (3,), f'Shape error in {key} on line {line}'
+                assert value.shape == (3, ), f'Shape error in {key} on line {line}'
 
                 self.values.append((element, value))
+
+    def __str__(self):
+        return '; '.join(self.getLines())
 
     def getLines(self):
         unitPart = [self.unit] if self.unit is not None else []
@@ -312,7 +318,7 @@ class ElementThreeVectorFloatBlock(Block):
     '''
     def translate(self, translationVector=None, fromUnit='ang'):
         assert type(translationVector) is ndarray
-        assert translationVector.shape == (3,)
+        assert translationVector.shape == (3, )
 
         assert type(fromUnit) is str
 
@@ -322,6 +328,7 @@ class ElementThreeVectorFloatBlock(Block):
 
         toUnit = self.unit if self.unit is not None else 'ang'  # Default in castep is ang
 
+        # TODO: consider this unit conversion
         translationVector = unitConvert(fromUnit=fromUnit, toUnit=toUnit)
 
         self.values = {element: vector + translationVector for element, vector in self.values.items()}
@@ -352,9 +359,12 @@ class ThreeVectorFloatBlock(Block):
                 except ValueError:
                     raise ValueError(f'Error in {key} on line {line}')
 
-                assert value.shape == (3,), f'Shape error in {key} on line {line}'
+                assert value.shape == (3, ), f'Shape error in {key} on line {line}'
 
                 self.values.append(value)
+
+    def __str__(self):
+        return '; '.join(self.getLines())
 
     def getLines(self):
         unitPart = [self.unit] if self.unit is not None else []
@@ -371,9 +381,12 @@ class ThreeVectorFloatWeightedBlock(Block):
             except ValueError:
                 raise ValueError(f'Error in {key} on line {line}')
 
-            assert value.shape == (4,), f'Shape error in {key} on line {line}'
+            assert value.shape == (4, ), f'Shape error in {key} on line {line}'
 
             self.values.append(value)
+
+    def __str__(self):
+        return '; '.join(self.getLines())
 
     def getLines(self):
         return ['   '.join('{:>4.2f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
@@ -389,9 +402,12 @@ class ThreeVectorIntBlock(Block):
             except ValueError:
                 raise ValueError(f'Error in {key} on line {line}')
 
-            assert value.shape == (3,), f'Shape error in {key} on line {line}'
+            assert value.shape == (3, ), f'Shape error in {key} on line {line}'
 
             self.values.append(value)
+
+    def __str__(self):
+        return '; '.join(self.getLines())
 
     def getLines(self):
         return ['  ' + '   '.join('{:>3d}' for _ in range(len(vector))).format(*vector) for vector in self.values]
