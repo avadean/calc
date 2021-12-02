@@ -31,7 +31,7 @@ class Model:
         string = ''
 
         for calculation in self.calculations:
-            string += calculation.__str__() + '\n'
+            string += f'{calculation}\n'
 
         string = string[:-1] # Remove last line break.
 
@@ -387,6 +387,10 @@ class Model:
         assert all(type(arg) is str for arg in args)
 
         args = set([arg.strip().lower() for arg in args])
+
+        assert all(type(kwarg) is str for kwarg in kwargs)
+
+        kwargs = {kwarg.strip().lower(): val for kwarg, val in kwargs.items()}
 
         calculations = self.calculations
 
