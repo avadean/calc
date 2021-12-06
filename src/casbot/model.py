@@ -2,7 +2,7 @@ from casbot.calculation import Calculation
 
 from collections import Counter
 from copy import deepcopy
-from matplotlib.pyplot import plot, scatter, show
+from matplotlib.pyplot import plot, scatter, show, xscale
 from numpy import ndarray
 from numpy.linalg import norm
 from pathlib import Path
@@ -190,6 +190,11 @@ class Model:
     def plot(self, x=None, y=None, **kwargs):
         assert type(x) in [str, list, ndarray]
         assert type(y) in [str, list, ndarray]
+        assert all(type(kwarg) is str for kwarg in kwargs)
+
+        kwargs = {key.strip().lower(): val for key, val in kwargs.items()}
+
+        density = kwargs.get('density', True)
 
         doneX, doneY = False, False
 
@@ -198,19 +203,26 @@ class Model:
         if type(y) is list: y, doneY = y, True
         if type(y) is ndarray: y, doneY = y.asarray(), True
 
-        if not doneX:
-            x = self.processStrAxis(axis=x, **kwargs)
+        calculations = self.groupDensityCalculations(calculations=self.calculations) if density else self.calculations
 
-        if not doneY:
-            y = self.processStrAxis(axis=y, **kwargs)
+        if not doneX and not doneY:
+            x, y = self.processStrAxis(x, y, calculations=calculations, **kwargs)
+
+        elif not doneX:
+            x, = self.processStrAxis(x, calculations=calculations, **kwargs)
+
+        elif not doneY:
+            y, = self.processStrAxis(y, calculations=calculations, **kwargs)
+
+        assert len(x) == len(y), f'Mismatch in x and y axis lengths: x is {len(x)}, y is {len(y)}'
 
         typeOfPlot = kwargs.get('type', 'plot')
-
-        assert type(typeOfPlot) is str, 'Please enter string for type of plot'
-
+        assert type(typeOfPlot) is str, 'Enter plot type as string'
         typeOfPlot = typeOfPlot.strip().lower()
+        assert typeOfPlot in ['plot', 'scatter', 'both'], f'Plotting type should be {", ".join(["plot", "scatter", "both"])}'
 
-        assert typeOfPlot in ['plot', 'scatter', 'both'], f'Do not know plotting type {typeOfPlot}'
+        logarithmic = kwargs.get('log', False)
+        assert type(logarithmic) is bool, 'Enter logarithmic type as bool'
 
         if typeOfPlot in ['plot', 'both']:
             plot(x, y)
@@ -218,38 +230,87 @@ class Model:
         if typeOfPlot in ['scatter', 'both']:
             scatter(x, y)
 
+        if logarithmic:
+            xscale('log')
+
         show()
 
-    def processStrAxis(self, axis=None, **kwargs):
-        assert type(axis) is str
+    @staticmethod
+    def processStrAxis(*args, calculations=None, **kwargs):
+        assert all(type(arg) is str for arg in args)
+        assert len(args) != 0, 'Enter at least one axis to process'
+        assert len(args) in (1, 2), 'Can only plot 2 dimensions for now'
+        assert all(type(kwarg) is str for kwarg in kwargs)
 
-        axis = axis.strip().lower()
+        knownPlots = {'bfield', 'fermiiso', 'fermiisobfield', 'kpointspacing'}
 
-        knownPlots = ['bfield', 'fermiiso', 'kpointspacing']
+        args = [arg.strip().lower() for arg in args]
 
-        assert axis in knownPlots, f'Do not know how to plot {axis}'
+        # Don't set args to a set as it randomly changes the ordering and thus the ordering of the returned x and y values.
 
-        density = kwargs.get('density', False)
+        assert not set(args) - knownPlots, f'Do not know how to plot {", ".join(set(args) - knownPlots)}'
 
-        calculations = self.groupDensityCalculations(calculations=self.calculations) if density else self.calculations
+        assert type(calculations) is list
+        assert all(type(c) is Calculation for c in calculations)
 
-        values = []
+        # Generalised in case n dimensions is needed.
+        values = []  # Values of each argument for each calculation.
 
-        if axis == 'bfield':
-            # Due to the groupDensityCalculations above, the bfield will only pick up the z component if density = True.
-            values = [norm(c.getSettingValue('external_bfield')) for c in calculations]
+        # Settings for specific argument.
+        kwargs = {key.strip().lower(): val for key, val in kwargs.items()}
+        element = kwargs.get('element', None)
+        ion = kwargs.get('ion', None)
 
-        elif axis == 'fermiiso':
-            ion = kwargs.get('ion', None)
+        for c in calculations:
+            cValues = []  # Values of each argument for this specific calculation.
 
-            assert type(ion) is int, 'Enter ion to get Fermi tensor for as int'
+            for arg in args:
+                cValue = None  # Value of argument for this specific calculation.
 
-            values = [c.hyperfineFermiTensors[ion].iso for c in calculations]
+                if arg == 'bfield':
+                    # Due to the groupDensityCalculations, the bfield will only pick up one component if density = True.
+                    cValue = norm(c.getSettingValue('external_bfield'))
 
-        elif axis == 'kpointspacing':
-            values = [c.getSettingValue('kpoint_mp_spacing') for c in calculations]
+                elif arg in ['fermiiso', 'fermiisobfield']:
+                    if not c.hyperfineFermiTensors:
+                        continue
 
-        return values
+                    assert type(element) is str, 'Enter element to get Fermi tensor for'
+                    assert type(ion) is int, 'Enter ion to get Fermi tensor for'
+
+                    element = element.strip()
+
+                    assert element, 'Enter element to get Fermi Tensor for'
+
+                    elementTensors = [tensor for tensor in c.hyperfineFermiTensors if tensor.element.strip().lower() == element.lower()]
+
+                    assert elementTensors, f'Cannot find any Fermi tensors corresponding to element {element}'
+
+                    assert len(elementTensors) >= ion, f'Ion requested for Fermi tensor does not exist, found {len(elementTensors)} tensors'
+
+                    cValue = elementTensors[ion-1].iso  # -1 because of Python indexing.
+
+                    # If fermiisobfield then we want the Fermi iso value divided by the bfield.
+                    if arg == 'fermiisobfield':
+                        cValue /= norm(c.getSettingValue('external_bfield'))
+
+                elif arg == 'kpointspacing':
+                    cValue = c.getSettingValue('kpoint_mp_spacing')
+
+                cValues.append(cValue)
+
+            # If we didn't find something correctly then we will have a None value - so ignore this point.
+            # Also, if we ignored a calculation because there was no value to find then our calcValues will not be the same lengths as the number of arguments asked for.
+            if any(val is None for val in cValues) or len(cValues) != len(args):
+                continue
+
+            # Concatenate new values onto current stack of values.
+            values.append(cValues)
+
+        # Each calculation's values are stored in a tuple in the values list. Zip the list together to return the x, y, etc. axis values individually.
+        values = zip(*values)  # We won't lose anything through zipping because of the len(cValues) != len(args) check above.
+
+        return values  #axisValues if len(axisValues) > 1 else axisValues[0]  # length can't be 0
 
     @staticmethod
     def groupDensityCalculations(calculations=None):
