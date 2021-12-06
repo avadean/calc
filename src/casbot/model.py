@@ -2,7 +2,7 @@ from casbot.calculation import Calculation
 
 from collections import Counter
 from copy import deepcopy
-from matplotlib.pyplot import plot, scatter, show, xscale
+from matplotlib.pyplot import plot, scatter, show, xscale, xlabel, ylabel
 from numpy import ndarray
 from numpy.linalg import norm
 from pathlib import Path
@@ -206,12 +206,16 @@ class Model:
         calculations = self.groupDensityCalculations(calculations=self.calculations) if density else self.calculations
 
         if not doneX and not doneY:
+            xlabel(x)
+            ylabel(y)
             x, y = self.processStrAxis(x, y, calculations=calculations, **kwargs)
 
         elif not doneX:
+            xlabel(x)
             x, = self.processStrAxis(x, calculations=calculations, **kwargs)
 
         elif not doneY:
+            ylabel(y)
             y, = self.processStrAxis(y, calculations=calculations, **kwargs)
 
         assert len(x) == len(y), f'Mismatch in x and y axis lengths: x is {len(x)}, y is {len(y)}'
