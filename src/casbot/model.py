@@ -37,6 +37,9 @@ class Model:
 
         return string
 
+    def __len__(self):
+        return len(self.calculations)
+
     def analyse(self, *toAnalyse, passive=False, reset=True):
         assert all(type(type_) is str for type_ in toAnalyse)
         assert type(passive) is bool
