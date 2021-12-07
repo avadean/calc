@@ -2517,22 +2517,31 @@ def readSettings(file_=None):
     with open(file_) as f:
         lines = f.read().splitlines()
 
+    # Strip lines and ignore empty ones.
     lines = [line.strip() for line in lines if line.strip()]
 
+    # Ignore whole line comments.
     lines = [line for line in lines if not line.startswith('#') and not line.startswith('!')]
 
-    settingKey = ''
-    inBlock = False
-    blockLines = []
+    settingKey = ''  # What setting are we looking at?
+    inBlock = False  # Are we in a block i.e. '%block species_pot'
+    blockLines = []  # What are the lines of the block we are in?
 
-    settings = []
+    settings = []  # All the settings we are going to get...
 
     for line in lines:
 
-        # Check for comment.
+        # Check for comment. This will go from left to right, so don't need to worry about multiple.
         comment = line.find('!')
 
         # Remove it if need be.
+        if comment != -1:
+            line = line[:comment].strip()
+
+        # And do the same with the other comment flag.
+        comment = line.find('#')
+
+        # And remove.
         if comment != -1:
             line = line[:comment].strip()
 
@@ -2623,9 +2632,9 @@ def readSettings(file_=None):
                     arguments = {'value': value, 'unit': unit}
 
                 elif len(parts) == 4:
-                    # e.g. kpoints_mp_grid : 1.0 1.0 1.0
+                    # e.g. kpoints_mp_grid : 1 1 1
                     key = parts[0].lower()
-                    value = stringToValue(' '.join(parts[1:3]))
+                    value = stringToValue(' '.join(parts[1:]))
 
                     arguments = {'value': value}
 
