@@ -1249,6 +1249,18 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
+                   'h2ocrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                                   '2.25969000000000       -3.91389788935532        0.00000000000000',
+                                                                                   '2.25969000000000        3.91389788935532        0.00000000000000',
+                                                                                   '0.00000000000000        0.00000000000000        7.35951000000000']),
+
+                                  ElementThreeVectorFloatBlock(key='positions_frac',
+                                                               lines=['H              0.449907681525901       0.899726237468610       0.021822099872174',
+                                                                      'H              0.336743825296009       0.673582218996844       0.192851865258861',
+                                                                      'O              0.330948493178090       0.661991543534546       0.061026034868965']),
+
+                                  VectorIntKeyword(key='kpoint_mp_grid', value=(3, 3, 2))],
+
                    'h2s': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                             '  10.0   0.0   0.0',
                                                                             '   0.0  10.0   0.0',
@@ -1260,6 +1272,18 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                                                                '  S             -0.000000004072088       0.000000002146601       0.011690591717938']),
 
                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'h2scrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                                   '4.93100000000000    0.00000000000000    0.00000000000000',
+                                                                                   '0.00000000000000    4.93100000000000    0.00000000000000',
+                                                                                   '0.00000000000000    0.00000000000000    4.93100000000000']),
+
+                                  ElementThreeVectorFloatBlock(key='positions_frac',
+                                                               lines=['H              0.435701473911940       0.248307316241313       0.054499064112790',
+                                                                      'H              0.044298587979226       0.248307457102906       0.054498965660194',
+                                                                      'S              0.239999938108834       0.239385226655781       0.247001970227016']),
+
+                                  VectorIntKeyword(key='kpoint_mp_grid', value=(3, 3, 3))],
 
                    'h2se': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                              '  10.0   0.0   0.0',
