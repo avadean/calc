@@ -1401,6 +1401,46 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                                    VectorIntKeyword(key='kpoint_mp_grid', value=(3, 2, 2))],
 
+                   'lih': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '3.99800000000000        0.00000000000000        0.00000000000000',
+                                                                            '0.00000000000000        3.99800000000000        0.00000000000000',
+                                                                            '0.00000000000000        0.00000000000000        3.99800000000000']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['H              0.500000000000000       0.500000000000000       0.500000000000000',
+                                                                                     'Li             0.000000000000000       0.000000000000000       0.000000000000000']),
+
+                           VectorIntKeyword(key='kpoint_mp_grid', value=(3, 3, 3))],
+
+                   'nah': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '4.78700000000000        0.00000000000000        0.00000000000000',
+                                                                            '0.00000000000000        4.78700000000000        0.00000000000000',
+                                                                            '0.00000000000000        0.00000000000000        4.78700000000000']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['H              0.500000000000000       0.500000000000000       0.500000000000000',
+                                                                                     'Na             0.000000000000000       0.000000000000000       0.000000000000000']),
+
+                           VectorIntKeyword(key='kpoint_mp_grid', value=(3, 3, 3))],
+
+                   'kh': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                           '5.70100000000000        0.00000000000000        0.00000000000000',
+                                                                           '0.00000000000000        5.70100000000000        0.00000000000000',
+                                                                           '0.00000000000000        0.00000000000000        5.70100000000000']),
+
+                          ElementThreeVectorFloatBlock(key='positions_frac', lines=['H              0.500000000000000       0.500000000000000       0.500000000000000',
+                                                                                    'K              0.000000000000000       0.000000000000000       0.000000000000000']),
+
+                          VectorIntKeyword(key='kpoint_mp_grid', value=(2, 2, 2))],
+
+                   'rbh': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '6.07500000000000        0.00000000000000        0.00000000000000',
+                                                                            '0.00000000000000        6.07500000000000        0.00000000000000',
+                                                                            '0.00000000000000        0.00000000000000        6.07500000000000']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['H              0.500000000000000       0.500000000000000       0.500000000000000',
+                                                                                     'Rb             0.000000000000000       0.000000000000000       0.000000000000000']),
+
+                           VectorIntKeyword(key='kpoint_mp_grid', value=(2, 2, 2))],
+
                    'gao': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                             '  12.0   0.0   0.0',
                                                                             '   0.0  12.0   0.0',
@@ -2500,7 +2540,12 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                             'methylhalides': [shortcutToCells.get('ch3f'),
                                               shortcutToCells.get('ch3cl'),
                                               shortcutToCells.get('ch3br'),
-                                              shortcutToCells.get('ch3i')]
+                                              shortcutToCells.get('ch3i')],
+
+                            'alkalihydrides': [shortcutToCells.get('lih'),
+                                               shortcutToCells.get('nah'),
+                                               shortcutToCells.get('kh'),
+                                               shortcutToCells.get('rbh')]
                             }
 
 defaultShortcut = {'defaults': [ThreeVectorIntBlock(key='cell_constraints', lines=['0   0   0', '0   0   0']),
