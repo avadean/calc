@@ -1445,6 +1445,16 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                            VectorIntKeyword(key='kpoint_mp_grid', value=(2, 2, 2))],
 
+                   'csh': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '6.43900000000000        0.00000000000000        0.00000000000000',
+                                                                            '0.00000000000000        6.43900000000000        0.00000000000000',
+                                                                            '0.00000000000000        0.00000000000000        6.43900000000000']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['H              0.500000000000000       0.500000000000000       0.500000000000000',
+                                                                                     'Cs             0.000000000000000       0.000000000000000       0.000000000000000']),
+
+                           VectorIntKeyword(key='kpoint_mp_grid', value=(2, 2, 2))],
+
                    'gao': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                             '  12.0   0.0   0.0',
                                                                             '   0.0  12.0   0.0',
@@ -2559,7 +2569,8 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                             'alkalihydrides': [shortcutToCells.get('lih'),
                                                shortcutToCells.get('nah'),
                                                shortcutToCells.get('kh'),
-                                               shortcutToCells.get('rbh')]
+                                               shortcutToCells.get('rbh'),
+                                               shortcutToCells.get('csh')]
                             }
 
 defaultShortcut = {'defaults': [ThreeVectorIntBlock(key='cell_constraints', lines=['0   0   0', '0   0   0']),
