@@ -1,6 +1,6 @@
-from casbot.data import assertBetween, assertCount,\
-    Any, elements,\
-    getUnit, getFromDict,\
+from casbot.data import assertBetween, assertCount, \
+    Any, elements, \
+    getUnit, getFromDict, \
     stringToValue
 
 from collections import Counter
@@ -291,7 +291,7 @@ class ElementThreeVectorFloatBlock(Block):
                 except ValueError:
                     raise ValueError(f'Error in {key} on line {line}')
 
-                assert value.shape == (3, ), f'Shape error in {key} on line {line}'
+                assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
                 self.values.append((element, value))
 
@@ -359,7 +359,7 @@ class ThreeVectorFloatBlock(Block):
                 except ValueError:
                     raise ValueError(f'Error in {key} on line {line}')
 
-                assert value.shape == (3, ), f'Shape error in {key} on line {line}'
+                assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
                 self.values.append(value)
 
@@ -381,7 +381,7 @@ class ThreeVectorFloatWeightedBlock(Block):
             except ValueError:
                 raise ValueError(f'Error in {key} on line {line}')
 
-            assert value.shape == (4, ), f'Shape error in {key} on line {line}'
+            assert value.shape == (4,), f'Shape error in {key} on line {line}'
 
             self.values.append(value)
 
@@ -402,7 +402,7 @@ class ThreeVectorIntBlock(Block):
             except ValueError:
                 raise ValueError(f'Error in {key} on line {line}')
 
-            assert value.shape == (3, ), f'Shape error in {key} on line {line}'
+            assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
             self.values.append(value)
 
@@ -445,8 +445,6 @@ class ElementStrBlock(Block):
     def getLines(self):
         return [f'{element:<3s}  {string}' for element, string in self.values.items()]
 '''
-
-
 
 cellKnown = [
     # Lattice.
@@ -629,7 +627,6 @@ cellUnits = {
 
     'symmetry_tol': 'length'
 }
-
 
 paramKnown = [  # task
     'task',
@@ -983,7 +980,6 @@ paramUnits = {
     'geom_force_tol': 'force'
 }
 
-
 stringToNiceValue = {
     'lda': 'LDA',
     'pw91': 'PW91',
@@ -1014,8 +1010,6 @@ stringToNiceValue = {
     'rscan': 'rSCAN'
 }
 
-
-
 settingKnown = cellKnown + paramKnown
 settingPriorities = cellPriorities | paramPriorities
 settingTypes = cellTypes | paramTypes
@@ -1041,7 +1035,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                                                                            '   0.0  10.0   0.0',
                                                                            '   0.0   0.0  10.0']),
 
-                          #ElementThreeVectorFloatBlock(key='positions_frac',
+                          # ElementThreeVectorFloatBlock(key='positions_frac',
                           #                             lines=['  H   0.1   0.1   0.099380480724825',
                           #                                    '  F   0.1   0.1   0.192319519275175']),
 
@@ -1056,7 +1050,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                                                                             '   0.0  10.0   0.0',
                                                                             '   0.0   0.0  10.0']),
 
-                           #ElementThreeVectorFloatBlock(key='positions_frac',
+                           # ElementThreeVectorFloatBlock(key='positions_frac',
                            #                             lines=['  H    0.009999871806914   0.009999872045901   0.009226072370290',
                            #                                    '  Cl   0.010000128193086   0.010000127954099   0.138173927629710']),
 
@@ -1066,12 +1060,23 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
+                   'hclcrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                                   '5.01400000000000        0.00000000000000        0.00000000000000',
+                                                                                   '0.00000000000000        4.38400000000000        0.00000000000000',
+                                                                                   '0.00000000000000        0.00000000000000        4.60000000000000']),
+
+                                  ElementThreeVectorFloatBlock(key='positions_frac',
+                                                               lines=['H              0.500000000265469       0.452779682986140       0.004188482251491',
+                                                                      'Cl             0.499999999734531       0.244220317013860       0.203811517748509']),
+
+                                  VectorIntKeyword(key='kpoint_mp_grid', value=(2, 3, 3))],
+
                    'hbr': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                             '  12.0   0.0   0.0',
                                                                             '   0.0  12.0   0.0',
                                                                             '   0.0   0.0  12.0']),
 
-                           #ElementThreeVectorFloatBlock(key='positions_frac',
+                           # ElementThreeVectorFloatBlock(key='positions_frac',
                            #                             lines=['  H    -0.000002946190640  -0.000003049675148   0.011117199951347',
                            #                                    '  Br    0.000002946190640   0.000003049675148   0.130282800048653']),
 
@@ -1081,7 +1086,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hbrcrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hbrcrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                                '  5.7907   0.0   0.0',
                    #                                                                '   0.0  5.7907   0.0',
                    #                                                                '   0.0   0.0  5.7907']),
@@ -1103,13 +1108,12 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                                   VectorIntKeyword(key='kpoint_mp_grid', value=(2, 2, 2))],
 
-
                    'hi': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                            '  12.0   0.0   0.0',
                                                                            '   0.0  12.0   0.0',
                                                                            '   0.0   0.0  12.0']),
 
-                          #ElementThreeVectorFloatBlock(key='positions_frac',
+                          # ElementThreeVectorFloatBlock(key='positions_frac',
                           #                             lines=['  H   0.000000000013618   0.000000000163156  -0.000952894767401',
                           #                                    '  I  -0.000000000013618  -0.000000000163156   0.135036228100734']),
 
@@ -1119,7 +1123,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hicrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hicrystal': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                               '  3.48800   0.00000   0.00000',
                    #                                                               '  0.00000   3.48800   0.00000',
                    #                                                               '  0.00000   0.00000   2.82300']),
@@ -1141,7 +1145,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                                  VectorIntKeyword(key='kpoint_mp_grid', value=(3, 3, 4))],
 
-                   #'hfrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hfrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                           '  10.0   0.0   0.0',
                    #                                                           '   0.0  10.0   0.0',
                    #                                                           '   0.0   0.0  10.0']),
@@ -1154,7 +1158,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                    #          ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hclrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hclrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                            '  10.0   0.0   0.0',
                    #                                                            '   0.0  10.0   0.0',
                    #                                                            '   0.0   0.0  10.0']),
@@ -1167,7 +1171,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                    #           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hbrrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hbrrot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                            '  12.0   0.0   0.0',
                    #                                                            '   0.0  12.0   0.0',
                    #                                                            '   0.0   0.0  12.0']),
@@ -1180,7 +1184,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                    #           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hirot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hirot': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                           '  12.0   0.0   0.0',
                    #                                                           '   0.0  12.0   0.0',
                    #                                                           '   0.0   0.0  12.0']),
@@ -1193,7 +1197,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                    #          ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hftrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hftrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                             '  10.0   0.0   0.0',
                    #                                                             '   0.0  10.0   0.0',
                    #                                                             '   0.0   0.0  10.0']),
@@ -1204,7 +1208,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                    #            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hcltrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hcltrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                              '  10.0   0.0   0.0',
                    #                                                              '   0.0  10.0   0.0',
                    #                                                              '   0.0   0.0  10.0']),
@@ -1215,7 +1219,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                    #             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hbrtrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hbrtrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                              '  12.0   0.0   0.0',
                    #                                                              '   0.0  12.0   0.0',
                    #                                                              '   0.0   0.0  12.0']),
@@ -1226,7 +1230,7 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                    #             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
-                   #'hitrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                   # 'hitrans': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                    #                                                             '  12.0   0.0   0.0',
                    #                                                             '   0.0  12.0   0.0',
                    #                                                             '   0.0   0.0  12.0']),
@@ -1337,9 +1341,9 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                                     ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
                    'ch3f': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
-                                                                                     '  10.0   0.0   0.0',
-                                                                                     '   0.0  10.0   0.0',
-                                                                                     '   0.0   0.0  10.0']),
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
 
                             ElementThreeVectorFloatBlock(key='positions_frac', lines=['H              0.000000375922766       0.104092705133823      -0.101339471583022',
                                                                                       'H              0.090143571233639      -0.052046473539305      -0.101339289601869',
@@ -1557,13 +1561,15 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                         StrBlock(key='devel_code', lines=['density_in_y=true']),
                                         StrBlock(key='devel_code', lines=['density_in_z=true'])],
 
-                            'bfielddensity': [(StrBlock(key='devel_code', lines=['density_in_x=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
-                                              (StrBlock(key='devel_code', lines=['density_in_y=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
-                                              (StrBlock(key='devel_code', lines=['density_in_z=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0']))],
+                            'bfielddensity': [
+                                (StrBlock(key='devel_code', lines=['density_in_x=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '500.0 0.0 0.0'])),
+                                (StrBlock(key='devel_code', lines=['density_in_y=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 500.0 0.0'])),
+                                (StrBlock(key='devel_code', lines=['density_in_z=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 500.0']))],
 
-                            'bfielddensityneg': [(StrBlock(key='devel_code', lines=['density_in_x=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '-500.0 0.0 0.0'])),
-                                                 (StrBlock(key='devel_code', lines=['density_in_y=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 -500.0 0.0'])),
-                                                 (StrBlock(key='devel_code', lines=['density_in_z=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 -500.0']))],
+                            'bfielddensityneg': [
+                                (StrBlock(key='devel_code', lines=['density_in_x=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '-500.0 0.0 0.0'])),
+                                (StrBlock(key='devel_code', lines=['density_in_y=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 -500.0 0.0'])),
+                                (StrBlock(key='devel_code', lines=['density_in_z=true']), ThreeVectorFloatBlock(key='external_bfield', lines=['TESLA', '0.0 0.0 -500.0']))],
 
                             'socdensity': [(StrKeyword(key='spin_treatment', value='scalar'), BoolKeyword(key='spin_orbit_coupling', value=False)),
 
@@ -2517,6 +2523,10 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                         shortcutToCells.get('hbr'),
                                         shortcutToCells.get('hi')],
 
+                            'halidecrystals': [shortcutToCells.get('hclcrystal'),
+                                               shortcutToCells.get('hbrcrystal'),
+                                               shortcutToCells.get('hicrystal')],
+
                             # 'halidesrot': [shortcutToCells.get('hfrot'),
                             #               shortcutToCells.get('hclrot'),
                             #               shortcutToCells.get('hbrrot'),
@@ -2531,6 +2541,10 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                                 shortcutToCells.get('hcl'),
                                                 shortcutToCells.get('hbr'),
                                                 shortcutToCells.get('hi')],
+
+                            'hydrogenhalidecrystals': [shortcutToCells.get('hclcrystal'),
+                                                       shortcutToCells.get('hbrcrystal'),
+                                                       shortcutToCells.get('hicrystal')],
 
                             'chalcogenides': [shortcutToCells.get('h2o'),
                                               shortcutToCells.get('h2s'),
@@ -2558,11 +2572,7 @@ defaultShortcut = {'defaults': [ThreeVectorIntBlock(key='cell_constraints', line
                                 IntKeyword(key='iprint', value=3)]
                    }
 
-
-
 stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases | defaultShortcut
-
-
 
 
 def setting(key=None, **kwargs):
@@ -2758,7 +2768,7 @@ def createVariableSettings(*variableSettings):
     variableSettingsProcessed = []
 
     for variable in variableSettings:
-        assert type(variable) in [str, list, tuple],\
+        assert type(variable) in [str, list, tuple], \
             f'Specify only shortcut strings, lists or tuples for variable cells/params, not {type(variable)}'
 
         # Strings are shortcuts, but shortcuts to specific combinations of cells/params.

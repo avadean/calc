@@ -541,6 +541,8 @@ unitTypeToUnit = { 'energy' : ['ev', 'ha', 'j', 'ry', 'mhz'],
 
 stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_HI'],
 
+                               'halidecrystals': ['002_HCl', '003_HBr', '004_HI'],
+
                                'chalcogenides': ['001_H2O', '002_H2S', '003_H2Se', '004_H2Te'],
 
                                'methylhalides': ['001_CH3F', '002_CH3Cl', '003_CH3Br', '004_CH3I'],
