@@ -218,6 +218,7 @@ class Calculation:
     hyperfineDipolarAug2Tensors = []
     hyperfineDipolarTensors = []
     hyperfineFermiTensors = []
+    hyperfineZFCTensors = []
     hyperfineTotalTensors = []
 
     forces = []
@@ -340,6 +341,7 @@ class Calculation:
             self.hyperfineDipolarAug2Tensors = getResult(resultToGet='hyperfine_dipolaraug2', lines=castepLines)
             self.hyperfineDipolarTensors = getResult(resultToGet='hyperfine_dipolar', lines=castepLines)
             self.hyperfineFermiTensors = getResult(resultToGet='hyperfine_fermi', lines=castepLines)
+            self.hyperfineZFCTensors = getResult(resultToGet='hyperfine_zfc', lines=castepLines)
             self.hyperfineTotalTensors = getResult(resultToGet='hyperfine_total', lines=castepLines)
 
             toAnalyse -= HYPERFINE
@@ -797,11 +799,13 @@ class Calculation:
                            self.hyperfineDipolarAug2Tensors,
                            self.hyperfineDipolarTensors,
                            self.hyperfineFermiTensors,
+                           self.hyperfineZFCTensors,
                            self.hyperfineTotalTensors]
 
         elif not dipolar and not fermi:
             tensorsList = [self.hyperfineDipolarTensors,
                            self.hyperfineFermiTensors,
+                           self.hyperfineZFCTensors,
                            self.hyperfineTotalTensors]
 
         else:
@@ -814,7 +818,8 @@ class Calculation:
                                 self.hyperfineDipolarTensors]
 
             if fermi:
-                tensorsList += [self.hyperfineFermiTensors]
+                tensorsList += [self.hyperfineFermiTensors,
+                                self.hyperfineZFCTensors]
 
         string = ''
 

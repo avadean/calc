@@ -432,6 +432,11 @@ class Model:
                                                                           cY.hyperfineFermiTensors,
                                                                           cZ.hyperfineFermiTensors)]
 
+            hyperfineZFCTensors = [tensorX + tensorY + tensorZ
+                                   for tensorX, tensorY, tensorZ in zip(cX.hyperfineZFCTensors,
+                                                                        cY.hyperfineZFCTensors,
+                                                                        cZ.hyperfineZFCTensors)]
+
             hyperfineTotalTensors = [tensorX + tensorY + tensorZ
                                      for tensorX, tensorY, tensorZ in zip(cX.hyperfineTotalTensors,
                                                                           cY.hyperfineTotalTensors,
@@ -442,6 +447,7 @@ class Model:
             cX.hyperfineDipolarAug2Tensors = hyperfineDipolarAug2Tensors
             cX.hyperfineDipolarTensors = hyperfineDipolarTensors
             cX.hyperfineFermiTensors = hyperfineFermiTensors
+            cX.hyperfineZFCTensors = hyperfineZFCTensors
             cX.hyperfineTotalTensors = hyperfineTotalTensors
 
             calculations.append(cX)

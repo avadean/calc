@@ -7,7 +7,7 @@ from numpy import ndarray
 
 
 resultKnown = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
-               'hyperfine_fermi', 'hyperfine_total',
+               'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total',
 
                'spin_density',
 
@@ -18,6 +18,7 @@ resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
                'hyperfine_dipolaraug2': 'DIPOLAR AUG2',
                'hyperfine_dipolar': 'DIPOLAR',
                'hyperfine_fermi': 'FERMI',
+               'hyperfine_zfc': 'ZFC',
                'hyperfine_total': 'TOTAL',
 
                'spin_density': 'SPIN DENSITY',
@@ -29,6 +30,7 @@ resultUnits = {'hyperfine_dipolarbare': 'energy',
                'hyperfine_dipolaraug2': 'energy',
                'hyperfine_dipolar': 'energy',
                'hyperfine_fermi': 'energy',
+               'hyperfine_zfc': 'energy',
                'hyperfine_total': 'energy',
 
                'spin_density': 'spin',
@@ -41,6 +43,7 @@ nmrColors = {'hyperfine_dipolarbare': PrintColors.blue,
              'hyperfine_dipolaraug2': PrintColors.blue,
              'hyperfine_dipolar': PrintColors.blue,
              'hyperfine_fermi': PrintColors.green,
+             'hyperfine_zfc': PrintColors.green,
              'hyperfine_total': PrintColors.orange}
 
 
@@ -56,13 +59,14 @@ def getResult(resultToGet=None, lines=None):
 
 
     if resultToGet in ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
-                       'hyperfine_fermi', 'hyperfine_total']:
+                       'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total']:
 
         wordToLookFor = {'hyperfine_dipolarbare': 'd_bare',
                          'hyperfine_dipolaraug': 'd_aug',
                          'hyperfine_dipolaraug2': 'd_aug2',
                          'hyperfine_dipolar': 'dipolar',
                          'hyperfine_fermi': 'fermi',
+                         'hyperfine_zfc': 'zfc',
                          'hyperfine_total': 'total'}.get(resultToGet)
 
         tensors = []
