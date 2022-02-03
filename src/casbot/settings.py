@@ -1405,6 +1405,39 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                                    VectorIntKeyword(key='kpoint_mp_grid', value=(3, 2, 2))],
 
+                   'co2': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['C             -0.000000002943713       0.000000000853473      -0.000000002809745',
+                                                                                     'O              0.000000023434435       0.000000024116648       0.116221598922081',
+                                                                                     'O             -0.000000020490722      -0.000000024970121      -0.116221596112336']),
+
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'cs2': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['C              0.000000000877350       0.000000000532145      -0.000000037396101',
+                                                                                     'S             -0.000000006711663       0.000000003144849       0.154948721513265',
+                                                                                     'S              0.000000005834313      -0.000000003676994      -0.154948684117163']),
+
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'cse2': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac', lines=['C              0.000000242209340      -0.000000012445800       0.000000305194672',
+                                                                                      'Se            -0.000000507102553       0.000000098891417       0.168647224010390',
+                                                                                      'Se             0.000000264893214      -0.000000086445617      -0.168647529205062']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
                    'lih': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
                                                                             '3.99800000000000        0.00000000000000        0.00000000000000',
                                                                             '0.00000000000000        3.99800000000000        0.00000000000000',
@@ -2560,6 +2593,10 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                               shortcutToCells.get('h2s'),
                                               shortcutToCells.get('h2se'),
                                               shortcutToCells.get('h2te')],
+
+                            'carbonchalcogenides': [shortcutToCells.get('co2'),
+                                                    shortcutToCells.get('cs2'),
+                                                    shortcutToCells.get('cse2')],
 
                             'methylhalides': [shortcutToCells.get('ch3f'),
                                               shortcutToCells.get('ch3cl'),
