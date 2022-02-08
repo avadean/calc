@@ -613,3 +613,9 @@ class Model:
     def removeSettings(self, *settingsToDeleteKeys):
         for calculation in self.calculations:
             calculation.removeSettings(*settingsToDeleteKeys)
+
+    def addProf(self):
+        # TODO: profiling
+        for calculation in self.calculations:
+            calculation.addProf()
+

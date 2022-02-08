@@ -3,7 +3,7 @@ from casbot.data import assertCount, createDirectories,\
     getFileLines,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
     PrintColors
-from casbot.settings import Setting, Keyword, Block, createSettings, createVariableSettings, readSettings
+from casbot.settings import Setting, Keyword, Block, createSettings, createVariableSettings, readSettings, StrBlock # TODO: profiling
 from casbot.results import getResult
 
 from copy import deepcopy
@@ -1043,3 +1043,13 @@ class Calculation:
                 continue
 
             self.settings = [setting for setting in self.settings if setting.key != settingToDeleteKey]
+
+    def addProf(self):
+        # TODO: profiling
+        try:
+            develCode = self.getSetting('devel_code')
+            develCode.lines.append('PROF: * :ENDPROF')
+        except ValueError:
+            develCode = StrSetting('devel_code', lines=['PROF: * :ENDPROF'])
+            self.updateSettings(develCode)
+
