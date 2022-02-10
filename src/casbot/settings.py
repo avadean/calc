@@ -370,6 +370,12 @@ class ThreeVectorFloatBlock(Block):
         unitPart = [self.unit] if self.unit is not None else []
         return unitPart + ['  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
 
+    def rotate(self, rotationMatrix=None):
+        assert type(rotationMatrix) is ndarray
+        assert rotationMatrix.shape == (3, 3)
+
+        self.values = [dot(rotationMatrix, vector) for vector in self.values]
+
 
 class ThreeVectorFloatWeightedBlock(Block):
     def __init__(self, key=None, lines=None):
