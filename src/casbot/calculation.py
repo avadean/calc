@@ -847,7 +847,7 @@ class Calculation:
             else:
                 print(f'                             S\n                       {self.spinDensity}')
 
-    def rotate(self, axis=None, angle=None, degrees=True):
+    def rotate(self, axis=None, angle=None, degrees=True, setting=None):
         try:
             axis = asarray(axis, dtype=float)
         except ValueError:
@@ -855,6 +855,10 @@ class Calculation:
 
         assert type(angle) in [float, int]
         assert type(degrees) is bool
+
+        if setting is not None:
+            assert type(setting) is str
+            setting = setting.strip().lower()
 
         angle = float(angle)
 
@@ -878,9 +882,12 @@ class Calculation:
                                 [2.0 * (bc - ad)  ,  aa + cc - bb - dd,  2.0 * (cd + ab)  ],
                                 [2.0 * (bd + ac)  ,  2.0 * (cd - ab)  ,  aa + dd - bb - cc]])
 
-        s = self.getSetting('positions_frac', 'positions_abs')
+        s = self.getSetting('positions_frac', 'positions_abs') if setting is None else self.getSetting(setting)
 
-        s.rotate(rotationMatrix=rotationMatrix)
+        try:
+            s.rotate(rotationMatrix=rotationMatrix)
+        except AttributeError:
+            raise AttributeError(f'Setting {s.key} does not have a rotation definition')
 
     # TODO: consider fractional coordinates
     '''
@@ -1050,6 +1057,6 @@ class Calculation:
             develCode = self.getSetting('devel_code')
             develCode.lines.append('PROF: * :ENDPROF')
         except ValueError:
-            develCode = StrSetting('devel_code', lines=['PROF: * :ENDPROF'])
+            develCode = StrBlock('devel_code', lines=['PROF: * :ENDPROF'])
             self.updateSettings(develCode)
 
