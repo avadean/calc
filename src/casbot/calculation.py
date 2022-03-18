@@ -530,6 +530,49 @@ class Calculation:
 
         print(f'Created calculation for {self.name} in {directory}')
 
+    def getFortFile(self, i=90, lines=True):
+        assert type(i) is int
+        assert i >= 0, 'Cannot have negative fort file numbers'
+
+        assert type(lines) is bool
+
+        if self.directory is None:
+            raise FileNotFoundError('Calculation does not have a directory to find fort file')
+
+        fortFile = f'{self.directory}fort.{i}'
+
+        assert Path(fortFile).is_file(), f'Cannot find fort file {i}'
+
+        if not lines:
+            return fortFile
+
+        with open(fortFile) as f:
+            fortLines = f.read().splitlines()
+
+        return fortLines
+
+    @staticmethod
+    def getFinalRunLines(lines=None):
+        assert type(lines) is list
+        assert all(type(line) is str for line in lines)
+
+        # Reverse lines in case there were multiple continuations in CASTEP file.
+        lines.reverse()
+
+        for num, line in enumerate(lines):
+            line = line.strip().lower()
+
+            if line.startswith('run started:'):
+                lines = lines[:num+1]  # :num and not num: due to .reverse() above.
+                break
+        else:
+            raise ValueError('Cannot find any run started line in lines')
+
+        # And reverse back to normal.
+        lines.reverse()
+
+        return lines
+
     def getCompletedTime(self):
         """ This function will work out (in seconds) how long it will take this calculation to complete """
 
@@ -702,28 +745,6 @@ class Calculation:
 
         else:
             raise TypeError(f'Setting {setting} not a class of Keyword or Block')
-
-    @staticmethod
-    def getFinalRunLines(lines=None):
-        assert type(lines) is list
-        assert all(type(line) is str for line in lines)
-
-        # Reverse lines in case there were multiple continuations in CASTEP file.
-        lines.reverse()
-
-        for num, line in enumerate(lines):
-            line = line.strip().lower()
-
-            if line.startswith('run started:'):
-                lines = lines[:num+1]  # :num and not num: due to .reverse() above.
-                break
-        else:
-            raise ValueError('Cannot find any run started line in lines')
-
-        # And reverse back to normal.
-        lines.reverse()
-
-        return lines
 
     def getSetting(self, *keys, settings=None):
         assert all(type(key) is str for key in keys)
