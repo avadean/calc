@@ -765,6 +765,29 @@ class Calculation:
 
         raise ValueError(f'Setting {key} is not in settings list')
 
+    def getSettingUnit(self, key=None, settings=None):
+        assert type(key) is str
+
+        if settings is not None:
+            assert type(settings) is list
+            assert all(isinstance(s, Setting) for s in settings)
+        else:
+            settings = self.settings
+
+        key = key.strip().lower()
+
+        for s in settings:
+            if key == s.key:
+                # Check Keyword and Block instances separately for now in case need to change in future.
+                if isinstance(s, Keyword):
+                    return s.unit
+                elif isinstance(s, Block):
+                    return s.unit
+                else:
+                    raise ValueError(f'Cannot determine type of setting {s}')
+
+        raise ValueError(f'Setting {key} is not in settings list')
+
     def printHyperfine(self, **kwargs):
         element = kwargs.get('element', None)
 
