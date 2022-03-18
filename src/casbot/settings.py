@@ -187,6 +187,7 @@ class Block(Setting):
 
         self.values = []
         self.lines = lines
+        self.unit = None
 
         if lines is not None:
             assert type(lines) is list, 'Lines for block should be a list'
@@ -2652,7 +2653,7 @@ defaultShortcut = {'defaults': [ThreeVectorIntBlock(key='cell_constraints', line
 stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases | defaultShortcut
 
 
-def setting(key=None, **kwargs):
+def setting(key=None, *args, **kwargs):
     assert type(key) is str
 
     key = key.strip().lower()
@@ -2661,7 +2662,7 @@ def setting(key=None, **kwargs):
 
     assert settingObject is not None, f'Key {key} does not correspond to setting'
 
-    newSetting = settingObject(key=key, **kwargs)
+    newSetting = settingObject(key, *args, **kwargs)
 
     return newSetting
 
