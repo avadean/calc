@@ -49,7 +49,11 @@ class Model:
 
         completedCalculations = [c for c in self.calculations if c.getStatus() == 'completed']
 
-        assert len(completedCalculations) > 0, 'No calculations have completed'
+        if len(completedCalculations) == 0:
+            print('No calculations have completed')
+            return
+
+        #assert len(completedCalculations) > 0, 'No calculations have completed'
 
         if len(completedCalculations) == len(self.calculations):
             print(f'All {len(self.calculations)} calculations have completed. Analysing...')
@@ -466,12 +470,14 @@ class Model:
 
         kwargs = {kwarg.strip().lower(): val for kwarg, val in kwargs.items()}
 
+        group = kwargs.get('group', True)
+
         calculations = self.calculations
 
         # Hyperfine calculations are a bit odd so we treat them separately for now as a hack.
         # If we are doing a density_in_x, density_in_y, density_in_z calculation, then temporarily make the calculations in groups of 3.
         # Only do this if hyperfine is the only thing we're asking for.
-        if len(args) == 1 and {'hyperfine'}.intersection(args):
+        if len(args) == 1 and 'hyperfine' in args and group:
             # and len(self.calculations) % 3 == 0\
             # and all([c.directory[:-2].endswith('density_in_') for c in self.calculations]):  # 2 characters for '/' and, 'x' or 'y' or 'z'
 

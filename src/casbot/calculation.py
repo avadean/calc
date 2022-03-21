@@ -11,8 +11,7 @@ from datetime import datetime
 from dateutil import parser
 from fnmatch import filter
 from itertools import product
-from math import floor, sin, cos, sqrt
-from numpy import array, asarray, dot
+from numpy import array, asarray, cos, dot, floor, sin, sqrt
 from os import chdir, getcwd, listdir
 from pathlib import Path
 #from re import search
