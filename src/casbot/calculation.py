@@ -212,6 +212,12 @@ def processCalculations(*directories):
 
 
 class Calculation:
+    efgBareTensors = []
+    efgIonTensors = []
+    efgAugTensors = []
+    efgAug2Tensors = []
+    efgTotalTensors = []
+
     hyperfineDipolarBareTensors = []
     hyperfineDipolarAugTensors = []
     hyperfineDipolarAug2Tensors = []
@@ -282,6 +288,8 @@ class Calculation:
 
         toAnalyse = set(type_.strip().lower() for type_ in toAnalyse)
 
+        EFG = {'efg', 'efgs', 'electric_field_gradient', 'electric_field_gradients', 'electricfieldgradient', 'electricfieldgradients'}
+
         HYPERFINE = {'hyperfine'}
 
         FORCES = {'forces'}
@@ -294,6 +302,13 @@ class Calculation:
 
         # Check if there is actually any work to do.
         if not reset:
+            if toAnalyse.intersection(EFG) and all([self.efgBareTensors,
+                                                    self.efgIonTensors,
+                                                    self.efgAugTensors,
+                                                    self.efgAug2Tensors,
+                                                    self.efgTotalTensors]):
+                toAnalyse -= EFG
+
             if toAnalyse.intersection(HYPERFINE) and all([self.hyperfineDipolarBareTensors,
                                                           self.hyperfineDipolarAugTensors,
                                                           self.hyperfineDipolarAug2Tensors,
@@ -333,7 +348,13 @@ class Calculation:
         if toAnalyse.intersection(POSFRACS):
             outSettings = readSettings(file_=f'{self.directory}{self.name}-out.cell')
 
-        # Now get the results.
+        if toAnalyse.intersection(EFG):
+            self.efgBareTensors = getResult(resultToGet='efg_bare', lines=castepLines)
+            self.efgIonTensors = getResult(resultToGet='efg_ion', lines=castepLines)
+            self.efgAugTensors = getResult(resultToGet='efg_aug', lines=castepLines)
+            self.efgAug2Tensors = getResult(resultToGet='efg_aug2', lines=castepLines)
+            self.efgTotalTensors = getResult(resultToGet='efg_total', lines=castepLines)
+
         if toAnalyse.intersection(HYPERFINE):
             self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
             self.hyperfineDipolarAugTensors = getResult(resultToGet='hyperfine_dipolaraug', lines=castepLines)
@@ -807,6 +828,53 @@ class Calculation:
                     raise ValueError(f'Cannot determine type of setting {s}')
 
         raise ValueError(f'Setting {key} is not in settings list')
+
+    def printEFG(self, **kwargs):
+        element = kwargs.get('element', None)
+
+        if element is not None:
+            assert type(element) is str
+
+            element = element.strip()
+            element = None if element == '' else element[0].upper() + element[1:].lower()
+
+        all_ = kwargs.get('all', False)
+        bare = kwargs.get('bare', False)
+        ion = kwargs.get('ion', False)
+        aug = kwargs.get('aug', False)
+
+        if all_:
+            tensorsList = [self.efgBareTensors,
+                           self.efgIonTensors,
+                           self.efgAugTensors,
+                           self.efgAug2Tensors,
+                           self.efgTotalTensors]
+
+        elif not bare and not ion and not aug:
+            tensorsList = [self.efgTotalTensors]
+
+        else:
+            tensorsList = []
+
+            if bare:
+                tensorsList.append(self.efgBareTensors)
+
+            if ion:
+                tensorsList.append(self.efgIonTensors)
+
+            if aug:
+                tensorsList.append(self.efgAugTensors)
+                tensorsList.append(self.efgAug2Tensors)
+
+        string = ''
+
+        for tensors in tensorsList:
+            for tensor in tensors:
+                if element is None or (element is not None and tensor.element == element):
+                    string += f'{tensor}\n'
+
+        if string:
+            print(string[:-1])  # Remove last line break.
 
     def printHyperfine(self, **kwargs):
         element = kwargs.get('element', None)

@@ -6,14 +6,22 @@ from casbot.data import elements,\
 from numpy import ndarray
 
 
-resultKnown = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
+resultKnown = ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total',
+
+               'hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
                'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total',
 
                'spin_density',
 
                'forces']
 
-resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
+resultNames = {'efg_bare': 'BARE',
+               'efg_ion': 'ION',
+               'efg_aug': 'AUG',
+               'efg_aug2': 'AUG2',
+               'efg_total': 'TOTAL',
+
+               'hyperfine_dipolarbare': 'DIPOLAR BARE',
                'hyperfine_dipolaraug': 'DIPOLAR AUG',
                'hyperfine_dipolaraug2': 'DIPOLAR AUG2',
                'hyperfine_dipolar': 'DIPOLAR',
@@ -25,7 +33,9 @@ resultNames = {'hyperfine_dipolarbare': 'DIPOLAR BARE',
 
                'forces': 'FORCES'}
 
-resultUnits = {'hyperfine_dipolarbare': 'energy',
+resultUnits = { # TODO: EFG unit
+
+               'hyperfine_dipolarbare': 'energy',
                'hyperfine_dipolaraug': 'energy',
                'hyperfine_dipolaraug2': 'energy',
                'hyperfine_dipolar': 'energy',
@@ -38,7 +48,13 @@ resultUnits = {'hyperfine_dipolarbare': 'energy',
                'forces': 'force'}
 
 
-nmrColors = {'hyperfine_dipolarbare': PrintColors.blue,
+nmrColors = {'efg_bare': PrintColors.red,
+             'efg_ion': PrintColors.blue,
+             'efg_aug': PrintColors.yellow,
+             'efg_aug2': PrintColors.yellow,
+             'efg_total': PrintColors.orange,
+
+             'hyperfine_dipolarbare': PrintColors.blue,
              'hyperfine_dipolaraug': PrintColors.blue,
              'hyperfine_dipolaraug2': PrintColors.blue,
              'hyperfine_dipolar': PrintColors.blue,
@@ -57,9 +73,41 @@ def getResult(resultToGet=None, lines=None):
 
     assert resultToGet in resultKnown
 
+    if resultToGet in ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total']:
 
-    if resultToGet in ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
-                       'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total']:
+        wordToLookFor = {'efg_bare': 'bare',
+                         'efg_ion': 'ion',
+                         'efg_aug': 'aug',
+                         'efg_aug2': 'aug2',
+                         'efg_total': 'total'}.get(resultToGet)
+
+        tensors = []
+
+        for num, line in enumerate(lines):
+            parts = line.strip().lower().split()
+
+            if len(parts) == 4:
+                if parts[2] == wordToLookFor and parts[3] == 'tensor':
+                    element = parts[0][0].upper() + parts[0][1:].lower()
+                    ion = parts[1]
+
+                    assert ion.isdigit(), f'Error in element ion on line {num+1} of results file'
+
+                    arrLines = lines[num+2:num+5]
+
+                    arr = strListToArray(arrLines)
+
+                    tensor = NMR(key=resultToGet, value=arr, unit=None, element=element, ion=ion)  # TODO: EFG units
+
+                    tensors.append(tensor)
+
+        #if len(tensors) == 0:
+        #    raise ValueError(f'Could not find any {resultToGet} tensors in results file')
+
+        return tensors
+
+    elif resultToGet in ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
+                         'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total']:
 
         wordToLookFor = {'hyperfine_dipolarbare': 'd_bare',
                          'hyperfine_dipolaraug': 'd_aug',

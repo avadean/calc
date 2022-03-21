@@ -502,6 +502,10 @@ class Model:
                 calculation.printSpinDensity(**kwargs)
                 print('')
 
+            if {'efg', 'efgs'}.intersection(args):
+                calculation.printEFG(**kwargs)
+                print('')
+
             if {'hyperfine'}.intersection(args):
                 calculation.printHyperfine(**kwargs)
                 print('')
