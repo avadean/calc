@@ -1166,8 +1166,12 @@ class Calculation:
         # TODO: profiling
         try:
             develCode = self.getSetting('devel_code')
-            develCode.lines.append('PROF: * :ENDPROF')
+
+            if 'PROF: * :ENDPROF' not in develCode.lines:
+                develCode.lines.append('PROF: * :ENDPROF')
+
         except ValueError:
             develCode = StrBlock('devel_code', lines=['PROF: * :ENDPROF'])
+
             self.updateSettings(develCode)
 
