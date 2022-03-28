@@ -3,7 +3,7 @@ from casbot.data import assertCount, createDirectories,\
     getFileLines,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
     PrintColors
-from casbot.settings import Setting, Keyword, Block, createSettings, createVariableSettings, readSettings, StrBlock # TODO: profiling
+from casbot.settings import Setting, createSettings, createVariableSettings, getSettings, getSettingLines, readSettings, StrBlock # TODO: profiling
 from casbot.results import getResult
 
 from copy import deepcopy
@@ -377,7 +377,7 @@ class Calculation:
             toAnalyse -= FORCES
 
         if toAnalyse.intersection(POSFRACS):
-            self.positionsFrac = self.getSetting('positions_frac', settings=outSettings)
+            self.positionsFrac = getSettings('positions_frac', settings=outSettings, attr='value')
 
             toAnalyse -= POSFRACS
 
@@ -525,7 +525,7 @@ class Calculation:
             with open(cellFile, 'w') as f:
                 for cell in cells:
 
-                    for line in self.getSettingLines(setting=cell, maxSettingLength=0):
+                    for line in getSettingLines(sttng=cell, maxSettingLength=0):
                         f.write(f'{line}\n')
 
                     f.write('\n')
@@ -545,7 +545,7 @@ class Calculation:
                         f.write('\n')
                         currentPriorityLevel = floor(param.priority)
 
-                    for line in self.getSettingLines(setting=param, maxSettingLength=longestParam):
+                    for line in getSettingLines(sttng=param, maxSettingLength=longestParam):
                         f.write(f'{line}\n')
 
         print(f'Created calculation for {self.name} in {directory}')
@@ -750,85 +750,6 @@ class Calculation:
         else:
             return 'created'
 
-    @staticmethod
-    def getSettingLines(setting=None, maxSettingLength=0):
-        assert isinstance(setting, Keyword) or isinstance(setting,
-                                                          Block), f'Setting {setting} not a class of Keyword or Block'
-        assert type(maxSettingLength) is int
-
-        if isinstance(setting, Keyword):
-            spaces = max(len(setting.key), maxSettingLength)
-            return [f'{setting.key:<{spaces}s} : {setting}']
-
-        elif isinstance(setting, Block):
-            return [f'%block {setting.key}'] + setting.getLines() + [f'%endblock {setting.key}']
-
-        else:
-            raise TypeError(f'Setting {setting} not a class of Keyword or Block')
-
-    def getSetting(self, *keys, settings=None):
-        assert all(type(key) is str for key in keys)
-
-        if settings is not None:
-            assert type(settings) is list
-            assert all(isinstance(s, Setting) for s in settings)
-        else:
-            settings = self.settings
-
-        keys = [key.strip().lower() for key in keys]
-
-        for key in keys:
-            for s in settings:
-                if key == s.key:
-                    return s
-        else:
-            raise ValueError(f'Setting(s) {", ".join(keys)} not in settings list')
-
-    def getSettingValue(self, key=None, settings=None):
-        assert type(key) is str
-
-        if settings is not None:
-            assert type(settings) is list
-            assert all(isinstance(s, Setting) for s in settings)
-        else:
-            settings = self.settings
-
-        key = key.strip().lower()
-
-        for s in settings:
-            if key == s.key:
-                if isinstance(s, Keyword):
-                    return s.value
-                elif isinstance(s, Block):
-                    return s.values
-                else:
-                    raise ValueError(f'Cannot determine type of setting {s}')
-
-        raise ValueError(f'Setting {key} is not in settings list')
-
-    def getSettingUnit(self, key=None, settings=None):
-        assert type(key) is str
-
-        if settings is not None:
-            assert type(settings) is list
-            assert all(isinstance(s, Setting) for s in settings)
-        else:
-            settings = self.settings
-
-        key = key.strip().lower()
-
-        for s in settings:
-            if key == s.key:
-                # Check Keyword and Block instances separately for now in case need to change in future.
-                if isinstance(s, Keyword):
-                    return s.unit
-                elif isinstance(s, Block):
-                    return s.unit
-                else:
-                    raise ValueError(f'Cannot determine type of setting {s}')
-
-        raise ValueError(f'Setting {key} is not in settings list')
-
     def printEFG(self, **kwargs):
         element = kwargs.get('element', None)
 
@@ -898,7 +819,7 @@ class Calculation:
 
         if ppm:
             # To convert to ppm we need to know the applied bfield.
-            bfield = self.getSettingValue(key='external_bfield')
+            bfield = getSettings('external_bfield', settings=self.settings, attr='value')
 
             # Now need to get norm of bfield.
             # To get from MHz to bfield we need to know the gyromagnetic ratio of the element in question.
@@ -993,7 +914,23 @@ class Calculation:
                                 [2.0 * (bc - ad)  ,  aa + cc - bb - dd,  2.0 * (cd + ab)  ],
                                 [2.0 * (bd + ac)  ,  2.0 * (cd - ab)  ,  aa + dd - bb - cc]])
 
-        s = self.getSetting('positions_frac', 'positions_abs') if setting is None else self.getSetting(setting)
+        if setting is None:
+            s = getSettings('positions_abs', 'positions_frac', settings=self.settings)
+
+            if s.count(None) == 2:
+                raise ValueError('Cannot find positions_abs or positions_frac to rotate')
+
+            if s.count(None) == 0:
+                raise ValueError('Both positions_abs and positions_frac specified, do not know which to rotate')
+
+            # Get whichever value is not None.
+            s = next(sttng for sttng in s if sttng is not None)
+
+        else:
+            s, = getSettings(setting, settings=self.settings)
+
+            if s is None:
+                raise ValueError(f'Cannot find setting {setting} to rotate')
 
         try:
             s.rotate(rotationMatrix=rotationMatrix)
@@ -1164,14 +1101,12 @@ class Calculation:
 
     def addProf(self):
         # TODO: profiling
-        try:
-            develCode = self.getSetting('devel_code')
+        develCode, = getSettings('devel_code', settings=self.settings)
 
-            if 'PROF: * :ENDPROF' not in develCode.lines:
-                develCode.lines.append('PROF: * :ENDPROF')
-
-        except ValueError:
+        if develCode is None:
             develCode = StrBlock('devel_code', lines=['PROF: * :ENDPROF'])
 
             self.updateSettings(develCode)
 
+        elif 'PROF: * :ENDPROF' not in develCode.lines:
+            develCode.lines.append('PROF: * :ENDPROF')

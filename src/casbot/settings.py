@@ -10,6 +10,63 @@ from pathlib import Path
 set_printoptions(precision=15)
 
 
+def getSettingLines(sttng=None, maxSettingLength=0):
+    """ TODO: integrate this into getSettings """
+
+    assert isinstance(sttng, (Keyword, Block)), f'Setting {sttng} not a class of Keyword or Block'
+    assert type(maxSettingLength) is int
+
+    if isinstance(sttng, Keyword):
+        spaces = max(len(sttng.key), maxSettingLength)
+        return [f'{sttng.key:<{spaces}s} : {sttng}']
+
+    elif isinstance(sttng, Block):
+        return [f'%block {sttng.key}'] + sttng.getLines() + [f'%endblock {sttng.key}']
+
+    else:
+        raise TypeError(f'Setting {sttng} not a class of Keyword or Block')
+
+
+def getSettings(*keys, settings=None, attr=None):
+    assert all(type(key) is str for key in keys)
+    assert type(settings) is list
+    assert all(isinstance(s, Setting) for s in settings)
+
+    if attr is not None:
+        assert type(attr) is str
+        attr = attr.strip().lower()
+        assert attr in ('value', 'unit', 'lines')
+
+    keys = [key.strip().lower() for key in keys]
+
+    values = ()
+
+    for key in keys:
+        for s in settings:
+            if key == s.key:
+
+                if attr is None:
+                    values += (s,)
+
+                elif attr == 'value':
+                    values += (s.getValue(),)
+
+                elif attr == 'unit':
+                    values += (s.getUnit(),)
+
+                elif attr == 'lines':
+                    values += (s.getLines(),)
+
+                else:
+                    raise ValueError(f'{attr} attribute/method not known for Setting')
+
+                break
+        else:
+            values += (None,)
+
+    return values
+
+
 def checkForUnit(lines=None, unitLine=0):
     assert type(lines) is list
     assert type(unitLine) is int
@@ -51,13 +108,19 @@ class Setting:
 
         self.priority = getFromDict(key=key, dct=settingPriorities, strict=False, default=None)
 
+        self.value = None
+        self.unit = None
+
+    def getValue(self):
+        return self.value
+
+    def getUnit(self):
+        return self.unit
+
 
 class Keyword(Setting):
     def __init__(self, key=None):
         super().__init__(key=key)
-
-        self.value = None
-        self.unit = None
 
 
 class BoolKeyword(Keyword):
@@ -185,9 +248,9 @@ class Block(Setting):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key)
 
-        self.values = []
+        self.value = []
+
         self.lines = lines
-        self.unit = None
 
         if lines is not None:
             assert type(lines) is list, 'Lines for block should be a list'
@@ -248,14 +311,14 @@ class ElementFloatBlock(Block):
                 except ValueError:
                     raise ValueError(f'Error in {key} on line {line}')
 
-                self.values.append((element, value))
+                self.value.append((element, value))
 
     def __str__(self):
         return '; '.join(self.getLines())
 
     def getLines(self):
         unitPart = [self.unit] if self.unit is not None else []
-        return unitPart + [f'{element:<3s}  {value:>15.12f}' for element, value in self.values]
+        return unitPart + [f'{element:<3s}  {value:>15.12f}' for element, value in self.value]
 
 
 class ElementThreeVectorFloatBlock(Block):
@@ -294,26 +357,26 @@ class ElementThreeVectorFloatBlock(Block):
 
                 assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
-                self.values.append((element, value))
+                self.value.append((element, value))
 
     def __str__(self):
         return '; '.join(self.getLines())
 
     def getLines(self):
         unitPart = [self.unit] if self.unit is not None else []
-        return unitPart + [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for (element, vector) in self.values]
+        return unitPart + [f'{element:<3s}  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for (element, vector) in self.value]
 
     def findName(self):
-        if not self.values:
+        if not self.value:
             return None
 
-        return ''.join([f'{element}{"" if num == 1 else num}' for element, num in Counter(list(zip(*self.values))[0]).items()])
+        return ''.join([f'{element}{"" if num == 1 else num}' for element, num in Counter(list(zip(*self.value))[0]).items()])
 
     def rotate(self, rotationMatrix=None):
         assert type(rotationMatrix) is ndarray
         assert rotationMatrix.shape == (3, 3)
 
-        self.values = [(element, dot(rotationMatrix, vector)) for element, vector in self.values]
+        self.value = [(element, dot(rotationMatrix, vector)) for element, vector in self.value]
 
     # TODO: consider fractional coordinates
     '''
@@ -332,7 +395,7 @@ class ElementThreeVectorFloatBlock(Block):
         # TODO: consider this unit conversion
         translationVector = unitConvert(fromUnit=fromUnit, toUnit=toUnit)
 
-        self.values = {element: vector + translationVector for element, vector in self.values.items()}
+        self.value = {element: vector + translationVector for element, vector in self.value.items()}
     '''
 
 
@@ -362,20 +425,20 @@ class ThreeVectorFloatBlock(Block):
 
                 assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
-                self.values.append(value)
+                self.value.append(value)
 
     def __str__(self):
         return '; '.join(self.getLines())
 
     def getLines(self):
         unitPart = [self.unit] if self.unit is not None else []
-        return unitPart + ['  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
+        return unitPart + ['  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for vector in self.value]
 
     def rotate(self, rotationMatrix=None):
         assert type(rotationMatrix) is ndarray
         assert rotationMatrix.shape == (3, 3)
 
-        self.values = [dot(rotationMatrix, vector) for vector in self.values]
+        self.value = [dot(rotationMatrix, vector) for vector in self.value]
 
 
 class ThreeVectorFloatWeightedBlock(Block):
@@ -390,13 +453,13 @@ class ThreeVectorFloatWeightedBlock(Block):
 
             assert value.shape == (4,), f'Shape error in {key} on line {line}'
 
-            self.values.append(value)
+            self.value.append(value)
 
     def __str__(self):
         return '; '.join(self.getLines())
 
     def getLines(self):
-        return ['   '.join('{:>4.2f}' for _ in range(len(vector))).format(*vector) for vector in self.values]
+        return ['   '.join('{:>4.2f}' for _ in range(len(vector))).format(*vector) for vector in self.value]
 
 
 class ThreeVectorIntBlock(Block):
@@ -411,20 +474,20 @@ class ThreeVectorIntBlock(Block):
 
             assert value.shape == (3,), f'Shape error in {key} on line {line}'
 
-            self.values.append(value)
+            self.value.append(value)
 
     def __str__(self):
         return '; '.join(self.getLines())
 
     def getLines(self):
-        return ['  ' + '   '.join('{:>3d}' for _ in range(len(vector))).format(*vector) for vector in self.values]
+        return ['  ' + '   '.join('{:>3d}' for _ in range(len(vector))).format(*vector) for vector in self.value]
 
 
 class StrBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
 
-        self.values = self.lines
+        self.value = self.lines
 
 
 '''
@@ -432,7 +495,7 @@ class ElementStrBlock(Block):
     def __init__(self, key=None, lines=None):
         super().__init__(key=key, lines=lines)
 
-        self.values = {}
+        self.value = {}
 
         for line in self.lines:
             parts = line.split()
@@ -447,10 +510,10 @@ class ElementStrBlock(Block):
 
             element = element[0].upper() + element[1:].lower()
 
-            self.values[element] = string
+            self.value[element] = string
 
     def getLines(self):
-        return [f'{element:<3s}  {string}' for element, string in self.values.items()]
+        return [f'{element:<3s}  {string}' for element, string in self.value.items()]
 '''
 
 cellKnown = [
@@ -1587,6 +1650,8 @@ shortcutToParams = {'singlepoint': StrKeyword(key='task', value='singlepoint'),
                     'iprint': IntKeyword(key='iprint', value=3),
 
                     'continuation': StrKeyword(key='continuation', value='default'),
+
+                    'randseed': IntKeyword(key='rand_seed', value=1234567),
 
                     'xdensity': StrBlock('devel_code', lines=['density_in_x=true']),
                     'ydensity': StrBlock('devel_code', lines=['density_in_y=true']),
