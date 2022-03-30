@@ -7,8 +7,11 @@ from casbot.settings import Keyword, Block,\
 from difflib import SequenceMatcher
 
 
-def help(key=None):
-    assert type(key) is str and key, 'Enter a string to find help about'
+def help(*args):
+    if not args:
+        return
+
+    assert all(type(key) is str and key for key in args), 'Enter a string to find help about'
 
     def printShortcut(shrtct):
         longestKey = 0
@@ -36,50 +39,51 @@ def help(key=None):
             else:
                 print(f'  {s.key:>{longestKey}} : {s}')
 
-    key = key.strip().lower()
-
-    print('')
-
-    if key in cellKnown:
-        print(f'{key} is a cell ->')
-        print(f'    type: {cellTypes.get(key)}')
-        print(f'  values: {cellValues.get(key)}')
-        print(f'   units: {cellUnits.get(key)}')
-        print('')
-
-    if key in paramKnown:
-        print(f'{key} is a param ->')
-        print(f'    type: {paramTypes.get(key)}')
-        print(f'  values: {paramValues.get(key)}')
-        print(f'   units: {paramUnits.get(key)}')
-        print('')
-
-    if key in shortcutToCells or key in shortcutToCellsAliases or key in shortcutToParams or key in shortcutToParamsAliases:
-        shortcut = (shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases).get(key)
-
-        if isinstance(shortcut, Keyword):
-            print(f'{key} is a shortcut to the keyword {shortcut.key} ->')
-            print(f'  {shortcut}')
-
-        elif isinstance(shortcut, Block):
-            print(f'{key} is a shortcut to the block {shortcut.key} ->')
-            print(f'%block {shortcut.key}')
-            print('\n'.join(shortcut.getLines()))
-            print(f'%endblock {shortcut.key}')
-
-        else:
-            print(f'{key} is a shortcut to multiple settings ->')
-
-            printShortcut(shrtct=shortcut)
+    for key in args:
+        key = key.strip().lower()
 
         print('')
 
-    if key in stringToVariableSettings:
-        print(f'{key} is a variable shortcut to multiple settings ->')
+        if key in cellKnown:
+            print(f'{key} is a cell ->')
+            print(f'    type: {cellTypes.get(key)}')
+            print(f'  values: {cellValues.get(key)}')
+            print(f'   units: {cellUnits.get(key)}')
+            print('')
 
-        printShortcut(shrtct=stringToVariableSettings.get(key))
+        if key in paramKnown:
+            print(f'{key} is a param ->')
+            print(f'    type: {paramTypes.get(key)}')
+            print(f'  values: {paramValues.get(key)}')
+            print(f'   units: {paramUnits.get(key)}')
+            print('')
 
-        print('')
+        if key in shortcutToCells or key in shortcutToCellsAliases or key in shortcutToParams or key in shortcutToParamsAliases:
+            shortcut = (shortcutToCells | shortcutToCellsAliases | shortcutToParams | shortcutToParamsAliases).get(key)
+
+            if isinstance(shortcut, Keyword):
+                print(f'{key} is a shortcut to the keyword {shortcut.key} ->')
+                print(f'  {shortcut}')
+
+            elif isinstance(shortcut, Block):
+                print(f'{key} is a shortcut to the block {shortcut.key} ->')
+                print(f'%block {shortcut.key}')
+                print('\n'.join(shortcut.getLines()))
+                print(f'%endblock {shortcut.key}')
+
+            else:
+                print(f'{key} is a shortcut to multiple settings ->')
+
+                printShortcut(shrtct=shortcut)
+
+            print('')
+
+        if key in stringToVariableSettings:
+            print(f'{key} is a variable shortcut to multiple settings ->')
+
+            printShortcut(shrtct=stringToVariableSettings.get(key))
+
+            print('')
 
 
 def search(key=None):
