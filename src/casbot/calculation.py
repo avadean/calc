@@ -1099,14 +1099,25 @@ class Calculation:
 
             self.settings = [setting for setting in self.settings if setting.key != settingToDeleteKey]
 
-    def addProf(self):
+    def addProf(self, *args, **kwargs):
         # TODO: profiling
+        full = kwargs.get('full', False)
+
+        assert type(full) is bool
+
         develCode, = getSettings('devel_code', settings=self.settings)
 
         if develCode is None:
-            develCode = StrBlock('devel_code', lines=['PROF: * :ENDPROF'])
+            l = ['FULL_TRACE', 'PROF: * :ENDPROF'] if full else ['PROF: * :ENDPROF']
+
+            develCode = StrBlock('devel_code', lines=l)
 
             self.updateSettings(develCode)
 
-        elif 'PROF: * :ENDPROF' not in develCode.lines:
-            develCode.lines.append('PROF: * :ENDPROF')
+        else:
+            if full and 'FULL_TRACE' not in develCode.lines:
+                develCode.lines.append('FULL_TRACE')
+
+            if 'PROF: * :ENDPROF' not in develCode.lines:
+                develCode.lines.append('PROF: * :ENDPROF')
+

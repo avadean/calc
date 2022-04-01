@@ -624,8 +624,8 @@ class Model:
         for calculation in self.calculations:
             calculation.removeSettings(*settingsToDeleteKeys)
 
-    def addProf(self):
+    def addProf(self, *args, **kwargs):
         # TODO: profiling
         for calculation in self.calculations:
-            calculation.addProf()
+            calculation.addProf(*args, **kwargs)
 
