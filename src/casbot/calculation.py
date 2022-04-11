@@ -1243,7 +1243,7 @@ class Calculation:
 
         assert type(full) is bool
 
-        develCode, = getSettings('devel_code', settings=self.settings)
+        develCode = getSettings('devel_code', settings=self.settings)
 
         if develCode is None:
             l = ['FULL_TRACE', 'PROF: * :ENDPROF'] if full else ['PROF: * :ENDPROF']
