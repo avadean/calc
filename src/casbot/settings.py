@@ -64,6 +64,8 @@ def getSettings(*keys, settings=None, attr=None):
         else:
             values += (None,)
 
+    values = values[0] if len(values) == 1 else values
+
     return values
 
 
