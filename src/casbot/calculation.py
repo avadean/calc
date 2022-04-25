@@ -350,6 +350,12 @@ def groupDensityCalculations(calculations=None):
 
 
 class Calculation:
+    nmrCoreTensors = []
+    nmrBareTensors = []
+    nmrDiaTensors = []
+    nmrParaTensors = []
+    nmrTotalTensors = []
+
     efgBareTensors = []
     efgIonTensors = []
     efgAugTensors = []
@@ -426,6 +432,8 @@ class Calculation:
 
         toAnalyse = set(type_.strip().lower() for type_ in toAnalyse)
 
+        NMR = {'nmr', 'nuclear_magnetic_resonance', 'nuclearmagneticresonance', 'shielding', 'magnetic_shielding', 'magneticshielding'}
+
         EFG = {'efg', 'efgs', 'electric_field_gradient', 'electric_field_gradients', 'electricfieldgradient', 'electricfieldgradients'}
 
         HYPERFINE = {'hyperfine'}
@@ -440,6 +448,13 @@ class Calculation:
 
         # Check if there is actually any work to do.
         if not reset:
+            if toAnalyse.intersection(NMR) and all([self.nmrCoreTensors,
+                                                    self.nmrBareTensors,
+                                                    self.nmrDiaTensors,
+                                                    self.nmrParaTensors,
+                                                    self.nmrTotalTensors]):
+                toAnalyse -= NMR
+
             if toAnalyse.intersection(EFG) and all([self.efgBareTensors,
                                                     self.efgIonTensors,
                                                     self.efgAugTensors,
@@ -479,12 +494,22 @@ class Calculation:
 
         outSettings = None  # -out.cell file.
 
-        if toAnalyse.intersection(HYPERFINE) or toAnalyse.intersection(SPINDENSITY) or toAnalyse.intersection(FORCES):
+        if toAnalyse.intersection(NMR) or toAnalyse.intersection(EFG) or toAnalyse.intersection(HYPERFINE) or toAnalyse.intersection(SPINDENSITY) or toAnalyse.intersection(FORCES):
             castepLines = getFileLines(file_=f'{self.directory}{self.name}.castep')
             castepLines = self.getFinalRunLines(lines=castepLines)
 
         if toAnalyse.intersection(POSFRACS):
             outSettings = readSettings(file_=f'{self.directory}{self.name}-out.cell')
+
+
+        if toAnalyse.intersection(NMR):
+            self.nmrCoreTensors = getResult(resultToGet='nmr_core', lines=castepLines)
+            self.nmrBareTensors = getResult(resultToGet='nmr_bare', lines=castepLines)
+            self.nmrDiaTensors = getResult(resultToGet='nmr_dia', lines=castepLines)
+            self.nmrParaTensors = getResult(resultToGet='nmr_para', lines=castepLines)
+            self.nmrTotalTensors = getResult(resultToGet='nmr_total', lines=castepLines)
+
+            toAnalyse -= NMR
 
         if toAnalyse.intersection(EFG):
             self.efgBareTensors = getResult(resultToGet='efg_bare', lines=castepLines)
@@ -492,6 +517,8 @@ class Calculation:
             self.efgAugTensors = getResult(resultToGet='efg_aug', lines=castepLines)
             self.efgAug2Tensors = getResult(resultToGet='efg_aug2', lines=castepLines)
             self.efgTotalTensors = getResult(resultToGet='efg_total', lines=castepLines)
+
+            toAnalyse -= EFG
 
         if toAnalyse.intersection(HYPERFINE):
             self.hyperfineDipolarBareTensors = getResult(resultToGet='hyperfine_dipolarbare', lines=castepLines)
@@ -902,6 +929,56 @@ class Calculation:
 
         else:
             return 'created'
+
+    def printNMR(self, **kwargs):
+        element = kwargs.get('element', None)
+
+        if element is not None:
+            assert type(element) is str
+
+            element = element.strip()
+            element = None if element == '' else element[0].upper() + element[1:].lower()
+
+        all_ = kwargs.get('all', False)
+        core = kwargs.get('core', False)
+        bare = kwargs.get('bare', False)
+        dia = kwargs.get('dia', False)
+        para = kwargs.get('para', False)
+
+        if all_:
+            tensorsList = [self.nmrCoreTensors,
+                           self.nmrBareTensors,
+                           self.nmrDiaTensors,
+                           self.nmrParaTensors,
+                           self.nmrTotalTensors]
+
+        elif not core and not bare and not dia and not para:
+            tensorsList = [self.nmrTotalTensors]
+
+        else:
+            tensorsList = []
+
+            if core:
+                tensorsList.append(self.nmrCoreTensors)
+
+            if bare:
+                tensorsList.append(self.nmrBareTensors)
+
+            if dia:
+                tensorsList.append(self.nmrDiaTensors)
+
+            if para:
+                tensorsList.append(self.nmrParaTensors)
+
+        string = ''
+
+        for tensors in tensorsList:
+            for tensor in tensors:
+                if element is None or (element is not None and tensor.element == element):
+                    string += f'{tensor}\n'
+
+        if string:
+            print(string[:-1])  # Remove last line break.
 
     def printEFG(self, **kwargs):
         element = kwargs.get('element', None)

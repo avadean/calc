@@ -202,9 +202,9 @@ class Model:
         doneX, doneY = False, False
 
         if type(x) is list: x, doneX = x, True
-        if type(x) is ndarray: x, doneX = x.asarray(), True
+        if type(x) is ndarray: x, doneX = x, True
         if type(y) is list: y, doneY = y, True
-        if type(y) is ndarray: y, doneY = y.asarray(), True
+        if type(y) is ndarray: y, doneY = y, True
 
         calculations = groupDensityCalculations(calculations=self.calculations) if density else self.calculations
 
@@ -249,7 +249,7 @@ class Model:
         assert len(args) in (1, 2), 'Can only plot 2 dimensions for now'
         assert all(type(kwarg) is str for kwarg in kwargs)
 
-        knownPlots = {'bfield', 'fermiiso', 'fermiisobfield', 'kpointspacing'}
+        knownPlots = {'bfield', 'nmriso', 'fermiiso', 'fermiisobfield', 'kpointspacing'}
 
         args = [arg.strip().lower() for arg in args]
 
@@ -278,6 +278,25 @@ class Model:
                     # Due to the groupDensityCalculations, the bfield will only pick up one component if density = True.
                     cValue = norm(c.getSettingValue('external_bfield'))
 
+                elif arg in ['nmriso']:
+                    if not c.nmrTotalTensors:
+                        continue
+
+                    assert type(element) is str, 'Enter element to get NMR total tensor for'
+                    assert type(ion) is int, 'Enter ion to get NMR total tensor for'
+
+                    element = element.strip()
+
+                    assert element, 'Enter element to get NMR total tensor for'
+
+                    elementTensors = [tensor for tensor in c.nmrTotalTensors if tensor.element.strip().lower() == element.lower()]
+
+                    assert elementTensors, f'Cannot find any NMR total tensors corresponding to element {element}'
+
+                    assert len(elementTensors) >= ion, f'Ion requested for NMR total tensor does not exist, found {len(elementTensors)} tensors'
+
+                    cValue = elementTensors[ion-1].iso  # -1 because of Python indexing.
+
                 elif arg in ['fermiiso', 'fermiisobfield']:
                     if not c.hyperfineFermiTensors:
                         continue
@@ -287,7 +306,7 @@ class Model:
 
                     element = element.strip()
 
-                    assert element, 'Enter element to get Fermi Tensor for'
+                    assert element, 'Enter element to get Fermi tensor for'
 
                     elementTensors = [tensor for tensor in c.hyperfineFermiTensors if tensor.element.strip().lower() == element.lower()]
 
@@ -361,6 +380,10 @@ class Model:
 
             if {'spindensity', 'spin density', 'spin_density'}.intersection(args):
                 calculation.printSpinDensity(**kwargs)
+                print('')
+
+            if {'nmr'}.intersection(args):
+                calculation.printNMR(**kwargs)
                 print('')
 
             if {'efg', 'efgs'}.intersection(args):

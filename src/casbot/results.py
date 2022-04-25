@@ -6,7 +6,9 @@ from casbot.data import elements,\
 from numpy import ndarray
 
 
-resultKnown = ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total',
+resultKnown = ['nmr_core', 'nmr_bare', 'nmr_dia', 'nmr_para', 'nmr_total',
+
+               'efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total',
 
                'hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
                'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total',
@@ -15,7 +17,13 @@ resultKnown = ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total',
 
                'forces']
 
-resultNames = {'efg_bare': 'BARE',
+resultNames = {'nmr_core': 'CORE',
+               'nmr_bare': 'BARE',
+               'nmr_dia': 'DIA',
+               'nmr_para': 'PARA',
+               'nmr_total': 'TOTAL',
+
+               'efg_bare': 'BARE',
                'efg_ion': 'ION',
                'efg_aug': 'AUG',
                'efg_aug2': 'AUG2',
@@ -33,7 +41,7 @@ resultNames = {'efg_bare': 'BARE',
 
                'forces': 'FORCES'}
 
-resultUnits = { # TODO: EFG unit
+resultUnits = { # TODO: NMR, EFG units
 
                'hyperfine_dipolarbare': 'energy',
                'hyperfine_dipolaraug': 'energy',
@@ -48,7 +56,13 @@ resultUnits = { # TODO: EFG unit
                'forces': 'force'}
 
 
-nmrColors = {'efg_bare': PrintColors.red,
+nmrColors = {'nmr_core': PrintColors.cyan,
+             'nmr_bare': PrintColors.magenta,
+             'nmr_dia': PrintColors.blue,
+             'nmr_para': PrintColors.red,
+             'nmr_total': PrintColors.orange,
+
+             'efg_bare': PrintColors.red,
              'efg_ion': PrintColors.blue,
              'efg_aug': PrintColors.yellow,
              'efg_aug2': PrintColors.yellow,
@@ -73,7 +87,37 @@ def getResult(resultToGet=None, lines=None):
 
     assert resultToGet in resultKnown
 
-    if resultToGet in ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total']:
+    if resultToGet in ['nmr_core', 'nmr_bare', 'nmr_dia', 'nmr_para', 'nmr_total']:
+
+        wordToLookFor = {'nmr_core': 'core',
+                         'nmr_bare': 'bare',
+                         'nmr_dia': 'dia',
+                         'nmr_para': 'para',
+                         'nmr_total': 'total'}.get(resultToGet)
+
+        tensors = []
+
+        for num, line in enumerate(lines):
+            parts = line.strip().lower().split()
+
+            if len(parts) == 4:
+                if parts[2] == wordToLookFor:
+                    element = parts[0][0].upper() + parts[0][1:].lower()
+                    ion = parts[1]
+
+                    assert ion.isdigit(), f'Error in element ion on line {num + 1} of results file'
+
+                    arrLines = lines[num+2:num+5]
+
+                    arr = strListToArray(arrLines)
+
+                    tensor = NMR(key=resultToGet, value=arr, unit=None, element=element, ion=ion)  # TODO: NMR units
+
+                    tensors.append(tensor)
+
+        return tensors
+
+    elif resultToGet in ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total']:
 
         wordToLookFor = {'efg_bare': 'bare',
                          'efg_ion': 'ion',
