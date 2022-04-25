@@ -751,6 +751,13 @@ class Calculation:
             line = line.strip().lower()
 
             if line.startswith('total time'):
+
+                # Check for sure it is indeed the total time printed at the end of the file.
+                parts = line.split()
+
+                if len(parts) <= 2 or parts[2] != '=':
+                    continue
+
                 index = line.index('=')
 
                 assert index != -1, f'Error in total time in castep file {castepFile}'
@@ -877,7 +884,15 @@ class Calculation:
             castepLines.reverse()  # Total time will be at the end of the file so will speed up the next loop.
 
             for line in castepLines:
-                if line.strip().lower().startswith('total time'):
+                line = line.strip().lower()
+
+                if line.startswith('total time'):
+                    # Check for sure it is indeed the total time printed at the end of the file.
+                    parts = line.split()
+
+                    if len(parts) <= 2 or parts[2] != '=':
+                        continue
+
                     return 'completed'
 
             return 'running'
