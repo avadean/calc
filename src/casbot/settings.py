@@ -1437,6 +1437,62 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
+                   'ch4': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac',
+                                                        lines=['H              0.063267135480870       0.063267135449777       0.063267135843203',
+                                                               'H             -0.063267510034405      -0.063267509752344       0.063270754345476',
+                                                               'H             -0.063267509697432       0.063270755016364      -0.063267509771584',
+                                                               'H              0.063270754570214      -0.063267509627021      -0.063267509798961',
+                                                               'C             -0.000002870319246      -0.000002871086775      -0.000002870618134']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'sih4': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac',
+                                                         lines=['H              0.085979145477420       0.085979169315231       0.085979135030576',
+                                                                'H             -0.085979725956674      -0.085979758890426       0.085980334938600',
+                                                                'H             -0.085979719475679       0.085980368204508      -0.085979732006461',
+                                                                'H              0.085980311071081      -0.085979774172879      -0.085979732830018',
+                                                                'Si            -0.000000011116149      -0.000000004456435      -0.000000005132697']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'geh4': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac',
+                                                         lines=['H              0.087453716226487       0.087456771015751       0.087456958336816',
+                                                                'H             -0.087460185505805      -0.087457368554614       0.087460865716999',
+                                                                'H             -0.087460440119159       0.087460803553965      -0.087457285941680',
+                                                                'H              0.087459270618156      -0.087459021213285      -0.087458960070307',
+                                                                'Ge             0.000007638780321      -0.000001184801817      -0.000001578041828']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'snh4': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac',
+                                                         lines=['H              0.098645132304870       0.098645162570146       0.098645145606710',
+                                                                'H             -0.098645454893457      -0.098645424557504       0.098645694106483',
+                                                                'H             -0.098645452909635       0.098645703608020      -0.098645437441890',
+                                                                'H              0.098645681138657      -0.098645428349987      -0.098645444738852',
+                                                                'Sn             0.000000094359565      -0.000000013270675       0.000000042467548']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
                    'ch3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['BOHR',
                                                                             '  10.0   0.0   0.0',
                                                                             '   0.0  10.0   0.0',
@@ -1701,6 +1757,9 @@ shortcutToParams = {'singlepoint': StrKeyword(key='task', value='singlepoint'),
 
                     'writecell': BoolKeyword(key='write_cell_structure', value=True),
 
+                    'iprint1': IntKeyword(key='iprint', value=1),
+                    'iprint2': IntKeyword(key='iprint', value=2),
+                    'iprint3': IntKeyword(key='iprint', value=3),
                     'iprint': IntKeyword(key='iprint', value=3),
 
                     'continuation': StrKeyword(key='continuation', value='default'),
@@ -1713,19 +1772,26 @@ shortcutToParams = {'singlepoint': StrKeyword(key='task', value='singlepoint'),
                     }
 
 shortcutToParamsAliases = {'geom': [shortcutToParams.get('geometryoptimisation'),
-                                    shortcutToParams.get('writecell')],
+                                    shortcutToParams.get('writecell'),
+                                    shortcutToParams.get('iprint1')],
                            'geometry': [shortcutToParams.get('geometryoptimisation'),
-                                        shortcutToParams.get('writecell')],
+                                        shortcutToParams.get('writecell'),
+                                        shortcutToParams.get('iprint1')],
                            'optimise': [shortcutToParams.get('geometryoptimisation'),
-                                        shortcutToParams.get('writecell')],
+                                        shortcutToParams.get('writecell'),
+                                        shortcutToParams.get('iprint1')],
                            'optimize': [shortcutToParams.get('geometryoptimisation'),
-                                        shortcutToParams.get('writecell')],
+                                        shortcutToParams.get('writecell'),
+                                        shortcutToParams.get('iprint1')],
                            'optimisation': [shortcutToParams.get('geometryoptimisation'),
-                                            shortcutToParams.get('writecell')],
+                                            shortcutToParams.get('writecell'),
+                                            shortcutToParams.get('iprint1')],
                            'optimization': [shortcutToParams.get('geometryoptimisation'),
-                                            shortcutToParams.get('writecell')],
+                                            shortcutToParams.get('writecell'),
+                                            shortcutToParams.get('iprint1')],
                            'geometryoptimization': [shortcutToParams.get('geometryoptimisation'),
-                                                    shortcutToParams.get('writecell')],
+                                                    shortcutToParams.get('writecell'),
+                                                    shortcutToParams.get('iprint1')],
 
                            'averagecutoff': shortcutToParams.get('normalcutoff'),
                            'middlecutoff': shortcutToParams.get('normalcutoff'),
@@ -2751,6 +2817,11 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                           shortcutToCells.get('ph3'),
                                           shortcutToCells.get('ash3'),
                                           shortcutToCells.get('sbh3')],
+
+                            'carbongroup': [shortcutToCells.get('ch4'),
+                                            shortcutToCells.get('sih4'),
+                                            shortcutToCells.get('geh4'),
+                                            shortcutToCells.get('snh4')],
 
                             'methylhalides': [shortcutToCells.get('ch3f'),
                                               shortcutToCells.get('ch3cl'),

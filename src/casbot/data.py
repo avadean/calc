@@ -549,6 +549,8 @@ stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_
 
                                'pnictides': ['001_H3N', '002_H3P', '003_H3As', '004_H3Sb'],
 
+                               'carbongroup': ['001_CH4', '002_SiH4', '003_GeH4', '004_SnH4'],
+
                                'methylhalides': ['001_CH3F', '002_CH3Cl', '003_CH3Br', '004_CH3I'],
 
                                'alkalihydrides': ['001_LiH', '002_NaH', '003_KH', '004_RbH', '005_CsH'],
