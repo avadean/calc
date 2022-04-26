@@ -1385,6 +1385,58 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
+                   'nh3': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac',
+                                                         lines=['H              0.000006407040808       0.100522912247874       0.000020324418027',
+                                                                'H              0.087062109520791      -0.050268258621779       0.000012308306465',
+                                                                'H             -0.087071182165915      -0.050270273463073       0.000010051596303',
+                                                                'N              0.000002665604317       0.000005619836978      -0.000022684320795']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'ph3': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac',
+                                                         lines=['H              0.000000515684409       0.118435336329655      -0.066195194593447',
+                                                                'H              0.102565242149704      -0.059212051087251      -0.066200252966151',
+                                                                'H             -0.102565293735021      -0.059213494258311      -0.066199366936981',
+                                                                'P             -0.000000464099091       0.000000209015907       0.013714814496580']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'ash3': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac',
+                                                         lines=['H              0.000001642150953       0.125269064249983      -0.081545515836112',
+                                                                'H              0.108491839582588      -0.062642532763749      -0.081557394954852',
+                                                                'H             -0.108489819744587      -0.062608509101231      -0.081576655533045',
+                                                                'As            -0.000003661988954      -0.000008022385003       0.004849566324009']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'sbh3': [ThreeVectorFloatBlock(key='lattice_cart', lines=[' ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac',
+                                                         lines=['H              0.000011559425910       0.132302038520858      -0.088089576345866',
+                                                                'H              0.122333592258257      -0.079347159955785      -0.098305809129754',
+                                                                'H             -0.122339018428583      -0.079328164963500      -0.098325922028042',
+                                                                'Sb            -0.000006133255584      -0.013616713601573       0.004891307503662']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
                    'ch3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['BOHR',
                                                                             '  10.0   0.0   0.0',
                                                                             '   0.0  10.0   0.0',
@@ -2694,6 +2746,11 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                                     shortcutToCells.get('cs2'),
                                                     shortcutToCells.get('cse2'),
                                                     shortcutToCells.get('cte2')],
+
+                            'pnictides': [shortcutToCells.get('nh3'),
+                                          shortcutToCells.get('ph3'),
+                                          shortcutToCells.get('ash3'),
+                                          shortcutToCells.get('sbh3')],
 
                             'methylhalides': [shortcutToCells.get('ch3f'),
                                               shortcutToCells.get('ch3cl'),
