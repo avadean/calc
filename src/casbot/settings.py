@@ -1493,6 +1493,54 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
+                   'bf3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['B              0.000000002295232      -0.000001611645635       0.000000057383755',
+                                                                                     'F              0.000000035661965       0.130356737684980       0.000000004782783',
+                                                                                     'F              0.112883755529237      -0.065177563767529      -0.000000058091245',
+                                                                                     'F             -0.112883793486434      -0.065177562271816      -0.000000004075293']),
+
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'bcl3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac', lines=['B              0.000000045491317       0.000022203818438      -0.000000004253526',
+                                                                                      'Cl             0.000000006942819       0.172691767811992       0.000000005145660',
+                                                                                      'Cl             0.149569422621628      -0.086361994556501       0.000000002779216',
+                                                                                      'Cl            -0.149569475055765      -0.086361977073928      -0.000000003671350']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'bbr3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                             '  10.0   0.0   0.0',
+                                                                             '   0.0  10.0   0.0',
+                                                                             '   0.0   0.0  10.0']),
+
+                            ElementThreeVectorFloatBlock(key='positions_frac', lines=['B             -0.000001893454796       0.000058991246653       0.000000639646940',
+                                                                                      'Br             0.000003543727073       0.188753624312720       0.000002196652407',
+                                                                                      'Br             0.163685986093486      -0.094406701001301      -0.000002630694046',
+                                                                                      'Br            -0.163687636365763      -0.094405914558073      -0.000000205605300']),
+
+                            ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'bi3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['B              0.000001069361425       0.000074333468837       0.000000013224615',
+                                                                                     'I             -0.000000036155453       0.210620209421039      -0.000000007155181',
+                                                                                     'I              0.182447171614844      -0.105347380392697       0.000000014252738',
+                                                                                     'I             -0.182448204820816      -0.105347162497179      -0.000000020322173']),
+
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
                    'ch3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['BOHR',
                                                                             '  10.0   0.0   0.0',
                                                                             '   0.0  10.0   0.0',
@@ -2832,7 +2880,12 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                                                shortcutToCells.get('nah'),
                                                shortcutToCells.get('kh'),
                                                shortcutToCells.get('rbh'),
-                                               shortcutToCells.get('csh')]
+                                               shortcutToCells.get('csh')],
+
+                            'boronhalides': [shortcutToCells.get('bf3'),
+                                             shortcutToCells.get('bcl3'),
+                                             shortcutToCells.get('bbr3'),
+                                             shortcutToCells.get('bi3')]
                             }
 
 defaultShortcut = {'defaults': [ThreeVectorIntBlock(key='cell_constraints', lines=['0   0   0', '0   0   0']),

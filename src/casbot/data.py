@@ -543,6 +543,8 @@ stringToVariableDirectories = {'halides': ['001_HF', '002_HCl', '003_HBr', '004_
 
                                'halidecrystals': ['002_HCl', '003_HBr', '004_HI'],
 
+                               'boronhalides': ['001_BF3', '002_BCl3', '003_BBr3', '004_BI3'],
+
                                'chalcogenides': ['001_H2O', '002_H2S', '003_H2Se', '004_H2Te'],
 
                                'carbonchalcogenides': ['001_CO2', '002_CS2', '003_CSe2', '004_CTe2'],
