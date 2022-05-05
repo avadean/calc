@@ -1493,6 +1493,18 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
 
                             ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
 
+                   'bh3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                            '  10.0   0.0   0.0',
+                                                                            '   0.0  10.0   0.0',
+                                                                            '   0.0   0.0  10.0']),
+
+                           ElementThreeVectorFloatBlock(key='positions_frac', lines=['H             -0.000000046956309       0.120023652918335       0.000000000176747',
+                                                                                     'H              0.103945456385237      -0.060012168144273      -0.000000122419757',
+                                                                                     'H             -0.103945442442255      -0.060012002581738       0.000000095853288',
+                                                                                     'B              0.000000033013327       0.000000517807675       0.000000026389722']),
+
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
                    'bf3': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
                                                                             '  10.0   0.0   0.0',
                                                                             '   0.0  10.0   0.0',
