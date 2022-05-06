@@ -18,41 +18,57 @@ from pathlib import Path
 from subprocess import run as subProcessRun
 
 
-def createCalculations(variableSettings=None, globalSettings=None, directoryNames=None, withDefaults=True, verbose=False):
-    assert type(verbose) is bool
-    assert type(withDefaults) is bool
+def createCalculations(*variables, settings=None, directories=None, defaults=True):
+    if settings is None:
+        settings = []
+    else:
+        assert type(settings) in (list, tuple)
 
-    if verbose: print('Beginning setup of calculations')
+    if directories is None:
+        directories = []
+    else:
+        assert type(directories) in (list, tuple)
 
-    if verbose: print('Generating variable settings...', end=' ', flush=True)
-    variableSettings = createVariableSettings(*variableSettings) if variableSettings is not None else []
-    if verbose: print('Done!')
+    assert type(defaults) is bool
+
+    variableSettings = createVariableSettings(*variables)
 
     # Now that we have dealt with the variable cells/params of the calculations, we now work on the general cells/params.
-    if verbose: print('Collecting general settings...', end=' ', flush=True)
-    globalSettings = createSettings(*globalSettings) if globalSettings is not None else []
-    if verbose: print('Done!')
+    settings = createSettings(*settings)
 
-    # Now let's deal with the directory names if given
-    if verbose: print('Creating directories...', end=' ', flush=True)
-    directoryNames = createDirectories(*directoryNames) if directoryNames is not None else []
-    if verbose: print('Done!')
+    # Now let's deal with the directory names if given.
+    directories = createDirectories(*directories)
 
-    # Some checks on the calculations and directories.
-    if directoryNames:
-        assert len(variableSettings) == len(directoryNames), 'Number of variable settings must match directory depth'
-        assert all(len(varSetts) == len(dirNames) for varSetts, dirNames in zip(variableSettings, directoryNames)), \
-            'Variable settings shape must match directories shape'
+    # If we've been given some directory names, then let's make sure they match the shape of the variable settings.
+    if directories:
+        if len(variableSettings) > 0:
+            assert len(variableSettings) == len(directories), 'Number of variable settings must match directory depth'
+            assert all(len(varSetts) == len(dirNames) for varSetts, dirNames in zip(variableSettings, directories)), \
+                'Variable settings shape must match directories shape'
 
-        # Add numbers to the start of each directory name.
-        #directoryNames = [['{:03}_{}'.format(n, directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
-        #directoryNames = [[f'{directoryNames[num][n-1]}' for n in range(1, len(var) + 1)]
-        #                  for num, var in enumerate(variableSettings)]
-        directoryNames = [[f'{dirNames[n-1]}' for n in range(1, len(varSetts) + 1)]
-                          for varSetts, dirNames in zip(variableSettings, directoryNames)]
+            # Add numbers to the start of each directory name.
+            # directoryNames = [['{:03}_{}'.format(n, directoryNames[num][n-1]) for n in range(1, len(var) + 1)]
+            # directoryNames = [[f'{directoryNames[num][n-1]}' for n in range(1, len(var) + 1)]
+            #                  for num, var in enumerate(variableSettings)]
+            directoryNames = [[f'{dirNames[n - 1]}' for n in range(1, len(varSetts) + 1)]
+                              for varSetts, dirNames in zip(variableSettings, directories)]
+        else:
+            # If we don't actually have any variables settings, then make sure the number of directories is one.
+            assert len(directories) == 1 == len(directories[0]), 'Only need one directory if no variable settings.'
+
+            directoryNames = directories
+
     else:
         # If we don't have directory names then default to just numbers.
-        directoryNames = [[f'{n:03}' for n in range(1, len(varSetts) + 1)] for varSetts in variableSettings]
+        if len(variableSettings) > 0:
+            ## Try to use any specified strings from the variable settings as shortcuts for the directories, as often they are the same. Otherwise, just numbers.
+            #directoryNames = [createDirectories(v1)[0] if type(v1) is str else [f'{n:03}' for n in range(1, len(v2) + 1)] for v1, v2 in zip(variables, variableSettings)]
+            # TODO: implement automatic directory names for variable shortcuts.
+
+            directoryNames = [[f'{n:03}' for n in range(1, len(v) + 1)] for v in variableSettings]
+
+        else:
+            directoryNames = [['000']]
 
     #assert sum(any(type(a) is str for a in variable) for variable in varSettingsProcessed) == 1,\
     #    'Can only have one iterable argument that is not a cell or param'
@@ -64,15 +80,13 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
     # Combinations will expand out the varSettingsProcessed and create every possible combination of the variable settings.
     # E.g. If we have argument1=['HF', 'HCl'] and argument2=[Cell(bField=1.0T), Cell(bField=2.0T)]
     # Then combinations will be: [(HF, bField 1.0T), (HF, bField 2.0T), (HCl, bField 1.0T), (HCl, bField 2.0T)]
-    varSettingsProcessed = list(product(*variableSettings))
+    variables = list(product(*variableSettings))
     directoryNames = list(product(*directoryNames))
 
-    if withDefaults:
-        if verbose: print('Adding in any default settings not set...', end=' ', flush=True)
-
+    if defaults:
         specifiedKeys = []
 
-        for combination in varSettingsProcessed:
+        for combination in variables:
             for listOfSettings in combination:
                 for setting in listOfSettings:
                     if setting.key not in specifiedKeys:
@@ -81,20 +95,17 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
             ## Don't use varSettingsProcessed[0] just incase varSettingsProcessed is empty.
             #break
 
-        specifiedKeys += [setting.key for setting in globalSettings]
+        specifiedKeys += [setting.key for setting in settings]
 
         defaultSettings = createSettings('defaults')
 
-        globalSettings += [setting for setting in defaultSettings if setting.key not in specifiedKeys]
+        settings += [setting for setting in defaultSettings if setting.key not in specifiedKeys]
 
-        if verbose: print('Done!')
-
-    if verbose: print('Creating calculations...', end=' ', flush=True)
     calculations = []
 
     # Loop through the possible combinations.
-    #for combNum, combination in enumerate(varSettingsProcessed):
-    for varSetts, dirNames in zip(varSettingsProcessed, directoryNames):
+    #for combNum, combination in enumerate(variables):
+    for varSetts, dirNames in zip(variables, directoryNames):
         name = None
 
         directory = '' # '{}'.format(get current working directory)
@@ -102,23 +113,28 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
         # For the specific variable cells/params.
         specificSettings = []
 
-        # Loop through the tuples of specific cells/params of this combination.
-        for lstSetts, dirName in zip(varSetts, dirNames):
-            directory += dirName
+        # If we have variable settings, loop through the tuples of specific cells/params of this combination.
+        if varSetts:
+            for lstSetts, dirName in zip(varSetts, dirNames):
+                directory += dirName
 
-            # Loop through the specific tuple that contains many cells or params or both.
-            for setting in lstSetts:
-                if isinstance(setting, Setting):
-                    specificSettings.append(setting)
+                # Loop through the specific tuple that contains many cells or params or both.
+                for setting in lstSetts:
+                    if isinstance(setting, Setting):
+                        specificSettings.append(setting)
 
-                else:
-                    raise TypeError(f'Only cells/params define a calculation, not {type(setting)}')
+                    else:
+                        raise TypeError(f'Only cells/params define a calculation, not {type(setting)}')
 
-            directory += '/'
+                directory += '/'
+
+        else:
+            # If we have no variable settings then there will only be on directory name.
+            directory, = dirNames
 
         # Combine the general cells/params we want with the variable cells/params.
         # Specific settings override the global settings.
-        settings = specificSettings + [setting for setting in globalSettings if setting.key not in [setting2.key for setting2 in specificSettings]]
+        settings = specificSettings + [setting for setting in settings if setting.key not in [setting2.key for setting2 in specificSettings]]
 
         # Calculation should have their own copy of settings.
         settings = deepcopy(settings)
@@ -127,10 +143,6 @@ def createCalculations(variableSettings=None, globalSettings=None, directoryName
         calculations.append(Calculation(name=name,
                                         directory=directory,
                                         settings=settings))
-
-    if verbose: print('Done!')
-
-    if verbose: print('Finalising setup of calculations')
 
     return calculations
 

@@ -113,6 +113,9 @@ class Setting:
         self.value = None
         self.unit = None
 
+    def __repr__(self):
+        return self.key
+
     def getValue(self):
         return self.value
 
@@ -3103,10 +3106,10 @@ def createVariableSettings(*variableSettings):
         would be outer producted to
         [HF+soc=false, HF+soc=true, HCl+soc=false, HCl+soc=true] """
 
-    variableSettingsProcessed = []
+    processed = []
 
     for variable in variableSettings:
-        assert type(variable) in [str, list, tuple], \
+        assert type(variable) in (str, list, tuple), \
             f'Specify only shortcut strings, lists or tuples for variable cells/params, not {type(variable)}'
 
         # Strings are shortcuts, but shortcuts to specific combinations of cells/params.
@@ -3115,7 +3118,15 @@ def createVariableSettings(*variableSettings):
         # 2 -> spin_treatment=vector and spin_orbit_coupling=false
         # 3 -> spin_treatment=vector and spin_orbit_coupling=true
         # So let's turn the shortcut string (if needed) into its list combination.
-        variable = getVariableSetting(variable.strip().lower()) if type(variable) is str else variable
+
+        if type(variable) is str:
+            variable = variable.strip().lower()
+
+            found = stringToVariableSettings.get(variable, None)
+
+            assert found is not None, f'Shortcut to variable settings {variable} not recognised'
+
+            variable = found
 
         # Create a list to store this combination.
         lst = []
@@ -3129,7 +3140,7 @@ def createVariableSettings(*variableSettings):
                 lst.append(variableSettings)
 
             # User defined.
-            elif type_ in [list, tuple]:
+            elif type_ in (list, tuple):
                 assert all(isinstance(sttng, Setting) for sttng in strListSetting), 'Settings should only be cells or params'
                 lst.append(list(strListSetting))
 
@@ -3139,9 +3150,9 @@ def createVariableSettings(*variableSettings):
             else:
                 raise TypeError('A specific setting of several cells/params must be given as a shortcut or tuple')
 
-        variableSettingsProcessed.append(lst)
+        processed.append(lst)
 
-    return variableSettingsProcessed
+    return processed
 
 
 def shortcutsToSettings(*shortcuts):
@@ -3163,20 +3174,6 @@ def shortcutsToSettings(*shortcuts):
         settings += newSettings
 
     return settings
-
-
-def getVariableSetting(string=None):
-    """ This function gets a specific shortcut from a string.
-        The string will map to a list that contains lists of
-        cells/params, each to be used as a different setting. """
-
-    assert type(string) is str
-
-    variableSetting = stringToVariableSettings.get(string.lower(), None)
-
-    assert variableSetting is not None, f'Shortcut to variable settings {string} not recognised'
-
-    return variableSetting
 
 
 def getCellsParams(settings=None):

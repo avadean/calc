@@ -195,21 +195,32 @@ elements = ['h' ,                                                               
             'rf', 'db', 'sg', 'bh', 'hs', 'mt', 'ds', 'rg', 'cn', 'nh', 'fl', 'mc', 'lv', 'ts', 'og' ]
 
 
-def createDirectories(*directoryNames):
+def createDirectories(*dirs, ignoreShortcuts=False):
 
-    for directory in directoryNames:
+    for directory in dirs:
         if type(directory) is list:
-            assert all(type(name) is str for name in directory)
+            assert all(type(name) is str for name in directory), 'Ensure all items in a set of directories are strings.'
+
         else:
             assert type(directory) is str,\
-                f'Specify only shortcut strings or lists for directories, not {type(directory)}'
+                f'Specify only strings or lists for directories, not {type(directory)}'
 
-    directoryNames = [(getVariableDirectories(directory.strip().lower()) if type(directory) is str else directory)
-                      for directory in directoryNames]
+    directories = []
 
-    directoryNames = [[string.strip() for string in direc] for direc in directoryNames]
+    for directory in dirs:
+        if type(directory) is str:
+            if ignoreShortcuts:
+                # If we're ignoring string shortcuts, then simply add the string as a directory.
+                directories.append([directory])
 
-    return directoryNames
+            else:
+                # Try to see if we have a shortcut, if not then allow it as the string itself.
+                directories.append(stringToVariableDirectories.get(directory.strip().lower(), [directory]))
+
+        else:
+            directories.append(directory)
+
+    return directories
 
 
 def strListToArray(lst=None):
@@ -368,20 +379,6 @@ def getNiceUnit(unit=None):
 
 def getAllowedUnits(unitType=None, strict=True):
     return getFromDict(key=unitType, dct=unitTypeToUnit, strict=strict)
-
-
-def getVariableDirectories(string=None):
-    """ This function gets a specific shortcut from a string.
-        The string will map to a list that contains several
-        directory names. """
-
-    assert type(string) is str
-
-    variableDirectories = stringToVariableDirectories.get(string.strip().lower(), None)
-
-    assert variableDirectories is not None, f'Shortcut to variable directories {string} not recognised'
-
-    return variableDirectories
 
 
 def getFileLines(file_=None):
