@@ -1,5 +1,5 @@
 from casbot.data import assertCount, createDirectories,\
-    pi,\
+    pi, getElement,\
     getFileLines,\
     serialDefault, bashAliasesFileDefault, notificationAliasDefault, queueFileDefault,\
     PrintColors
@@ -948,8 +948,7 @@ class Calculation:
         if element is not None:
             assert isinstance(element, str)
 
-            element = element.strip()
-            element = None if element == '' else element[0].upper() + element[1:].lower()
+            element = getElement(element)
 
         all_ = kwargs.get('all', False)
         core = kwargs.get('core', False)
@@ -998,8 +997,7 @@ class Calculation:
         if element is not None:
             assert isinstance(element, str)
 
-            element = element.strip()
-            element = None if element == '' else element[0].upper() + element[1:].lower()
+            element = getElement(element)
 
         all_ = kwargs.get('all', False)
         bare = kwargs.get('bare', False)
@@ -1045,8 +1043,7 @@ class Calculation:
         if element is not None:
             assert isinstance(element, str)
 
-            element = element.strip()
-            element = None if element == '' else element[0].upper() + element[1:].lower()
+            element = getElement(element)
 
         all_ = kwargs.get('all', False)
         dipolar = kwargs.get('dipolar', False)
