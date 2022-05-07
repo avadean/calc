@@ -13,15 +13,15 @@ from tqdm import tqdm
 class Model:
     def __init__(self, calculations=None, name=None):
         if name is not None:
-            assert type(name) is str
+            assert isinstance(name, str)
 
         self.name = name
 
         self.calculations = []
 
         if calculations is not None:
-            assert type(calculations) is list
-            assert all(type(calculation) is Calculation for calculation in calculations)
+            assert isinstance(calculations, list)
+            assert all(isinstance(calculation, Calculation) for calculation in calculations)
             self.calculations = calculations
 
         self.species = self.getSpecies(calculations=self.calculations, strict=False)
@@ -40,9 +40,9 @@ class Model:
         return len(self.calculations)
 
     def analyse(self, *toAnalyse, passive=False, reset=True):
-        assert all(type(type_) is str for type_ in toAnalyse)
-        assert type(passive) is bool
-        assert type(reset) is bool
+        assert all(isinstance(type_, str) for type_ in toAnalyse)
+        assert isinstance(passive, bool)
+        assert isinstance(reset, bool)
 
         assert len(self.calculations) > 0, 'No calculations to analyse'
 
@@ -146,8 +146,8 @@ class Model:
             c.expectedSecToFinish = None
 
     def create(self, force=False, passive=False):
-        assert type(force) is bool
-        assert type(passive) is bool
+        assert isinstance(force, bool)
+        assert isinstance(passive, bool)
 
         if force and passive:
             raise ValueError('Cannot create model with force=True and passive=True - use one option as True only')
@@ -165,15 +165,15 @@ class Model:
             calculation.create(force=force, passive=passive)
 
     def edit(self, parameter=None, **kwargs):  # def edit(self, parameter=None, *names, **kwargs):
-        assert type(parameter) is str
+        assert isinstance(parameter, str)
 
         parameter = parameter.strip().lower()
 
-        if parameter in ['rotate', 'rotation']:
+        if parameter in ('rotate', 'rotation'):
             for calculation in self.calculations:
                 calculation.rotate(**kwargs)
 
-        elif parameter in ['translate', 'translation']:
+        elif parameter in ('translate', 'translation'):
             raise NotImplementedError('Translation editing not yet implemented')
 
         else:
@@ -181,9 +181,9 @@ class Model:
 
     @staticmethod
     def getSpecies(calculations=None, strict=False):
-        assert type(strict) is bool
-        assert type(calculations) is list
-        assert all(type(calculation) is Calculation for calculation in calculations)
+        assert isinstance(strict, bool)
+        assert isinstance(calculations, list)
+        assert all(isinstance(calculation, Calculation) for calculation in calculations)
 
         for calculation in calculations:
             calculation.setName(strict=strict)
@@ -191,22 +191,22 @@ class Model:
         return Counter(calculation.name for calculation in calculations)
 
     def plot(self, x=None, y=None, **kwargs):
-        assert type(x) in [str, list, ndarray]
-        assert type(y) in [str, list, ndarray]
-        assert all(type(kwarg) is str for kwarg in kwargs)
+        assert isinstance(x, (str, list, ndarray))
+        assert isinstance(y, (str, list, ndarray))
+        assert all(isinstance(kwarg, str) for kwarg in kwargs)
 
         kwargs = {key.strip().lower(): val for key, val in kwargs.items()}
 
-        density = kwargs.get('density', True)
+        group = kwargs.get('group', True)
 
         doneX, doneY = False, False
 
-        if type(x) is list: x, doneX = x, True
-        if type(x) is ndarray: x, doneX = x, True
-        if type(y) is list: y, doneY = y, True
-        if type(y) is ndarray: y, doneY = y, True
+        if isinstance(x, list): x, doneX = x, True
+        if isinstance(x, ndarray): x, doneX = x, True
+        if isinstance(y, list): y, doneY = y, True
+        if isinstance(y, ndarray): y, doneY = y, True
 
-        calculations = groupDensityCalculations(calculations=self.calculations) if density else self.calculations
+        calculations = groupDensityCalculations(calculations=self.calculations) if group else self.calculations
 
         if not doneX and not doneY:
             xlabel(x)
@@ -224,17 +224,17 @@ class Model:
         assert len(x) == len(y), f'Mismatch in x and y axis lengths: x is {len(x)}, y is {len(y)}'
 
         typeOfPlot = kwargs.get('type', 'plot')
-        assert type(typeOfPlot) is str, 'Enter plot type as string'
+        assert isinstance(typeOfPlot, str), 'Enter plot type as string'
         typeOfPlot = typeOfPlot.strip().lower()
-        assert typeOfPlot in ['plot', 'scatter', 'both'], f'Plotting type should be {", ".join(["plot", "scatter", "both"])}'
+        assert typeOfPlot in ('plot', 'scatter', 'both'), f'Plotting type should be {", ".join(["plot", "scatter", "both"])}'
 
         logarithmic = kwargs.get('log', False)
-        assert type(logarithmic) is bool, 'Enter logarithmic type as bool'
+        assert isinstance(logarithmic, bool), 'Enter logarithmic type as bool'
 
-        if typeOfPlot in ['plot', 'both']:
+        if typeOfPlot in ('plot', 'both'):
             plot(x, y)
 
-        if typeOfPlot in ['scatter', 'both']:
+        if typeOfPlot in ('scatter', 'both'):
             scatter(x, y)
 
         if logarithmic:
@@ -244,10 +244,10 @@ class Model:
 
     @staticmethod
     def processStrAxis(*args, calculations=None, **kwargs):
-        assert all(type(arg) is str for arg in args)
+        assert all(isinstance(arg, str) for arg in args)
         assert len(args) != 0, 'Enter at least one axis to process'
         assert len(args) in (1, 2), 'Can only plot 2 dimensions for now'
-        assert all(type(kwarg) is str for kwarg in kwargs)
+        assert all(isinstance(kwarg, str) for kwarg in kwargs)
 
         knownPlots = {'bfield', 'nmriso', 'fermiiso', 'fermiisobfield', 'kpointspacing'}
 
@@ -257,8 +257,8 @@ class Model:
 
         assert not set(args) - knownPlots, f'Do not know how to plot {", ".join(set(args) - knownPlots)}'
 
-        assert type(calculations) is list
-        assert all(type(c) is Calculation for c in calculations)
+        assert isinstance(calculations, list)
+        assert all(isinstance(c, Calculation) for c in calculations)
 
         # Generalised in case n dimensions is needed.
         values = []  # Values of each argument for each calculation.
@@ -282,8 +282,8 @@ class Model:
                     if not c.nmrTotalTensors:
                         continue
 
-                    assert type(element) is str, 'Enter element to get NMR total tensor for'
-                    assert type(ion) is int, 'Enter ion to get NMR total tensor for'
+                    assert isinstance(element, str), 'Enter element to get NMR total tensor for'
+                    assert isinstance(ion, int), 'Enter ion to get NMR total tensor for'
 
                     element = element.strip()
 
@@ -301,8 +301,8 @@ class Model:
                     if not c.hyperfineFermiTensors:
                         continue
 
-                    assert type(element) is str, 'Enter element to get Fermi tensor for'
-                    assert type(ion) is int, 'Enter ion to get Fermi tensor for'
+                    assert isinstance(element, str), 'Enter element to get Fermi tensor for'
+                    assert isinstance(ion, int), 'Enter ion to get Fermi tensor for'
 
                     element = element.strip()
 
@@ -342,11 +342,11 @@ class Model:
         if len(args) == 0:
             return
 
-        assert all(type(arg) is str for arg in args)
+        assert all(isinstance(arg, str) for arg in args)
 
         args = set([arg.strip().lower() for arg in args])
 
-        assert all(type(kwarg) is str for kwarg in kwargs)
+        assert all(isinstance(kwarg, str) for kwarg in kwargs)
 
         kwargs = {kwarg.strip().lower(): val for kwarg, val in kwargs.items()}
 
@@ -395,21 +395,21 @@ class Model:
                 print('')
 
     def run(self, test=False, force=False, passive=False, shuffle=False, serial=None, bashAliasesFile=None, notificationAlias=None):
-        assert type(test) is bool
-        assert type(force) is bool
-        assert type(passive) is bool
-        assert type(shuffle) is bool
+        assert isinstance(test, bool)
+        assert isinstance(force, bool)
+        assert isinstance(passive, bool)
+        assert isinstance(shuffle, bool)
 
         if serial is not None:
-            assert type(serial) is bool
+            assert isinstance(serial, bool)
 
         if bashAliasesFile is not None:
-            assert type(bashAliasesFile) is str
+            assert isinstance(bashAliasesFile, str)
 
         if notificationAlias is not None:
-            assert type(notificationAlias) is str
+            assert isinstance(notificationAlias, str)
 
-        calculations = [c for c in self.calculations if c.getStatus() not in ['completed', 'running', 'submitted']]
+        calculations = [c for c in self.calculations if c.getStatus() not in ('completed', 'running', 'submitted')]
 
         if len(calculations) != len(self.calculations) and not passive:
             raise ValueError('Some calculations are complete, already running or submitted - use passive=True to skip them')
@@ -442,14 +442,14 @@ class Model:
             print(f'*** Ran {len(calculations)} calculations ***')
 
     def sub(self, test=False, force=False, passive=False, shuffle=False, reverse=False, queueFile=None):
-        assert type(test) is bool
-        assert type(force) is bool
-        assert type(passive) is bool
-        assert type(shuffle) is bool
-        assert type(reverse) is bool
+        assert isinstance(test, bool)
+        assert isinstance(force, bool)
+        assert isinstance(passive, bool)
+        assert isinstance(shuffle, bool)
+        assert isinstance(reverse, bool)
 
         if not force:
-            calculations = [c for c in self.calculations if c.getStatus() not in ['completed', 'running', 'submitted']]
+            calculations = [c for c in self.calculations if c.getStatus() not in ('completed', 'running', 'submitted')]
 
             if len(calculations) != len(self.calculations) and not passive:
                 raise ValueError('Some calculations are complete, running or already submitted - use passive=True to skip them or force=True to re-run them')
@@ -460,7 +460,7 @@ class Model:
             assert not reverse
 
         if queueFile is not None:
-            assert type(queueFile) is str
+            assert isinstance(queueFile, str)
 
         calculations = sample(calculations, k=len(calculations)) if shuffle else calculations
 
@@ -478,8 +478,8 @@ class Model:
             print(f'*** Submitted {len(calculations)} calculations ***')
 
     def save(self, file=None, overwrite=False):
-        assert type(file) is str
-        assert type(overwrite) is bool
+        assert isinstance(file, str)
+        assert isinstance(overwrite, bool)
 
         assert not Path(file).is_file() or overwrite, f'File {file} exists - use overwrite=True to overwrite'
 
@@ -490,7 +490,7 @@ class Model:
 
     @staticmethod
     def load(file=None):
-        assert type(file) is str
+        assert isinstance(file, str)
         assert Path(file).is_file(), f'Cannot find file {file}'
 
         with open(file, 'rb') as f:

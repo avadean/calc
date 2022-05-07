@@ -22,14 +22,14 @@ def createCalculations(*variables, settings=None, directories=None, defaults=Tru
     if settings is None:
         settings = []
     else:
-        assert type(settings) in (list, tuple)
+        assert isinstance(settings, (list, tuple))
 
     if directories is None:
         directories = []
     else:
-        assert type(directories) in (list, tuple)
+        assert isinstance(directories, (list, tuple))
 
-    assert type(defaults) is bool
+    assert isinstance(defaults, bool)
 
     variableSettings = createVariableSettings(*variables)
 
@@ -62,7 +62,7 @@ def createCalculations(*variables, settings=None, directories=None, defaults=Tru
         # If we don't have directory names then default to just numbers.
         if len(variableSettings) > 0:
             ## Try to use any specified strings from the variable settings as shortcuts for the directories, as often they are the same. Otherwise, just numbers.
-            #directoryNames = [createDirectories(v1)[0] if type(v1) is str else [f'{n:03}' for n in range(1, len(v2) + 1)] for v1, v2 in zip(variables, variableSettings)]
+            #directoryNames = [createDirectories(v1)[0] if isinstance(v1, str) else [f'{n:03}' for n in range(1, len(v2) + 1)] for v1, v2 in zip(variables, variableSettings)]
             # TODO: implement automatic directory names for variable shortcuts.
 
             directoryNames = [[f'{n:03}' for n in range(1, len(v) + 1)] for v in variableSettings]
@@ -70,7 +70,7 @@ def createCalculations(*variables, settings=None, directories=None, defaults=Tru
         else:
             directoryNames = [['000']]
 
-    #assert sum(any(type(a) is str for a in variable) for variable in varSettingsProcessed) == 1,\
+    #assert sum(any(isinstance(a, str) for a in variable) for variable in varSettingsProcessed) == 1,\
     #    'Can only have one iterable argument that is not a cell or param'
 
     # varSettingsProcessed looks like = [argument1, argument2, etc...]   ~ this is all the information
@@ -148,8 +148,8 @@ def createCalculations(*variables, settings=None, directories=None, defaults=Tru
 
 
 
-def processCalculations(*directories):
-    directories = createDirectories(*directories)
+def processCalculations(*directories, parent=None):
+    directories = createDirectories(*directories, parent=parent)
 
     if len(directories) == 0:
         return []
@@ -169,7 +169,7 @@ def processCalculations(*directories):
 
         # Get settings from cell file.
         cellFiles = filter(listdir(directory), '*.cell')
-        cellFiles = [f for f in cellFiles if f[-9:] != '-out.cell']
+        cellFiles = [f for f in cellFiles if not f.endswith('-out.cell')]
 
         cells = []
 
@@ -224,8 +224,8 @@ def processCalculations(*directories):
 
 
 def groupDensityCalculations(calculations=None):
-    assert type(calculations) is list
-    assert all(type(c) is Calculation for c in calculations)
+    assert isinstance(calculations, list)
+    assert all(isinstance(c, Calculation) for c in calculations)
 
     # calculations = sorted(self.calculations, key=lambda c: c.directory)
     # calculations = deepcopy(calculations)
@@ -390,15 +390,15 @@ class Calculation:
 
     def __init__(self, directory=None, settings=None, name=None):
         if directory is not None:
-            assert type(directory) is str
+            assert isinstance(directory, str)
 
         if settings is not None:
-            assert type(settings) is list
+            assert isinstance(settings, list)
             assert all(isinstance(setting, Setting) for setting in settings)
             assertCount([setting.key for setting in settings])
 
         if name is not None:
-            assert type(name) is str
+            assert isinstance(name, str)
             assert ' ' not in name, 'Cannot have spaces in name'
 
         self.directory = directory
@@ -436,11 +436,11 @@ class Calculation:
         return string
 
     def analyse(self, *toAnalyse, reset=True):
-        assert type(reset) is bool
+        assert isinstance(reset, bool)
 
         assert self.getStatus() == 'completed', 'Calculation not completed therefore cannot analyse'
 
-        assert all(type(type_) is str for type_ in toAnalyse)
+        assert all(isinstance(type_, str) for type_ in toAnalyse)
 
         toAnalyse = set(type_.strip().lower() for type_ in toAnalyse)
 
@@ -561,11 +561,9 @@ class Calculation:
         if toAnalyse:
             print(f'Skipping result{"" if len(toAnalyse) == 1 else "s"} {", ".join(toAnalyse)} as do not know how to analyse (yet)')
 
-    def check(self, nameOutputLen=0, dirOutputLen=0, latestFinishTime=0.0):
-        assert type(nameOutputLen) is int
-        assert type(dirOutputLen) is int
-        assert type(latestFinishTime) in [int, float]
-
+    def check(self, **kwargs):
+        latestFinishTime = kwargs.get('latestFinishTime', 0.0)
+        assert isinstance(latestFinishTime, (int, float))
         latestFinishTime = float(latestFinishTime)
 
         self.setName(strict=False)
@@ -573,14 +571,16 @@ class Calculation:
         string = ' ->'
 
         if self.name is not None:
-            nameOutputLen = max(len(self.name), nameOutputLen)
+            nameOutputLen = kwargs.get('nameOutputLen', 0)
+            assert isinstance(nameOutputLen, int) and nameOutputLen >= 0
             string += f'  {self.name:<{nameOutputLen}}'
 
         if self.directory is None:
             string += '  (no directory specified)'
             return
         else:
-            dirOutputLen = max(len(self.directory), dirOutputLen)
+            dirOutputLen = kwargs.get('dirOutputLen', 0)
+            assert isinstance(dirOutputLen, int) and dirOutputLen >= 0
             directory = f'({self.directory})'
             string += f'  {directory:<{dirOutputLen+2}}'  # +2 for brackets, ()
 
@@ -660,8 +660,8 @@ class Calculation:
         print(string)
 
     def create(self, force=False, passive=False):
-        assert type(force) is bool
-        assert type(passive) is bool
+        assert isinstance(force, bool)
+        assert isinstance(passive, bool)
 
         if force and passive:
             raise ValueError('Cannot create calculation with force=True and passive=True - use one option as True only')
@@ -728,10 +728,10 @@ class Calculation:
         print(f'Created calculation for {self.name} in {directory}')
 
     def getFortFile(self, i=90, lines=True):
-        assert type(i) is int
+        assert isinstance(i, int)
         assert i >= 0, 'Cannot have negative fort file numbers'
 
-        assert type(lines) is bool
+        assert isinstance(lines, bool)
 
         if self.directory is None:
             raise FileNotFoundError('Calculation does not have a directory to find fort file')
@@ -750,8 +750,8 @@ class Calculation:
 
     @staticmethod
     def getFinalRunLines(lines=None):
-        assert type(lines) is list
-        assert all(type(line) is str for line in lines)
+        assert isinstance(lines, list)
+        assert all(isinstance(line, str) for line in lines)
 
         # Reverse lines in case there were multiple continuations in CASTEP file.
         lines.reverse()
@@ -946,7 +946,7 @@ class Calculation:
         element = kwargs.get('element', None)
 
         if element is not None:
-            assert type(element) is str
+            assert isinstance(element, str)
 
             element = element.strip()
             element = None if element == '' else element[0].upper() + element[1:].lower()
@@ -996,7 +996,7 @@ class Calculation:
         element = kwargs.get('element', None)
 
         if element is not None:
-            assert type(element) is str
+            assert isinstance(element, str)
 
             element = element.strip()
             element = None if element == '' else element[0].upper() + element[1:].lower()
@@ -1043,7 +1043,7 @@ class Calculation:
         element = kwargs.get('element', None)
 
         if element is not None:
-            assert type(element) is str
+            assert isinstance(element, str)
 
             element = element.strip()
             element = None if element == '' else element[0].upper() + element[1:].lower()
@@ -1127,11 +1127,11 @@ class Calculation:
         except ValueError:
             raise ValueError('Supply axis to rotate around as array-like e.g. [1, 1, 1]')
 
-        assert type(angle) in [float, int]
-        assert type(degrees) is bool
+        assert isinstance(angle, (int, float))
+        assert isinstance(degrees, bool)
 
         if setting is not None:
-            assert type(setting) is str
+            assert isinstance(setting, str)
             setting = setting.strip().lower()
 
         angle = float(angle)
@@ -1187,7 +1187,7 @@ class Calculation:
         except ValueError:
             raise ValueError('Supply vector to translate by as array-like e.g. [1, 2, 3]')
 
-        assert type(unit) is str
+        assert isinstance(unit, str)
 
         unit = unit.strip().lower()
 
@@ -1213,17 +1213,20 @@ class Calculation:
         if self.directory is None:
             raise ValueError('Cannot run calculation when there is no directory specified')
 
-        assert type(test) is bool
+        assert isinstance(test, bool)
 
         if serial is None:
             serial = serialDefault
         else:
-            assert type(serial) is bool
+            assert isinstance(serial, bool)
 
         if bashAliasesFile is None:
             bashAliasesFile = bashAliasesFileDefault
+
+            if bashAliasesFile is None:
+                raise FileNotFoundError('No bash aliases file loaded as default.')
         else:
-            assert type(bashAliasesFile) is str
+            assert isinstance(bashAliasesFile, str)
 
             if not Path(bashAliasesFile).is_file():
                 raise FileNotFoundError(f'Cannot find alias file {bashAliasesFile}')
@@ -1231,7 +1234,7 @@ class Calculation:
         if notificationAlias is None:
             notificationAlias = notificationAliasDefault
         else:
-            assert type(notificationAlias) is str
+            assert isinstance(notificationAlias, str)
 
         # Work out CASTEP prefix intelligently if calculation does not have a name
         self.setName(strict=True)
@@ -1260,13 +1263,17 @@ class Calculation:
         if self.directory is None:
             raise ValueError('Cannot submit calculation when there is no directory specified')
 
-        assert type(test) is bool
-        assert type(force) is bool
+        assert isinstance(test, bool)
+        assert isinstance(force, bool)
 
         if queueFile is None:
             queueFile = queueFileDefault
+
+            if queueFile is None:
+                raise FileNotFoundError('No queue file loaded as default.')
+
         else:
-            assert type(queueFile) is str
+            assert isinstance(queueFile, str)
 
         if not Path(queueFile).is_file():
             raise FileNotFoundError(f'Cannot find queue file {queueFile}')
@@ -1304,7 +1311,7 @@ class Calculation:
                 f.write(f'{self.name}  {directory.resolve()}\n')
 
     def setName(self, strict=False):
-        assert type(strict) is bool
+        assert isinstance(strict, bool)
 
         if self.name is not None:
             return
@@ -1332,7 +1339,7 @@ class Calculation:
             self.sortSettings()
 
     def removeSettings(self, *settingsToDeleteKeys):
-        assert all(type(settingToDeleteKey) is str for settingToDeleteKey in settingsToDeleteKeys)
+        assert all(isinstance(settingToDeleteKey, str) for settingToDeleteKey in settingsToDeleteKeys)
 
         for settingToDeleteKey in settingsToDeleteKeys:
             if settingToDeleteKey not in [setting.key for setting in self.settings]:
@@ -1345,7 +1352,7 @@ class Calculation:
         # TODO: profiling
         full = kwargs.get('full', False)
 
-        assert type(full) is bool
+        assert isinstance(full, bool)
 
         develCode = getSettings('devel_code', settings=self.settings)
 

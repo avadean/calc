@@ -9,6 +9,9 @@ bashAliasesFileDefault = '/home/dean/.bash_aliases'
 notificationAliasDefault = 'noti'
 queueFileDefault = '/home/dean/tools/files/castep_queue.txt'
 
+bashAliasesFileDefault = bashAliasesFileDefault if Path(bashAliasesFileDefault).is_file() else None
+queueFileDefault = queueFileDefault if Path(queueFileDefault).is_file() else None
+
 
 # Mathematical constants.
 pi = 3.141_592_653_589_793_238_462_643_383_279_502_884_197_169
@@ -195,37 +198,64 @@ elements = ['h' ,                                                               
             'rf', 'db', 'sg', 'bh', 'hs', 'mt', 'ds', 'rg', 'cn', 'nh', 'fl', 'mc', 'lv', 'ts', 'og' ]
 
 
-def createDirectories(*dirs, ignoreShortcuts=False):
+def getElement(element=''):
+    assert isinstance(element, str)
 
-    for directory in dirs:
-        if type(directory) is list:
-            assert all(type(name) is str for name in directory), 'Ensure all items in a set of directories are strings.'
+    element = element.strip().lower()
 
-        else:
-            assert type(directory) is str,\
-                f'Specify only strings or lists for directories, not {type(directory)}'
+    assert element in elements
+
+    element = element[:1].upper() + element[1:].lower()
+
+    return element
+
+
+def getIon(ion=''):
+    assert isinstance(ion, str)
+
+    ion = ion.strip()
+
+    assert ion.isdigit()
+
+    ion = str(int(float(ion)))
+
+    return ion
+
+
+def createDirectories(*dirs, ignoreShortcuts=False, parent=''):
+    assert isinstance(ignoreShortcuts, bool)
+    assert isinstance(parent, str)
+
+    parent = parent.strip('/')
+    parent = parent + '/' if parent else parent
 
     directories = []
 
     for directory in dirs:
-        if type(directory) is str:
+        if isinstance(directory, str):
             if ignoreShortcuts:
                 # If we're ignoring string shortcuts, then simply add the string as a directory.
-                directories.append([directory])
+                directories.append([parent + directory])
 
             else:
                 # Try to see if we have a shortcut, if not then allow it as the string itself.
-                directories.append(stringToVariableDirectories.get(directory.strip().lower(), [directory]))
+                ds = stringToVariableDirectories.get(directory.strip().lower(), [directory])
+                directories.append([parent + d for d in ds])
+
+        elif isinstance(directory, list):
+            assert all(isinstance(name, str) for name in directory), 'Ensure all items in a set of directories are strings.'
+
+            directories.append(directory)
 
         else:
-            directories.append(directory)
+            raise TypeError(f'Specify only strings or lists for directories, not {type(directory)}.')
 
     return directories
 
 
 def strListToArray(lst=None):
-    assert type(lst) is list
-    assert all(type(line) is str for line in lst)
+    assert isinstance(lst, list)
+    assert all(isinstance(line, str) for line in lst)
 
     if len(lst) == 0:
         return empty(0, dtype=float)
@@ -241,14 +271,14 @@ def strListToArray(lst=None):
 
 
 def stringToValue(value):
-    assert type(value) is str
+    assert isinstance(value, str)
 
     value = value.strip()
 
-    if value.lower() in ['t', 'true']:
+    if value.lower() in ('t', 'true'):
         return True
 
-    elif value.lower() in ['f', 'false']:
+    elif value.lower() in ('f', 'false'):
         return False
 
     elif isInt(value):
@@ -268,7 +298,7 @@ def stringToValue(value):
 
 
 def isInt(*xList):
-    assert all(type(x_i) is str for x_i in xList)
+    assert all(isinstance(x_i, str) for x_i in xList)
 
     for x_i in xList:
         try:
@@ -284,7 +314,7 @@ def isInt(*xList):
 
 
 def isFloat(*xList):
-    assert all(type(x_i) is str for x_i in xList)
+    assert all(isinstance(x_i, str) for x_i in xList)
 
     for x_i in xList:
         try:
@@ -296,22 +326,23 @@ def isFloat(*xList):
 
 
 def isVectorInt(vector):
-    assert type(vector) is str
+    assert isinstance(vector, str)
 
     return True if all(isInt(part) for part in vector.split()) else False
 
 
 def isVectorFloat(vector):
-    assert type(vector) is str
+    assert isinstance(vector, str)
 
     return True if all(isFloat(part) for part in vector.split()) else False
 
 
 def assertCount(lst=None, count=1):
-    assert type(lst) is list
-    assert type(count) is int
+    assert isinstance(lst, list)
+    assert isinstance(count, int)
 
     counter = Counter(lst)
+
     assert all(val == count for val in counter.values()), \
         f'{counter.most_common(1)[0][0]} must be specified {count} time(s)'
 
@@ -322,12 +353,12 @@ def assertBetween(*values, minimum=None, maximum=None, key=None):
             float(value)
         except ValueError:
             raise ValueError('Non-int or float type present')
-    #assert all(type(value) in [int, float] for value in values)
-    assert type(minimum) in [int, float]
-    assert type(maximum) in [int, float]
+    #assert all(isinstance(value, (int, float)) for value in values)
+    assert isinstance(minimum, (int, float))
+    assert isinstance(maximum, (int, float))
 
     if key is not None:
-        assert type(key) is str
+        assert isinstance(key, str)
 
     for value in values:
         assert minimum <= value <= maximum,\
@@ -338,12 +369,12 @@ def assertBetween(*values, minimum=None, maximum=None, key=None):
 
 
 def getFromDict(key=None, dct=None, strict=True, default=None):
-    assert type(key) is str
-    assert type(dct) is dict
-    assert type(strict) is bool
+    assert isinstance(key, str)
+    assert isinstance(dct, dict)
+    assert isinstance(strict, bool)
 
     if default is not None:
-        assert type(default) in [str, float, int], f'getFromDict default does not work for type {type(default)} yet'
+        assert isinstance(default, (str, float, int)), f'getFromDict default does not work for type {type(default)} yet'
 
     key = key.strip().lower()
 
@@ -357,10 +388,10 @@ def getFromDict(key=None, dct=None, strict=True, default=None):
 
 
 def getUnit(key=None, unit=None, unitTypes=None, strict=True):
-    assert type(key) is str
-    assert type(unit) is str
-    assert type(unitTypes) is dict
-    assert type(strict) is bool
+    assert isinstance(key, str)
+    assert isinstance(unit, str)
+    assert isinstance(unitTypes, dict)
+    assert isinstance(strict, bool)
 
     unitType = getFromDict(key=key, dct=unitTypes, strict=strict)
 
@@ -382,7 +413,7 @@ def getAllowedUnits(unitType=None, strict=True):
 
 
 def getFileLines(file_=None):
-    assert type(file_) is str
+    assert isinstance(file_, str)
 
     assert Path(file_).is_file(), f'Cannot find file {file_}'
 
@@ -393,9 +424,9 @@ def getFileLines(file_=None):
 
 
 def unitConvert(value=None, fromUnit=None, toUnit=None):
-    assert type(value) in (int, float)
-    assert type(fromUnit) is str
-    assert type(toUnit) is str
+    assert isinstance(value, (int, float))
+    assert isinstance(fromUnit, str)
+    assert isinstance(toUnit, str)
 
     fromUnit = fromUnit.strip().lower()
     toUnit = toUnit.strip().lower()
@@ -436,7 +467,7 @@ class Any:
         if self.type_ is None:
             return True
 
-        if type(other) is not self.type_:
+        if not isinstance(other, self.type_):
             return False
 
         return True

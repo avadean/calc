@@ -1,4 +1,4 @@
-from casbot.data import elements,\
+from casbot.data import getElement, getIon,\
     getUnit, getFromDict,\
     PrintColors,\
     strListToArray
@@ -6,16 +6,18 @@ from casbot.data import elements,\
 from numpy import ndarray
 
 
-resultKnown = ['nmr_core', 'nmr_bare', 'nmr_dia', 'nmr_para', 'nmr_total',
+NMR = ['nmr_core', 'nmr_bare', 'nmr_dia', 'nmr_para', 'nmr_total']
 
-               'efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total',
+EFG = ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total']
 
-               'hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
-               'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total',
+hyperfine = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
+             'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total']
 
-               'spin_density',
+spin = ['spin_density']
 
-               'forces']
+forces = ['forces']
+
+resultKnown = NMR + EFG + hyperfine + spin + forces
 
 resultNames = {'nmr_core': 'CORE',
                'nmr_bare': 'BARE',
@@ -41,6 +43,26 @@ resultNames = {'nmr_core': 'CORE',
 
                'forces': 'FORCES'}
 
+resultWords = {'nmr_core': 'core',
+               'nmr_bare': 'bare',
+               'nmr_dia': 'dia',
+               'nmr_para': 'para',
+               'nmr_total': 'total',
+
+               'efg_bare': 'bare',
+               'efg_ion': 'ion',
+               'efg_aug': 'aug',
+               'efg_aug2': 'aug2',
+               'efg_total': 'total',
+
+               'hyperfine_dipolarbare': 'd_bare',
+               'hyperfine_dipolaraug': 'd_aug',
+               'hyperfine_dipolaraug2': 'd_aug2',
+               'hyperfine_dipolar': 'dipolar',
+               'hyperfine_fermi': 'fermi',
+               'hyperfine_zfc': 'zfc',
+               'hyperfine_total': 'total'}
+
 resultUnits = { # TODO: NMR, EFG units
 
                'hyperfine_dipolarbare': 'energy',
@@ -55,45 +77,44 @@ resultUnits = { # TODO: NMR, EFG units
 
                'forces': 'force'}
 
+resultColors = {'nmr_core': PrintColors.cyan,
+                'nmr_bare': PrintColors.magenta,
+                'nmr_dia': PrintColors.blue,
+                'nmr_para': PrintColors.red,
+                'nmr_total': PrintColors.orange,
 
-nmrColors = {'nmr_core': PrintColors.cyan,
-             'nmr_bare': PrintColors.magenta,
-             'nmr_dia': PrintColors.blue,
-             'nmr_para': PrintColors.red,
-             'nmr_total': PrintColors.orange,
+                'efg_bare': PrintColors.red,
+                'efg_ion': PrintColors.blue,
+                'efg_aug': PrintColors.yellow,
+                'efg_aug2': PrintColors.yellow,
+                'efg_total': PrintColors.orange,
 
-             'efg_bare': PrintColors.red,
-             'efg_ion': PrintColors.blue,
-             'efg_aug': PrintColors.yellow,
-             'efg_aug2': PrintColors.yellow,
-             'efg_total': PrintColors.orange,
+                'hyperfine_dipolarbare': PrintColors.blue,
+                'hyperfine_dipolaraug': PrintColors.blue,
+                'hyperfine_dipolaraug2': PrintColors.blue,
+                'hyperfine_dipolar': PrintColors.blue,
+                'hyperfine_fermi': PrintColors.green,
+                'hyperfine_zfc': PrintColors.green,
+                'hyperfine_total': PrintColors.orange}
 
-             'hyperfine_dipolarbare': PrintColors.blue,
-             'hyperfine_dipolaraug': PrintColors.blue,
-             'hyperfine_dipolaraug2': PrintColors.blue,
-             'hyperfine_dipolar': PrintColors.blue,
-             'hyperfine_fermi': PrintColors.green,
-             'hyperfine_zfc': PrintColors.green,
-             'hyperfine_total': PrintColors.orange}
-
+assert set(resultNames).issubset(resultKnown)
+assert set(resultWords).issubset(resultKnown)
+assert set(resultUnits).issubset(resultKnown)
+assert set(resultColors).issubset(resultKnown)
 
 
 def getResult(resultToGet=None, lines=None):
-    assert type(resultToGet) is str
-    assert type(lines) is list
-    assert all(type(line) is str for line in lines)
+    assert isinstance(resultToGet, str)
+    assert isinstance(lines, list)
+    assert all(isinstance(line, str) for line in lines)
 
     resultToGet = resultToGet.strip().lower()
 
     assert resultToGet in resultKnown
 
-    if resultToGet in ['nmr_core', 'nmr_bare', 'nmr_dia', 'nmr_para', 'nmr_total']:
+    if resultToGet in NMR:
 
-        wordToLookFor = {'nmr_core': 'core',
-                         'nmr_bare': 'bare',
-                         'nmr_dia': 'dia',
-                         'nmr_para': 'para',
-                         'nmr_total': 'total'}.get(resultToGet)
+        wordToLookFor = resultWords.get(resultToGet)
 
         tensors = []
 
@@ -102,14 +123,11 @@ def getResult(resultToGet=None, lines=None):
 
             if len(parts) == 4:
                 if parts[2] == wordToLookFor:
-                    element = parts[0][0].upper() + parts[0][1:].lower()
-                    ion = parts[1]
+                    element = getElement(parts[0])
 
-                    assert ion.isdigit(), f'Error in element ion on line {num + 1} of results file'
+                    ion = getIon(parts[1])
 
-                    arrLines = lines[num+2:num+5]
-
-                    arr = strListToArray(arrLines)
+                    arr = strListToArray(lines[num+2:num+5])
 
                     tensor = NMR(key=resultToGet, value=arr, unit=None, element=element, ion=ion)  # TODO: NMR units
 
@@ -117,13 +135,9 @@ def getResult(resultToGet=None, lines=None):
 
         return tensors
 
-    elif resultToGet in ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total']:
+    elif resultToGet in EFG:
 
-        wordToLookFor = {'efg_bare': 'bare',
-                         'efg_ion': 'ion',
-                         'efg_aug': 'aug',
-                         'efg_aug2': 'aug2',
-                         'efg_total': 'total'}.get(resultToGet)
+        wordToLookFor = resultWords.get(resultToGet)
 
         tensors = []
 
@@ -132,14 +146,11 @@ def getResult(resultToGet=None, lines=None):
 
             if len(parts) == 4:
                 if parts[2] == wordToLookFor and parts[3] == 'tensor':
-                    element = parts[0][0].upper() + parts[0][1:].lower()
-                    ion = parts[1]
+                    element = getElement(parts[0])
 
-                    assert ion.isdigit(), f'Error in element ion on line {num+1} of results file'
+                    ion = getIon(parts[1])
 
-                    arrLines = lines[num+2:num+5]
-
-                    arr = strListToArray(arrLines)
+                    arr = strListToArray(lines[num+2:num+5])
 
                     tensor = NMR(key=resultToGet, value=arr, unit=None, element=element, ion=ion)  # TODO: EFG units
 
@@ -150,16 +161,9 @@ def getResult(resultToGet=None, lines=None):
 
         return tensors
 
-    elif resultToGet in ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
-                         'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total']:
+    elif resultToGet in hyperfine:
 
-        wordToLookFor = {'hyperfine_dipolarbare': 'd_bare',
-                         'hyperfine_dipolaraug': 'd_aug',
-                         'hyperfine_dipolaraug2': 'd_aug2',
-                         'hyperfine_dipolar': 'dipolar',
-                         'hyperfine_fermi': 'fermi',
-                         'hyperfine_zfc': 'zfc',
-                         'hyperfine_total': 'total'}.get(resultToGet)
+        wordToLookFor = resultWords.get(resultToGet)
 
         tensors = []
 
@@ -168,14 +172,11 @@ def getResult(resultToGet=None, lines=None):
 
             if len(parts) == 4:
                 if parts[2] == wordToLookFor and parts[3] == 'tensor':
-                    element = parts[0][0].upper() + parts[0][1:].lower()
-                    ion = parts[1]
+                    element = getElement(parts[0])
 
-                    assert ion.isdigit(), f'Error in element ion on line {num+1} of results file'
+                    ion = getIon(parts[1])
 
-                    arrLines = lines[num+2:num+5]
-
-                    arr = strListToArray(arrLines)
+                    arr = strListToArray(lines[num+2:num+5])
 
                     tensor = NMR(key=resultToGet, value=arr, unit='MHz', element=element, ion=ion)
 
@@ -187,20 +188,20 @@ def getResult(resultToGet=None, lines=None):
         return tensors
 
 
-    elif resultToGet == 'spin_density':
+    elif resultToGet in spin:
         hits = []
 
-        for num, line in enumerate(lines):
+        for num, line in enumerate(lines, 1):
             line = line.strip().lower()
 
             if 'integrated spin density' in line:
                 parts = line.split('=')
 
-                assert len(parts) == 2, f'Error in spin density on line {num+1} of results file'
+                assert len(parts) == 2, f'Error in spin density on line {num} of results file'
 
                 parts = parts[1].strip().split()
 
-                assert len(parts) in [2, 4], f'Could not determine scalar or vector spin density on line {num+1} of results file'
+                assert len(parts) in (2, 4), f'Could not determine scalar or vector spin density on line {num} of results file'
 
                 arr = strListToArray(parts[:-1])
 
@@ -214,7 +215,7 @@ def getResult(resultToGet=None, lines=None):
         return None if len(hits) == 0 else hits[-1]
 
 
-    elif resultToGet == 'forces':
+    elif resultToGet in forces:
         # Groups are groups of forces: one group for each SCF cycle.
         # In each group, there will be n hits where n is the number of ions.
         groups = []
@@ -234,13 +235,11 @@ def getResult(resultToGet=None, lines=None):
                         parts = lineInBlock.split()
 
                         if len(parts) == 7:
-                            element, ion, x, y, z = parts[1:-1]
+                            element = getElement(parts[1])
 
-                            element = element[0].upper() + element[1:].lower()
+                            ion = getIon(parts[2])
 
-                            assert ion.isdigit(), f'Error in element ion on line {numInBlock + 1} of results file'
-
-                            vector = strListToArray([x, y, z])
+                            vector = strListToArray(parts[3:-1])
 
                             force = Force(key=resultToGet, value=vector, unit='eV/Ang', element=element, ion=ion)
 
@@ -262,7 +261,7 @@ def getResult(resultToGet=None, lines=None):
 
 class Result:
     def __init__(self, key=None):
-        assert type(key) is str
+        assert isinstance(key, str)
 
         key = key.strip().lower()
 
@@ -276,12 +275,12 @@ class Tensor(Result):
     def __init__(self, key=None, value=None, unit=None, shape=None):
         super().__init__(key=key)
 
-        assert type(value) is ndarray, f'Value {value} not acceptable for {self.key}, should be {ndarray}'
+        assert isinstance(value, ndarray), f'Value {value} not acceptable for {self.key}, should be {ndarray}'
 
         self.value = value
         self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=resultUnits, strict=True)
 
-        assert type(shape) is tuple
+        assert isinstance(shape, tuple)
 
         assert self.value.shape == shape, f'Tensor should be dimension {shape} not {self.value.shape}'
 
@@ -298,12 +297,12 @@ class Vector(Result):
     def __init__(self, key=None, value=None, unit=None, shape=None):
         super().__init__(key=key)
 
-        assert type(value) is ndarray, f'Value {value} not acceptable for {self.key}, should be {ndarray}'
+        assert isinstance(value, ndarray), f'Value {value} not acceptable for {self.key}, should be {ndarray}'
 
         self.value = value
         self.unit = unit if unit is None else getUnit(key=key, unit=unit, unitTypes=resultUnits, strict=True)
 
-        assert type(shape) is tuple
+        assert isinstance(shape, tuple)
 
         assert self.value.shape == shape, f'Array should be dimension {shape} not {self.value.shape}'
 
@@ -320,23 +319,13 @@ class NMR(Tensor):
     def __init__(self, key=None, value=None, unit=None, element=None, ion=None):
         super().__init__(key=key, value=value, unit=unit, shape=(3, 3))
 
-        assert type(element) is str
+        self.element = getElement(element)
 
-        element = element.strip().lower()
-
-        assert len(element) > 0
-        assert element in elements
-
-        self.element = element[0].upper() + element[1:].lower()
-
-        assert type(ion) is str
-        assert ion.isdigit()
-
-        self.ion = str(int(float(ion)))
+        self.ion = getIon(ion)
 
         self.iso = self.trace / 3.0
 
-        self.printColor = getFromDict(key=self.key, dct=nmrColors, default='', strict=False)
+        self.printColor = getFromDict(key=self.key, dct=resultColors, default='', strict=False)
 
     def __str__(self):
         rows = 3 * '\n        {:>12.5E}   {:>12.5E}   {:>12.5E}'
@@ -390,19 +379,9 @@ class Force(Vector):
     def __init__(self, key=None, value=None, unit=None, element=None, ion=None):
         super().__init__(key=key, value=value, unit=unit, shape=(3, 1))
 
-        assert type(element) is str
+        self.element = getElement(element)
 
-        element = element.strip().lower()
-
-        assert len(element) > 0
-        assert element in elements
-
-        self.element = element[0].upper() + element[1:].lower()
-
-        assert type(ion) is str
-        assert ion.isdigit()
-
-        self.ion = str(int(float(ion)))
+        self.ion = getIon(ion)
 
     def __str__(self):
         Fx, Fy, Fz = self.value.flatten()

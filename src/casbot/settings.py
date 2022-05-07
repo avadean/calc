@@ -14,7 +14,7 @@ def getSettingLines(sttng=None, maxSettingLength=0):
     """ TODO: integrate this into getSettings """
 
     assert isinstance(sttng, (Keyword, Block)), f'Setting {sttng} not a class of Keyword or Block'
-    assert type(maxSettingLength) is int
+    assert isinstance(maxSettingLength, int)
 
     if isinstance(sttng, Keyword):
         spaces = max(len(sttng.key), maxSettingLength)
@@ -28,12 +28,12 @@ def getSettingLines(sttng=None, maxSettingLength=0):
 
 
 def getSettings(*keys, settings=None, attr=None):
-    assert all(type(key) is str for key in keys)
-    assert type(settings) is list
+    assert all(isinstance(key, str) for key in keys)
+    assert isinstance(settings, list)
     assert all(isinstance(s, Setting) for s in settings)
 
     if attr is not None:
-        assert type(attr) is str
+        assert isinstance(attr, str)
         attr = attr.strip().lower()
         assert attr in ('value', 'unit', 'lines')
 
@@ -70,8 +70,8 @@ def getSettings(*keys, settings=None, attr=None):
 
 
 def checkForUnit(lines=None, unitLine=0):
-    assert type(lines) is list
-    assert type(unitLine) is int
+    assert isinstance(lines, list)
+    assert isinstance(unitLine, int)
 
     try:
         potentialUnitLine = lines[unitLine]
@@ -95,7 +95,7 @@ def checkForUnit(lines=None, unitLine=0):
 
 class Setting:
     def __init__(self, key=None):
-        assert type(key) is str, 'Key for setting should be a string'
+        assert isinstance(key, str), 'Key for setting should be a string'
         key = key.strip().lower()
 
         # See if we can find the key in cells, then params, if not then we don't know what it is.
@@ -144,7 +144,7 @@ class StrKeyword(Keyword):
     def __init__(self, key=None, value=None):
         super().__init__(key=key)
 
-        assert type(value) is str
+        assert isinstance(value, str)
 
         value = value.strip().lower()
 
@@ -160,10 +160,9 @@ class FloatKeyword(Keyword):
     def __init__(self, key=None, value=None, unit=None):
         super().__init__(key=key)
 
-        assert type(value) in [float, int], f'Value of {value} not accepted for {self.key}, should be an int or float'
+        assert isinstance(value, (int, float)), f'Value of {value} not accepted for {self.key}, should be an int or float'
 
-        if type(value) is int:
-            value = float(value)
+        value = float(value)
 
         minimum = min(settingValues.get(self.key))
         maximum = max(settingValues.get(self.key))
@@ -184,7 +183,7 @@ class IntKeyword(Keyword):
     def __init__(self, key=None, value=None, unit=None):
         super().__init__(key=key)
 
-        assert type(value) is int, f'Value of {value} not accepted for {self.key}, should be an int'
+        assert isinstance(value, int), f'Value of {value} not accepted for {self.key}, should be an int'
 
         minimum = min(settingValues.get(self.key))
         maximum = max(settingValues.get(self.key))
@@ -258,8 +257,8 @@ class Block(Setting):
         self.lines = lines
 
         if lines is not None:
-            assert type(lines) is list, 'Lines for block should be a list'
-            assert all(type(line) is str for line in lines), 'Each line for the block should be a string'
+            assert isinstance(lines, list), 'Lines for block should be a list'
+            assert all(isinstance(line, str) for line in lines), 'Each line for the block should be a string'
 
             lines = [line.strip() for line in lines if line.strip() and not line.strip().startswith('#') and not line.strip().startswith('!')]
 
@@ -378,7 +377,7 @@ class ElementThreeVectorFloatBlock(Block):
         return ''.join([f'{element}{"" if num == 1 else num}' for element, num in Counter(list(zip(*self.value))[0]).items()])
 
     def rotate(self, rotationMatrix=None):
-        assert type(rotationMatrix) is ndarray
+        assert isinstance(rotationMatrix, ndarray)
         assert rotationMatrix.shape == (3, 3)
 
         self.value = [(element, dot(rotationMatrix, vector)) for element, vector in self.value]
@@ -386,10 +385,10 @@ class ElementThreeVectorFloatBlock(Block):
     # TODO: consider fractional coordinates
     '''
     def translate(self, translationVector=None, fromUnit='ang'):
-        assert type(translationVector) is ndarray
+        assert isinstance(translationVector, ndarray)
         assert translationVector.shape == (3, )
 
-        assert type(fromUnit) is str
+        assert isinstance(fromUnit, str)
 
         fromUnit = fromUnit.strip().lower()
 
@@ -440,7 +439,7 @@ class ThreeVectorFloatBlock(Block):
         return unitPart + ['  ' + '   '.join('{:>15.12f}' for _ in range(len(vector))).format(*vector) for vector in self.value]
 
     def rotate(self, rotationMatrix=None):
-        assert type(rotationMatrix) is ndarray
+        assert isinstance(rotationMatrix, ndarray)
         assert rotationMatrix.shape == (3, 3)
 
         self.value = [dot(rotationMatrix, vector) for vector in self.value]
@@ -2917,7 +2916,7 @@ stringToSettings = shortcutToCells | shortcutToCellsAliases | shortcutToParams |
 
 
 def setting(key=None, *args, **kwargs):
-    assert type(key) is str
+    assert isinstance(key, str)
 
     key = key.strip().lower()
 
@@ -2931,7 +2930,7 @@ def setting(key=None, *args, **kwargs):
 
 
 def readSettings(file_=None):
-    assert type(file_) is str
+    assert isinstance(file_, str)
     assert Path(file_).is_file(), f'Cannot find file {file_} when reading settings'
 
     with open(file_) as f:
@@ -3083,11 +3082,9 @@ def createSettings(*settings):
     # E.g. 'soc' is spin_treatment=vector and spin_orbit_coupling=true.
     settingsFromShortcuts = shortcutsToSettings(*shortcuts)
 
-    for sttng in settingsFromShortcuts:
-        if isinstance(sttng, Setting):
-            settings.append(sttng)
-        else:
-            raise TypeError(f'{type(sttng)} type not recognised in shortcut')
+    assert all(isinstance(sttng, Setting) for sttng in settingsFromShortcuts), 'Type not recognised in shortcut'
+
+    settings += settingsFromShortcuts
 
     # Check that none of the shortcuts themselves have now duplicated any cells/params.
     assertCount([sttng.key for sttng in settings])
@@ -3109,7 +3106,7 @@ def createVariableSettings(*variableSettings):
     processed = []
 
     for variable in variableSettings:
-        assert type(variable) in (str, list, tuple), \
+        assert isinstance(variable, (str, list, tuple)), \
             f'Specify only shortcut strings, lists or tuples for variable cells/params, not {type(variable)}'
 
         # Strings are shortcuts, but shortcuts to specific combinations of cells/params.
@@ -3119,7 +3116,7 @@ def createVariableSettings(*variableSettings):
         # 3 -> spin_treatment=vector and spin_orbit_coupling=true
         # So let's turn the shortcut string (if needed) into its list combination.
 
-        if type(variable) is str:
+        if isinstance(variable, str):
             variable = variable.strip().lower()
 
             found = stringToVariableSettings.get(variable, None)
@@ -3132,15 +3129,13 @@ def createVariableSettings(*variableSettings):
         lst = []
 
         for strListSetting in variable:
-            type_ = type(strListSetting)
-
             # Shortcut string.
-            if type_ is str:
+            if isinstance(strListSetting, str):
                 variableSettings = shortcutsToSettings(strListSetting.strip().lower())
                 lst.append(variableSettings)
 
             # User defined.
-            elif type_ in (list, tuple):
+            elif isinstance(strListSetting, (list, tuple)):
                 assert all(isinstance(sttng, Setting) for sttng in strListSetting), 'Settings should only be cells or params'
                 lst.append(list(strListSetting))
 
@@ -3163,7 +3158,7 @@ def shortcutsToSettings(*shortcuts):
     settings = []
 
     for shortcut in shortcuts:
-        assert type(shortcut) is str
+        assert isinstance(shortcut, str)
 
         settingOrList = stringToSettings.get(shortcut.lower(), None)
 
@@ -3184,7 +3179,7 @@ def getCellsParams(settings=None):
     if settings is None:
         return None
 
-    assert type(settings) is list
+    assert isinstance(settings, list)
     assert all(isinstance(sttng, Setting) for sttng in settings)
 
     cells = []
@@ -3213,41 +3208,24 @@ def parseArgs(*stringsAndSettings):
     strings = []
 
     for arg in stringsAndSettings:
-        t = type(arg)
-
-        if t is str:
+        if isinstance(arg, str):
             strings.append(arg)
 
         elif isinstance(arg, Setting):
             settings.append(arg)
 
-        elif t is tuple:
+        elif isinstance(arg, (list, tuple)):
             for arg2 in arg:
-                t2 = type(arg2)
-
-                if t2 is str:
+                if isinstance(arg2, str):
                     strings.append(arg2)
 
-                elif isinstance(t2, Setting):
+                elif isinstance(arg2, Setting):
                     settings.append(arg2)
 
                 else:
-                    raise TypeError(f'Cannot have type {t2} in tuple')
-
-        elif t is list:
-            for arg2 in arg:
-                t2 = type(arg2)
-
-                if t2 is str:
-                    strings.append(arg2)
-
-                elif isinstance(t2, Setting):
-                    settings.append(arg2)
-
-                else:
-                    raise TypeError(f'Cannot have type {t2} in list')
+                    raise TypeError(f'Cannot have type {type(arg2)} in iterable')
 
         else:
-            raise TypeError(f'Cannot have type {t}')
+            raise TypeError(f'Cannot have type {type(arg)}')
 
     return settings, strings
