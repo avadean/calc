@@ -148,7 +148,7 @@ def createCalculations(*variables, settings=None, directories=None, defaults=Tru
 
 
 
-def processCalculations(*directories, parent=None):
+def processCalculations(*directories, parent=''):
     directories = createDirectories(*directories, parent=parent)
 
     if len(directories) == 0:

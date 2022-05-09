@@ -6,18 +6,18 @@ from casbot.data import getElement, getIon,\
 from numpy import ndarray
 
 
-NMR = ['nmr_core', 'nmr_bare', 'nmr_dia', 'nmr_para', 'nmr_total']
+NMRresults = ['nmr_core', 'nmr_bare', 'nmr_dia', 'nmr_para', 'nmr_total']
 
-EFG = ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total']
+EFGresults = ['efg_bare', 'efg_ion', 'efg_aug', 'efg_aug2', 'efg_total']
 
-hyperfine = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
-             'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total']
+hyperfineResults = ['hyperfine_dipolarbare', 'hyperfine_dipolaraug', 'hyperfine_dipolaraug2', 'hyperfine_dipolar',
+                    'hyperfine_fermi', 'hyperfine_zfc', 'hyperfine_total']
 
-spin = ['spin_density']
+spinResults = ['spin_density']
 
-forces = ['forces']
+forcesResults = ['forces']
 
-resultKnown = NMR + EFG + hyperfine + spin + forces
+resultKnown = NMRresults + EFGresults + hyperfineResults + spinResults + forcesResults
 
 resultNames = {'nmr_core': 'CORE',
                'nmr_bare': 'BARE',
@@ -112,7 +112,7 @@ def getResult(resultToGet=None, lines=None):
 
     assert resultToGet in resultKnown
 
-    if resultToGet in NMR:
+    if resultToGet in NMRresults:
 
         wordToLookFor = resultWords.get(resultToGet)
 
@@ -135,7 +135,7 @@ def getResult(resultToGet=None, lines=None):
 
         return tensors
 
-    elif resultToGet in EFG:
+    elif resultToGet in EFGresults:
 
         wordToLookFor = resultWords.get(resultToGet)
 
@@ -161,7 +161,7 @@ def getResult(resultToGet=None, lines=None):
 
         return tensors
 
-    elif resultToGet in hyperfine:
+    elif resultToGet in hyperfineResults:
 
         wordToLookFor = resultWords.get(resultToGet)
 
@@ -188,7 +188,7 @@ def getResult(resultToGet=None, lines=None):
         return tensors
 
 
-    elif resultToGet in spin:
+    elif resultToGet in spinResults:
         hits = []
 
         for num, line in enumerate(lines, 1):
@@ -215,7 +215,7 @@ def getResult(resultToGet=None, lines=None):
         return None if len(hits) == 0 else hits[-1]
 
 
-    elif resultToGet in forces:
+    elif resultToGet in forcesResults:
         # Groups are groups of forces: one group for each SCF cycle.
         # In each group, there will be n hits where n is the number of ions.
         groups = []
