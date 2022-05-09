@@ -11,14 +11,14 @@ def help(*args):
     if not args:
         return
 
-    assert all(type(key) is str and key for key in args), 'Enter a string to find help about'
+    assert all(isinstance(key, str) and key for key in args), 'Enter a string to find help about'
 
     def printShortcut(shrtct):
         longestKey = 0
         longestValue = 0
 
         for s in shrtct:
-            if type(s) is tuple:
+            if isinstance(s, (tuple, list)):
                 for s2 in s:
                     longestKey = max(len(s2.key), longestKey)
                     longestValue = max(len(str(s2)), longestValue)
@@ -27,7 +27,7 @@ def help(*args):
                 longestValue = max(len(str(s)), longestValue)
 
         for s in shrtct:
-            if type(s) is tuple:
+            if isinstance(s, (tuple, list)):
                 print('')
 
                 leftBorder = ['/'] + ['|'] * (len(s) - 2) + ['\\']
@@ -87,7 +87,7 @@ def help(*args):
 
 
 def search(key=None):
-    assert type(key) is str and key, 'Enter a string to search for'
+    assert isinstance(key, str) and key, 'Enter a string to search for'
 
     def f(lst, title):
         hits = []
