@@ -199,9 +199,15 @@ elements = ['h' ,                                                               
 
 
 def getElement(element=''):
+    if element is None:
+        return
+
     assert isinstance(element, str)
 
     element = element.strip().lower()
+
+    if not element:
+        return
 
     assert element in elements
 
@@ -211,9 +217,15 @@ def getElement(element=''):
 
 
 def getIon(ion=''):
+    if ion is None:
+        return
+
     assert isinstance(ion, str)
 
     ion = ion.strip()
+
+    if not ion:
+        return
 
     assert ion.isdigit()
 
@@ -242,7 +254,7 @@ def createDirectories(*dirs, ignoreShortcuts=False, parent=''):
                 ds = stringToVariableDirectories.get(directory.strip().lower(), [directory])
                 directories.append([parent + d for d in ds])
 
-        elif isinstance(directory, list):
+        elif isinstance(directory, (tuple, list)):
             assert all(isinstance(name, str) for name in directory), 'Ensure all items in a set of directories are strings.'
 
             directories.append(directory)
