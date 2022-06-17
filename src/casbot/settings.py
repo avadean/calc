@@ -1826,7 +1826,25 @@ shortcutToCells = {'usp': StrBlock(key='species_pot', lines=[]),
                                                         lines=['H             -0.000000040337827       0.000000097245202      -0.006698281679581',
                                                                'Au             0.000000040337827      -0.000000097245202       0.145698281679581']),
 
-                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])]
+                           ThreeVectorFloatWeightedBlock(key='kpoints_list', lines=['0.25 0.25 0.25 1.0'])],
+
+                   'bialteo6': [ThreeVectorFloatBlock(key='lattice_cart', lines=['ANG',
+                                                                                 '4.38789091335462       -2.53335000000000        0.00000000000000',
+                                                                                 '0.00000000000000        5.06670000000000        0.00000000000000',
+                                                                                 '0.00000000000000        0.00000000000000        4.99200000000000']),
+
+                                ElementThreeVectorFloatBlock(key='positions_frac',
+                                                             lines=['O                0.630860635049577       0.618919538549504       0.215786701751868',
+                                                                    'O                0.381080461450496       0.369139364950422       0.784213298248132',
+                                                                    'O                0.988058903499926       0.618919538549504       0.784213298248132',
+                                                                    'O                0.381080461450496       0.011941096500074       0.215786701751868',
+                                                                    'O                0.988058903499926       0.369139364950422       0.215786701751868',
+                                                                    'O                0.630860635049577       0.011941096500074       0.784213298248132',
+                                                                    'Al               0.666666666666667       0.333333333333333       0.000000000000000',
+                                                                    'Te               0.333333333333333       0.666666666666667       0.000000000000000',
+                                                                    'Bi               0.000000000000000      -0.000000000000000       0.500000000000000']),
+
+                                VectorIntKeyword(key='kpoint_mp_grid', value=(3, 3, 3))]
 
                    }
 
@@ -2955,7 +2973,7 @@ stringToVariableSettings = {'soc': [(StrKeyword(key='spin_treatment', value='sca
                             }
 
 defaultShortcut = {'defaults': [ThreeVectorIntBlock(key='cell_constraints', lines=['0   0   0', '0   0   0']),
-                                StrBlock(key='species_pot', lines=['SOC19']),
+                                #StrBlock(key='species_pot', lines=['SOC19']),
                                 BoolKeyword(key='fix_com', value=True),
                                 StrKeyword(key='task', value='singlepoint'),
                                 StrKeyword(key='xcfunctional', value='LDA'),
