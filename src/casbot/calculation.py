@@ -1156,10 +1156,10 @@ class Calculation:
         if setting is None:
             s = getSettings('positions_abs', 'positions_frac', settings=self.settings)
 
-            if s.count(None) == 2:
+            if s.count(None) == 0:
                 raise ValueError('Cannot find positions_abs or positions_frac to rotate')
 
-            if s.count(None) == 0:
+            if s.count(None) == 2:
                 raise ValueError('Both positions_abs and positions_frac specified, do not know which to rotate')
 
             # Get whichever value is not None.
